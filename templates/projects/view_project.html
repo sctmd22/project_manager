@@ -1,0 +1,81 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+<div class="card card-primary card-outline mb-4" style="width:1024px">
+	<div class="card-header">
+		<div class="card-title">
+			Project Title
+		</div>
+	</div>
+	
+	<div class="card-body">
+	
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Properties:</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+		
+			<tr class="align-middle">
+				<td>Status:</td>
+				<td>Active</td>
+			</tr>
+			<tr class="align-middle">
+				<td>Contractor:</td>
+				<td>Hipperson</td>
+			</tr>
+			<tr class="align-middle">
+				<td>Location:</td>
+				<td></td>
+			</tr>
+		
+			<tr class="align-middle">
+				<td>Created by:</td>
+				<td>Admin</td>
+			</tr>
+			<tr class="align-middle">
+				<td>Date Created:</td>
+				<td>2024-11-21</td>
+			</tr>
+			<tr class="align-middle">
+				<td colspan="2">Description:</td>
+			
+			</tr>
+
+
+		</tbody>
+	</table>
+
+	<br />
+	
+	<a href="{{ url_for('edit_project', project_id=data.id) }}"><button type="button" class="btn btn-primary">Edit Project</button></a>
+	<button type="button" class="btn btn-danger">Delete</button>
+
+	
+	<hr />
+	
+	
+		<div class="btn-group" role="group"> <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				New Report
+			</button>
+			
+			<ul class="dropdown-menu" style="">
+				<li> <a class="dropdown-item" href="#">Cylinder</a> </li>
+				<li> <a class="dropdown-item" href="#">Grout Cube</a> </li>
+				<li> <a class="dropdown-item" href="#">Shrinkage Prism</a> </li>
+			</ul>
+		</div>
+
+
+	</div>
+
+
+</div>
+
+
+
+{% endblock %}

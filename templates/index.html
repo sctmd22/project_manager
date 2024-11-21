@@ -25,12 +25,13 @@
 			{% include "breadcrumbs.html" %}
 		
 			<div class="app-content"> <!--begin::Container-->
-				{% block content %}
-				  
-					{% include "dashboard.html" %}<!--default include (homepage data)-->
-				  
-				{% endblock %}
-				
+				<div class="container-fluid">
+					{% block content %}
+					  
+						{% include "dashboard.html" %}<!--default include (homepage data)-->
+					  
+					{% endblock %}
+				</div>
 			</div>
 		
 		</main> <!--end::App Main--> <!--begin::Footer-->
