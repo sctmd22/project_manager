@@ -99,6 +99,9 @@ def edit_project(project_id):
 
     return render_template("projects/edit_project.html")
 
+    return redirect(url_for("projects"))
+
+
 @app.route("/projects/cancel_new_project")
 def cancel_project():
     return redirect(url_for("projects"))
