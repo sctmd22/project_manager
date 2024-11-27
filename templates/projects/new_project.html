@@ -13,7 +13,7 @@
 <form action="{{ url_for('submit_project') }}" method="POST"> <!--begin::Body-->
 <div class="card-body">
 	<div class="mb-3"> 
-	<label for="projectTitle" class="form-label">Project Title</label> 
+	<label for="projectTitle" class="form-label">Project Title:</label> 
 	<input type="text" class="form-control" id="projectTitle" name="projectTitle" value="{{ data.title }}" aria-describedby="textDesc">
 		<div id="textDesc" class="form-text">
 			Text
@@ -21,23 +21,18 @@
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectContractor" class="form-label">Contractor</label> 
+		<label for="projectContractor" class="form-label">Contractor:</label> 
 		<input type="text" class="form-control" name="projectContractor" value="{{ data.contractor }}">
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectLocation" class="form-label">Location</label> 
+		<label for="projectLocation" class="form-label">Location:</label> 
 		<input type="text" class="form-control" name="projectLocation" value="{{ data.location }}">
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectDescription" class="form-label">Description</label> 
+		<label for="projectDescription" class="form-label">Description:</label> 
 		<input type="text" class="form-control" name="projectDescription" value="{{ data.description }}">
-	</div>
-	
-	<div class="mb-3"> 
-		<label for="projectDate" class="form-label">Date</label> 
-		<input type="date" class="form-control" name="projectDate" value="{{ data.date }}">
 	</div>
 
 	
@@ -45,7 +40,7 @@
 </div> <!--end::Body--> <!--begin::Footer-->
 <div class="card-footer"> 
 	<button type="submit" class="btn btn-primary">Submit</button> 
-	<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cancel_project') }}'">Cancel</button>  
+	<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cancel_new_project') }}'">Cancel</button>  
 </div> <!--end::Footer-->
 </form>
 

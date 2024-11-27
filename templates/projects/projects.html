@@ -21,7 +21,7 @@
 		<table class="table table-striped align-middle">
 			<thead>
 				<tr>
-					<th>Project</th>
+					<th>Name</th>
 					<th>Contractor</th>
 					<th>Location</th>
 					<th>Description</th>
@@ -31,18 +31,21 @@
 				</tr>
 			</thead>
 			<tbody>
+				
+				{% for row in data %}
+				
+			
 				<tr>
-					<td> <img src="{{ url_for('static', filename='images/default-150x150.png') }}" alt="Product 1" class="rounded-circle img-size-32 me-2">
-						<a href="#" class="text-secondary">Hipperson Z15 FWIS</a>
-					</td>
-					<td>Hipperson</td>
+					<td><a href="{{ url_for('view_project', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
+					<td>{{ row.contractor|e }}</td>
 					<td></td>
-					<td></td>
-					<td>Active</td>
-					<td>2024-11-30</td>
-					<td>Admin</td>
+					<td>{{ row.shortDescription|e }}</td>
+					<td>{{ row.status|e }}</td>
+					<td>{{ row.date_created|e }}</td>
+					<td>{{ row.created_by|e }}</td>
 				</tr>
 				
+				{% endfor %}
 				
 			</tbody>
 		</table>
