@@ -5,28 +5,29 @@
 
 <div class="card">
 	<div class="card-header">
-	<a href="{{ url_for('projects_bp.new_project') }}"><button type="button" class="btn btn-block btn-primary">New Project</button></a>
+	<a href="{{ url_for('projects_bp.new_project') }}"><button type="button" class="btn btn-block btn-primary">New Cylinder</button></a>
 	</div>
 </div>
 
 <br />
-
+ 
 
 <div class="card mb-4">
 	<div class="card-header">
-		<h3 class="card-title">Ongoing Projects</h3>
+		<h3 class="card-title">Cylinder Reports</h3>
 		
 	</div>
 	<div class="card-body table-responsive p-0">
 		<table class="table table-striped align-middle">
 			<thead>
 				<tr>
-					<th>Start Date</th>
 					<th>Name</th>
+					<th>Cast Date</th>
 					<th>Contractor</th>
 					<th>Site</th>
-					<th>Description</th>
+					<th>Supplier</th>
 					<th>Status</th>
+					<th>Date Created</th>
 					<th>Created By</th>
 				</tr>
 			</thead>
@@ -36,13 +37,13 @@
 				
 			
 				<tr>
-					<td>{{ row.date_started | strip_time }}</td>
 					<td><a href="{{ url_for('projects_bp.view_project', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
-
+					<td><td>
 					<td>{{ row.contractor|e }}</td>
-					<td>{{ row.location|e }}</td>
-					<td>{{ row.description | short_description | e }}</td>
-					<td>{{ row.status | project_status | e }}</td>
+					<td>{{ row.site|e }}</td>
+					<td>{{ row.supplier|e }}</td>
+					<td>{{ row.status|e }}</td>
+					<td>{{ row.date_created|e }}</td>
 					<td>{{ row.created_by|e }}</td>
 				</tr>
 				

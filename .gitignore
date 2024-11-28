@@ -1,2 +1,5 @@
 # created by virtualenv automatically
 /Lib/
+/templates/scratch.html
+/templates/test/
+/routes/__pycache__/
