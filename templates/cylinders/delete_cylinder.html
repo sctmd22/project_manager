@@ -9,19 +9,19 @@
 		</div>
 	</div>
 
-	<form action="{{ url_for('projects_bp.delete_project') }}" method="POST"> <!--begin::Body-->
-		<input type="hidden" name="project_id" value="{{ data.id }}">
+	<form action="{{ url_for('cylinders_bp.delete_cylinder') }}" method="POST"> <!--begin::Body-->
+		<input type="hidden" name="cylinder_id" value="{{ data.id }}">
 	
 		<div class="card-body">
 			<div class="mb-3"> 
-				<label for="projectTitle" class="form-label">Are you sure want you delete the current project?</label> 
+				<label for="cylinderTitle" class="form-label">Are you sure want you delete the current report?</label> 
 			</div>
 			
 
 		</div> <!--end::Body--> <!--begin::Footer-->
 		<div class="card-footer"> 
 			<button type="submit" class="btn btn-danger">Delete</button> 
-			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('projects_bp.cancel_delete', project_id=data.id) }}'">Cancel</button>  
+			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.cancel_delete', cylinder_id=data.id) }}'">Cancel</button>  
 		</div> <!--end::Footer-->
 	</form>
 

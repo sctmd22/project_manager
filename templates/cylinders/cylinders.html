@@ -5,7 +5,7 @@
 
 <div class="card">
 	<div class="card-header">
-	<a href="{{ url_for('projects_bp.new_project') }}"><button type="button" class="btn btn-block btn-primary">New Cylinder</button></a>
+	<a href="{{ url_for('cylinders_bp.new_cylinder') }}"><button type="button" class="btn btn-block btn-primary">New Cylinder Report</button></a>
 	</div>
 </div>
 
@@ -37,7 +37,7 @@
 				
 			
 				<tr>
-					<td><a href="{{ url_for('projects_bp.view_project', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
+					<td><a href="{{ url_for('cylinders_bp.view_cylinder', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
 					<td><td>
 					<td>{{ row.contractor|e }}</td>
 					<td>{{ row.site|e }}</td>
