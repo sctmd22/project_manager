@@ -13,6 +13,19 @@ app.register_blueprint(project_routes.bp)
 app.register_blueprint(cylinder_routes.bp)
 
 
+@app.template_filter('date_created_format')
+def date_created_format(date):
+    """Custom Jinja filter to format start_dates in project reports"""
+
+    try:
+        newDate = date.strftime('%B %d, %Y - %I:%M:%S %p')
+
+    except:
+        return date
+
+    return newDate
+
+
 @app.template_filter('start_date_format')
 def strip_time_filter(date):
     """Custom Jinja filter to format start_dates in project reports"""
@@ -21,7 +34,7 @@ def strip_time_filter(date):
         newDate = date.strftime('%B %d, %Y (%Y-%m-%d)')
 
     except:
-        return ""
+        return date
 
     return newDate
 
@@ -32,7 +45,7 @@ def strip_time_filter(date):
         timeless = date.strftime('%Y-%m-%d')
 
     except:
-        return ""
+        return date
 
     return timeless
 
@@ -48,6 +61,7 @@ def short_description(description):
 
 @app.template_filter('project_status')
 def project_status(status):
+    '''Convert status into to text'''
     try:
         statusText = GLB_project_status[status]
 

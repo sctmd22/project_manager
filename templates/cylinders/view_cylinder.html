@@ -1,0 +1,525 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+
+<div class="card card-primary card-outline mb-4" style="max-width: 800px">
+	<div class="card-header">
+		<div class="card-title">
+			{% if editData %}
+				
+				{% if newCylinder %}
+					<form action="{{ url_for('cylinders_bp.submit_cylinder') }}" method="POST">
+				{% else %}
+					<form action="{{ url_for('cylinders_bp.update_cylinder') }}" method="POST">
+				{% endif %}
+				
+				<input type="text" class="form-control" id="cylTitle" name="cylTitle" size="60" value="{{ data.title }}" aria-describedby="textDesc">
+				
+				<input type="hidden" name="cylinder_id" value="{{ data.id }}">
+				
+				<input type="hidden" name="newCylinder" value="{{ newCylinder }}">
+				<input type="hidden" name="createdBy" value="{{ data.created_by }}">
+				<input type="hidden" name="dateCreated" value="{{ data.date_created }}">
+
+			{% else %}
+				{{ data.title|e }}
+			{% endif %}
+			
+			
+		</div>
+	</div>
+	
+	<div class="card-body">
+	
+<table class="table table-bordered">
+	<tbody>
+		<tr>
+			<td><b>Mix and Field Data:</b></td>
+		</tr>
+		<tr>
+			<td>
+				<div class="row">
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
+							<div class="col">
+							{% if editData %}
+								<input class="form-control cylFormData" type="date" name="cylCastDate" value="{{ data.date_cast | strip_time }}">
+							{% else %}
+								{{ data.date_cast }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Status:</label>
+							<div class="col">
+							{% if editData %}
+									<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
+									{% for key,value in statusData.items() %}	
+										<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
+									{% endfor %}
+								</select>
+							{% else %}
+								{{ data.status | project_status }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Project:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylProject" name="cylProject"  value="{{ data.projectName }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.projectName|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Contractor:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylContractor" name="cylContractor"  value="{{ data.contractor }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.contractor|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Type of Placement:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylPlacement" name="cylPlacement"  value="{{ data.placementType }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.placementType|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Ticket #:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylTicket" name="cylTicket"  value="{{ data.ticket_num }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.ticket_num|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Sampled From:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylSampled" name="cylSampled"  value="{{ data.sampled_from }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.sampled_from|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Cement Type:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylCement" name="cylCement"  value="{{ data.cement_type }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.cement_type|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				
+					<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Supplier:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylSupplier" name="cylSupplier"  value="{{ data.supplier }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.supplier|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Mix ID:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylMix" name="cylMix"  value="{{ data.mix_id }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.mix_id|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Load Volume:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylVolume" name="cylVolume"  value="{{ data.load_volume }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.load_volume|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Load #:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylLoadNum" name="cylLoadNum"  value="{{ data.load_num }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.load_num|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Truck #:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylTruckNum" name="cylTruckNum"  value="{{ data.truck_num }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.truck_num|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Mould Type:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylMouldType" name="cylMouldType"  value="{{ data.mould_type }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.mould_type|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+						
+				</div>
+
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">PO #:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="text" class="form-control cylFormData" id="cylPONum" name="cylPONum"  value="{{ data.po_num }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.po_num|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+				
+				</div>
+
+		</td>
+	</tr>
+
+	</tbody>
+	</table>
+
+	<table class="table table-bordered">
+		<tbody>
+		<tr>
+			<td colspan="2"><b>Time:</b></td>
+		
+		</tr>
+		<tr>
+			<td colspan="2">
+			
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Batch Time:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="time" class="form-control cylFormTime" id="cylBatchTime" name="cylBatchTime"  value="{{ data.time_batch }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.time_batch|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+				
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Sample Time:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="time" class="form-control cylFormTime" id="cylSampleTime" name="cylSampleTime"  value="{{ data.time_sample }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.time_sample|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+				
+				</div>
+				
+				<div class="form-group row">
+					<div class="col">
+						<div class="form-group row cylrow">
+							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Cast Time:</label>
+							<div class="col">
+							{% if editData %}
+								<input type="time" class="form-control cylFormTime" id="cylCastTime" name="cylCastTime"  value="{{ data.time_cast }}" aria-describedby="textDesc">
+							{% else %}
+								{{ data.time_cast|e }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+				
+				</div>
+			
+			</td>
+		
+		</tr>
+		
+	</tbody>
+	</table>
+	
+	<table class="table table-bordered">
+		<tbody>	
+		<tr>
+			<td colspan="3"><b>Strength Target:</b></td>
+	
+		</tr>
+	
+		<tr class="cylStrRow">
+			<td></td>
+			<td>Strength (MPa)</td>
+			<td>Days</td>
+		</tr>
+		<tr class="cylStrRow">
+			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 1:</label></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_str1" name="str_table_str1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_days1" name="str_table_days1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+		</tr>
+		<tr class="cylStrRow">
+			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 2:</label></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_str2" name="str_table_str2"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_days2" name="str_table_days2"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+		</tr>
+		<tr class="cylStrRow">
+			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 3:</label></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_str3" name="str_table_str3"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+			<td><input type="number" class="form-control cylStrData" id="str_table_days3" name="str_table_days3"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+		</tr>
+
+
+	</tbody>
+	
+	</table>	
+	
+	<div class="table-container-measurements">
+		<table class="table table-bordered table-container-measurements">
+			<tbody>	
+			
+			<tr>
+				<td colspan="5"><b>Measurements:</b></td>
+			</tr>
+
+			<tr class="cylStrRow">
+				<td></td>
+				<td>Actual</td>
+				<td>Min</td>
+				<td>Max</td>
+				<td>Notes</td>
+			</tr>
+			
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Slump (mm)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Air (%)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Unit Density (kg/m<sup>3</sup>)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Sample Temp (&deg;C)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Ambient Temp (&deg;C)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+			<tr class="cylStrRow">
+				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Initial Curing Conditions (&deg;C)</label></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
+			</tr>
+
+				
+				
+		</table>		
+	</div>
+		
+	<table class="table table-bordered">
+		<tbody>	
+			<tr class="align-middle">
+				<td>Notes:</td>
+				<td>
+				{% if editData %}
+					<div class="form-group">
+                        <textarea name="cylNotes" id="cylNotes" class="form-control" rows="3" placeholder="">{{ data.notes|e }}</textarea>
+                      </div>
+				{% else %}
+					{{ data.notes|e }}
+				{% endif %}
+				</td>
+				
+			</tr>
+			<tr class="align-middle">
+				<td>Files:</td>
+				<td>
+				{% if editData %}
+					<div class="form-group">
+                       
+                      </div>
+				{% else %}
+
+				{% endif %}
+				</td>
+				
+			</tr>
+			<tr class="align-middle">
+				<td>Created by:</td>
+				<td>{{ data.created_by|e }}</td>
+			</tr>
+			<tr class="align-middle">
+				<td>Date Created:</td>
+				<td> {{data.date_created | date_created_format }} </td>
+			</tr>
+
+
+		</tbody>
+	</table>
+
+
+	<br />
+	
+	{% if editData %}
+		<button type="submit" class="btn btn-primary">Save</button> 
+		{% if newCylinder %}
+			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.cylinders') }}'">Cancel</button> 
+		
+		{% else %}
+		
+			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.view_cylinder', cylinder_id = data.id) }}'">Cancel</button> 
+		
+		{% endif %}
+		</form>
+	{% else %}
+		<a href="{{ url_for('cylinders_bp.view_cylinder', cylinder_id=data.id, edit=True) }}"><button type="button" class="btn btn-primary">Edit Cylinder</button></a>
+		<div style="float:right"><a href="{{ url_for('cylinders_bp.confirm_delete', cylinder_id=data.id) }}"><button type="button" class="btn btn-danger">Delete</button></a></div>
+	{% endif %}
+
+
+	{% if not editData %}
+	<hr />
+
+		<div class="btn-group" role="group"> <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				New Report
+			</button>
+			
+			<ul class="dropdown-menu" style="">
+				<li> <a class="dropdown-item" href="{{ url_for('cylinders_bp.new_cylinder') }}">Cylinder</a> </li>
+				<li> <a class="dropdown-item" href="#">Grout Cube</a> </li>
+				<li> <a class="dropdown-item" href="#">Shrinkage Prism</a> </li>
+			</ul>
+		</div>
+	{% endif %}
+
+
+	</div>
+
+</div>
+
+
+{% endblock %}

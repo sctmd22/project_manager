@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from flask import Flask, render_template, request, redirect, url_for, Blueprint
 
 from db import db_connect
-from helpers import get_SQL_timestamp, GLB_project_status
+from helpers import get_SQL_timestamp, GLB_project_status, get_simple_date
 
 
 
@@ -35,40 +35,53 @@ def projects():
 @bp.route("/new")
 def new_project():
 
+    editing = True
+    newProject = True
+
     #default values
     data = {
+        "id": -1,
+        "status": 0,
+        "date_started": datetime.today(),
         "title":"New Project",
-        "date":datetime.today().strftime('%Y-%m-%d'),
+        "date_created":datetime.today(),
         "contractor": "",
         "location": "",
-        "description": ""
+        "description": "",
+        "created_by":"admin"
     }
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Create New Project"
 
-    return render_template("projects/new_project.html", data=data, breadcrumb=bcData)
+    #return render_template("projects/view_project.html", data=data, breadcrumb=bcData)
+
+    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GLB_project_status, newProject = newProject)
+
+
+
 
 #Handle new project submission then redirect to the project template page
 @bp.route("/new/submit", methods=["POST"])
 def submit_project():
 
-    createdBy = "admin"
-    status = 0
+    #dateCreated = datetime.strptime(rawDateCreated, "%Y-%m-%d %H:%M:%S.%f")
+    dateCreated = request.form['dateCreated']
+    createdBy = request.form['createdBy']
+    status = request.form['projectStatus']
     title = request.form['projectTitle']
-    dateCreated = get_SQL_timestamp()
     contractor = request.form['projectContractor']
     location = request.form['projectLocation']
     description = request.form['projectDescription']
     dateStarted = request.form['projectDateStarted']
 
     if(dateStarted == ""):
-        dateStarted = get_SQL_timestamp()
+        dateStarted = datetime.today().strftime("%Y-%m-%d")
 
     data = (dateCreated, title, createdBy, contractor, status, description, location, dateStarted)
 
     dbCon = db_connect()
-    cursor = dbCon.cursor(dictionary=True)
+    cursor = dbCon.cursor()
 
 
     SQL_PROJECT_INSERT = (f"INSERT INTO {TB_PROJECTS} (date_created, title, created_by, contractor, status, description, location, date_started) VALUES "
@@ -96,11 +109,10 @@ def update_project():
     description = request.form['projectDescription']
     location = request.form['projectLocation']
     dateStarted = request.form['projectDateStarted']
-
-    status = 1
+    status = request.form['projectStatus']
 
     dbCon = db_connect()
-    cursor = dbCon.cursor(dictionary=True)
+    cursor = dbCon.cursor()
 
     SQL_PROJECT_UPDATE = (
         f"UPDATE {TB_PROJECTS} SET "
@@ -167,10 +179,6 @@ def view_project(project_id):
     return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GLB_project_status)
 
 
-
-@bp.route("/new_project/cancel")
-def cancel_new_project():
-    return redirect(url_for("projects_bp.projects"))
 
 
 @bp.route("/delete/cancel/<int:project_id>")

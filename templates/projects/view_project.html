@@ -6,9 +6,21 @@
 	<div class="card-header">
 		<div class="card-title">
 			{% if editData %}
-				<form action="{{ url_for('projects_bp.update_project') }}" method="POST">
-				<input type="hidden" name="project_id" value="{{ data.id }}">
+				
+				{% if newProject %}
+					<form action="{{ url_for('projects_bp.submit_project') }}" method="POST">
+				{% else %}
+					<form action="{{ url_for('projects_bp.update_project') }}" method="POST">
+				{% endif %}
+				
 				<input type="text" class="form-control" id="projectTitle" name="projectTitle" size="60" value="{{ data.title }}" aria-describedby="textDesc">
+				
+				<input type="hidden" name="project_id" value="{{ data.id }}">
+				
+				<input type="hidden" name="newProject" value="{{ newProject }}">
+				<input type="hidden" name="createdBy" value="{{ data.created_by }}">
+				<input type="hidden" name="dateCreated" value="{{ data.date_created }}">
+
 			{% else %}
 				{{ data.title|e }}
 			{% endif %}
@@ -22,7 +34,7 @@
 	<table class="table table-bordered">
 
 		<tbody>
-		<tr class="align-middle">
+			<tr class="align-middle">
 				<td style="width: 150px" class="align-middle">Start Date:</td>
 				<td>
 				{% if editData %}
@@ -37,13 +49,13 @@
 				<td>
 				{% if editData %}
 				
-					<select class="form-select" id="projectStatus" style="width: 200px">
+					<select class="form-select" name="projectStatus" id="projectStatus" style="width: 200px">
 						{% for key,value in statusData.items() %}	
-							<option selected="">{{ value }}</option>
+							<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
 						{% endfor %}
 					</select>
 				{% else %}
-					{{ data.status|e }}
+					{{ data.status | project_status }}
 				{% endif %}
 				</td>
 			</tr>
@@ -101,7 +113,7 @@
 			</tr>
 			<tr class="align-middle">
 				<td>Date Created:</td>
-				<td>{{ data.date_created }}</td>
+				<td> {{data.date_created | date_created_format }} </td>
 			</tr>
 
 
@@ -111,8 +123,15 @@
 	<br />
 	
 	{% if editData %}
-		<button type="submit" class="btn btn-primary">Save Changes</button> 
-		<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('projects_bp.view_project', project_id = data.id) }}'">Cancel</button> 
+		<button type="submit" class="btn btn-primary">Save</button> 
+		{% if newProject %}
+			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('projects_bp.projects') }}'">Cancel</button> 
+		
+		{% else %}
+		
+			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('projects_bp.view_project', project_id = data.id) }}'">Cancel</button> 
+		
+		{% endif %}
 		</form>
 	{% else %}
 		<a href="{{ url_for('projects_bp.view_project', project_id=data.id, edit=True) }}"><button type="button" class="btn btn-primary">Edit Project</button></a>
@@ -120,6 +139,7 @@
 	{% endif %}
 
 
+	{% if not editData %}
 	<hr />
 
 		<div class="btn-group" role="group"> <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -127,11 +147,12 @@
 			</button>
 			
 			<ul class="dropdown-menu" style="">
-				<li> <a class="dropdown-item" href="#">Cylinder</a> </li>
+				<li> <a class="dropdown-item" href="{{ url_for('cylinders_bp.new_cylinder') }}">Cylinder</a> </li>
 				<li> <a class="dropdown-item" href="#">Grout Cube</a> </li>
 				<li> <a class="dropdown-item" href="#">Shrinkage Prism</a> </li>
 			</ul>
 		</div>
+	{% endif %}
 
 
 	</div>

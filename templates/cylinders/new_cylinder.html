@@ -1,4 +1,4 @@
-{% extends "projects/projects.html" %}
+{% extends "cylinders/cylinders.html" %}
 
 {% block content %}
 
@@ -10,29 +10,29 @@
 		</div>
 	</div>
 
-<form action="{{ url_for('projects_bp.submit_project') }}" method="POST"> <!--begin::Body-->
+<form action="{{ url_for('cylinders_bp.submit_cylinder') }}" method="POST"> <!--begin::Body-->
 <div class="card-body">
 	<div class="mb-3"> 
-	<label for="projectTitle" class="form-label">Project Title:</label> 
-	<input type="text" class="form-control" id="projectTitle" name="projectTitle" value="{{ data.title }}" aria-describedby="textDesc">
+	<label for="cylinderTitle" class="form-label">Cylinder Title:</label> 
+	<input type="text" class="form-control" id="cylinderTitle" name="cylinderTitle" value="{{ data.title }}" aria-describedby="textDesc">
 		<div id="textDesc" class="form-text">
 			Text
 		</div>
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectContractor" class="form-label">Contractor:</label> 
-		<input type="text" class="form-control" name="projectContractor" value="{{ data.contractor }}">
+		<label for="cylinderContractor" class="form-label">Contractor:</label> 
+		<input type="text" class="form-control" name="cylinderContractor" value="{{ data.contractor }}">
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectLocation" class="form-label">Site:</label> 
-		<input type="text" class="form-control" name="projectLocation" value="{{ data.location }}">
+		<label for="cylinderLocation" class="form-label">Site:</label> 
+		<input type="text" class="form-control" name="cylinderLocation" value="{{ data.location }}">
 	</div>
 	
 	<div class="mb-3"> 
-		<label for="projectDescription" class="form-label">Description:</label> 
-		<input type="text" class="form-control" name="projectDescription" value="{{ data.description }}">
+		<label for="cylinderDescription" class="form-label">Description:</label> 
+		<input type="text" class="form-control" name="cylinderDescription" value="{{ data.description }}">
 	</div>
 
 	
@@ -40,7 +40,7 @@
 </div> <!--end::Body--> <!--begin::Footer-->
 <div class="card-footer"> 
 	<button type="submit" class="btn btn-primary">Submit</button> 
-	<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('projects_bp.cancel_new_project') }}'">Cancel</button>  
+	<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.cancel_new_cylinder') }}'">Cancel</button>  
 </div> <!--end::Footer-->
 </form>
 

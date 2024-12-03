@@ -1,0 +1,64 @@
+.cylrow {
+	margin-bottom:  6px;
+	margin-top:  6px
+
+}
+
+.cylFormText {
+	width: 160px
+	
+}
+
+.cylFormTime {
+	width: 120px
+}
+
+.cylFormData {
+	width: 200px
+}
+
+
+.cylStrRow {
+	text-align: center;
+	
+}
+
+.cylStrLabel {
+	width: 60px
+}
+
+.cylStrData {
+	width: 80px;
+	display: inline;
+}
+
+.cylStrTable {
+
+}
+
+
+.cylMeasureLabel {
+	width: 130px
+	
+}
+
+.cylMeasureNotes {
+	width: 200px;
+	display: inline;
+	vertical-align: middle;
+}
+
+
+.table-container-measurements {
+  overflow-x: auto; /* Enables horizontal scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile devices */
+  max-width: 100%; /* Ensures the container doesn't exceed the screen width */
+}
+
+
+table {
+  width: 100%; /* Ensures the table uses full width of the container */
+  border-collapse: collapse; /* Optional: For consistent borders */
+
+}
+
