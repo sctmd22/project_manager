@@ -31,7 +31,9 @@
 	</div>
 	
 	<div class="card-body">
-	
+
+
+
 <table class="table table-bordered">
 	<tbody>
 		<tr>
@@ -39,40 +41,7 @@
 		</tr>
 		<tr>
 			<td>
-				<div class="row">
-					<div class="col">
-						<div class="form-group row cylrow">
-						
-							<label for="cylinderCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
-							<div class="col">
-							{% if editData %}
-								<input class="form-control cylFormData" type="date" name="cylCastDate" value="{{ data.date_cast | strip_time }}">
-							{% else %}
-								{{ data.date_cast }}
-							{% endif %}
-							</div>
-						</div>
-					</div>
-						
-					<div class="col">
-						<div class="form-group row cylrow">
-						
-							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormText">Status:</label>
-							<div class="col">
-							{% if editData %}
-									<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
-									{% for key,value in statusData.items() %}	
-										<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
-									{% endfor %}
-								</select>
-							{% else %}
-								{{ data.status | project_status }}
-							{% endif %}
-							</div>
-						</div>
-					</div>
-						
-				</div>
+				
 				
 				<div class="form-group row">
 					<div class="col">
@@ -281,13 +250,48 @@
 	<table class="table table-bordered">
 		<tbody>
 		<tr>
-			<td colspan="2"><b>Time:</b></td>
+			<td colspan="2"><b>Date and Time:</b></td>
 		
 		</tr>
+
 		<tr>
+		<td colspan="2">
+			<div class="row">
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
+							<div class="col">
+							{% if editData %}
+								<input class="form-control cylFormData" type="date" name="cylCastDate" value="{{ data.dateCast | strip_time }}">
+							{% else %}
+								{{ data.dateCast }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+					<div class="col">
+						<div class="form-group row cylrow">
+						
+							<label for="cylinderDateTransported" class="col-sm-2 col-form-label cylFormText">Date Transported:</label>
+							<div class="col">
+							{% if editData %}
+								<input class="form-control cylFormData" type="date" name="cylDateTransported" value="{{ data.dateTransported | strip_time }}">
+							{% else %}
+								{{ data.dateTransported }}
+							{% endif %}
+							</div>
+						</div>
+					</div>
+	
+						
+				</div>
+			</td>
+		</tr>
+
+		<tr>
+
 			<td colspan="2">
-			
-				
 				<div class="form-group row">
 					<div class="col">
 						<div class="form-group row cylrow">
@@ -343,34 +347,33 @@
 	</tbody>
 	</table>
 	
+
+	
 	<table class="table table-bordered">
-		<tbody>	
+		<tbody id="table-body">	
 		<tr>
-			<td colspan="3"><b>Strength Target:</b></td>
+			<td colspan="3"><b>Strength Target:	<div id="jsDebug"></div></b></td>
 	
 		</tr>
 	
 		<tr class="cylStrRow">
-			<td></td>
+			<td>
+				{% if editData %}
+					<button type="button" class="btn btn-primary" onclick="addInput()">Add Strength</button>
+					<button type="button" class="btn btn-primary" onclick="removeCylStrInput()">Remove</button>
+				{% endif %}
+			</td>
 			<td>Strength (MPa)</td>
 			<td>Days</td>
 		</tr>
+		
 		<tr class="cylStrRow">
-			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 1:</label></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_str1" name="str_table_str1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_days1" name="str_table_days1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+				<td><label class="col-sm-2 col-form-label cylStrLabel">Target 1:</label></td>
+				<td><input type="number" class="form-control cylStrData" id="str_table_str1" name="str_table_str1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+				<td><input type="number" class="form-control cylStrData" id="str_table_days1" name="str_table_days1"  value="{{ data.a }}" aria-describedby="textDesc"></td>
+		
+		
 		</tr>
-		<tr class="cylStrRow">
-			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 2:</label></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_str2" name="str_table_str2"  value="{{ data.a }}" aria-describedby="textDesc"></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_days2" name="str_table_days2"  value="{{ data.a }}" aria-describedby="textDesc"></td>
-		</tr>
-		<tr class="cylStrRow">
-			<td><label class="col-sm-2 col-form-label cylStrLabel">Target 3:</label></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_str3" name="str_table_str3"  value="{{ data.a }}" aria-describedby="textDesc"></td>
-			<td><input type="number" class="form-control cylStrData" id="str_table_days3" name="str_table_days3"  value="{{ data.a }}" aria-describedby="textDesc"></td>
-		</tr>
-
 
 	</tbody>
 	
@@ -468,13 +471,29 @@
 				</td>
 				
 			</tr>
+			
+			<tr class="align-middle">
+				<td>Status:</td>
+				<td>
+				{% if editData %}
+						<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
+						{% for key,value in statusData.items() %}	
+							<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
+						{% endfor %}
+						</select>
+				{% else %}
+					{{ data.status | project_status }}
+				{% endif %}
+				</td>
+			
+			</tr>
 			<tr class="align-middle">
 				<td>Created by:</td>
-				<td>{{ data.created_by|e }}</td>
+				<td>{{ data.createdBy|e }}</td>
 			</tr>
 			<tr class="align-middle">
 				<td>Date Created:</td>
-				<td> {{data.date_created | date_created_format }} </td>
+				<td> {{data.dateCreated | date_created_format }} </td>
 			</tr>
 
 
@@ -501,20 +520,6 @@
 	{% endif %}
 
 
-	{% if not editData %}
-	<hr />
-
-		<div class="btn-group" role="group"> <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-				New Report
-			</button>
-			
-			<ul class="dropdown-menu" style="">
-				<li> <a class="dropdown-item" href="{{ url_for('cylinders_bp.new_cylinder') }}">Cylinder</a> </li>
-				<li> <a class="dropdown-item" href="#">Grout Cube</a> </li>
-				<li> <a class="dropdown-item" href="#">Shrinkage Prism</a> </li>
-			</ul>
-		</div>
-	{% endif %}
 
 
 	</div>

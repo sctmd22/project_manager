@@ -37,8 +37,8 @@
 				
 			
 				<tr>
-					<td><a href="{{ url_for('cylinders_bp.view_cylinder', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
-					<td><td>
+					<td><a href="{{ url_for('cylinders_bp.view_cylinder', cylinder_id=row.auto_id ) }}" class="text-secondary">{{ row.report_title|e }}</a></td>
+					<td>{{ row.cast_date }}<td>
 					<td>{{ row.contractor|e }}</td>
 					<td>{{ row.site|e }}</td>
 					<td>{{ row.supplier|e }}</td>

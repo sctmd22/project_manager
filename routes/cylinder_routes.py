@@ -14,20 +14,25 @@ TB_CONDITIONS = "cyl_conditions_table"
 bp = Blueprint('cylinders_bp', __name__, url_prefix='/cylinders')
 
 
-#Common data fields that can be grouped together
-CYL_DATA_FIELDS = [
-    {''},
-    {},
-]
-
-
 
 @bp.route("/")
 def cylinders():
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    return render_template("cylinders/cylinders.html", breadcrumb=bcData)
+    dbCon = db_connect();
+    cursor = dbCon.cursor(dictionary=True)
+
+    SQL_PROJECT_GET_ALL = (f"SELECT * FROM {TB_REPORT_DATA} ORDER BY date_cast DESC")
+
+    cursor.execute(SQL_PROJECT_GET_ALL)
+
+    result = cursor.fetchall()
+
+    cursor.close()
+    dbCon.close()  # return connection to pool
+
+    return render_template("cylinders/cylinders.html", breadcrumb=bcData, data=result)
 
 
 
@@ -105,7 +110,7 @@ def view_cylinder(cylinder_id):
         "notes":result['notes'],
 
 
-        "created_by":"admin"
+        "createdBy":"admin"
 
     }
 
@@ -114,7 +119,7 @@ def view_cylinder(cylinder_id):
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data)
+    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data, statusData = GLB_project_status)
 
 
 
@@ -241,9 +246,51 @@ def submit_cylinder():
 
 
 
-@bp.route("/update")
+@bp.route("/update", methods=['POST'])
 def update_cylinder():
-    id = 0
+    dateCreated = request.form['dateCreated']
+    title = request.form['cylTitle']
+    status = request.form['cylStatus']
+    createdBy = request.form['createdBy']
+    projectName = request.form['cylProject']
+    ticketNum = request.form['cylTicket']
+    supplier = request.form['cylSupplier']
+    loadNum = request.form['cylLoadNum']
+    truckNum = request.form['cylTruckNum']
+    contractor = request.form['cylContractor']
+    sampledFrom = request.form['cylSampled']
+    mixId = request.form['cylMix']
+    mouldType = request.form['cylMouldType']
+    poNum = request.form['cylPONum']
+    placementType = request.form['cylPlacement']
+    cementType = request.form['cylCement']
+    loadVolume = request.form['cylVolume']
+    dateCast = request.form['cylCastDate']
+    batchTime = request.form['cylBatchTime']
+    sampleTime = request.form['cylSampleTime']
+    castTime = request.form['cylCastTime']
+    # dateTransported = request.form['']
+    notes = request.form['cylNotes']
+
+    dbCon = db_connect()
+    cursor = dbCon.cursor()
+
+    SQL_PROJECT_UPDATE = (
+        f"UPDATE {TB_PROJECTS} SET "
+        f"title='{title}', "
+        f"contractor='{contractor}', "
+        f"status='{status}', "
+        f"description='{description}', "
+        f"location='{location}', "
+        f"date_started='{dateStarted}' "
+        f"WHERE auto_id = %s")
+
+    values = (id,)
+    cursor.execute(SQL_PROJECT_UPDATE, values)
+    dbCon.commit()
+
+    cursor.close()
+    dbCon.close()  # return connection to pool
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
