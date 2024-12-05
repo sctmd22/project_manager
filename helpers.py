@@ -16,3 +16,8 @@ def get_SQL_timestamp():
 
 def get_simple_date():
     return datetime.today().strftime(SIMPLE_DATE_FORMAT)
+
+
+def num_str_targets():
+    numStrTargets = 5
+    return numStrTargets
