@@ -28,8 +28,9 @@
 }
 
 .cylStrData {
-	width: 80px;
+	width: 75px;
 	display: inline;
+	text-align: center
 }
 
 .cylStrTable {
@@ -48,6 +49,10 @@
 	vertical-align: middle;
 }
 
+
+.dataValues {
+	padding: 7px
+}
 
 .table-container-measurements {
   overflow-x: auto; /* Enables horizontal scrolling */
