@@ -1,7 +1,7 @@
 from _datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, Blueprint
 
-from helpers import GLB_project_status, num_str_targets
+from helpers import GLB_project_status, num_str_targets, create_str_table, convertToInt
 
 from db import db_connect
 
@@ -43,9 +43,10 @@ def new_cylinder():
     newCylinder = True
 
     str_list = []
-    str_list.append({"target_strength": 0, "target_days": 0})
-    numStrTargets = 1
+    for i in range(num_str_targets()):
+        str_list.append({"auto_id": -1, "target_strength": "", "target_days": ""})
 
+    #numTargets = 1
 
     data = {
         "id":-1,
@@ -74,7 +75,6 @@ def new_cylinder():
 
         "createdBy": "admin",
 
-        "numStrTargets": numStrTargets,
         "str_table": str_list
 
 
@@ -115,7 +115,15 @@ def view_cylinder(cylinder_id):
 
     str_result = cursor.fetchall()
 
-    numStrTargets = len(str_result)
+    print(str_result)
+
+    if(not editing):
+        #Iterate through the strength table backwards and remove any that meet the criteria
+        for i in range(len(str_result)-1, 0, -1):
+            if(str_result[i]['target_strength'] == 0 and str_result[i]['target_days'] == 0):
+                str_result.pop(i)
+                print(str_result)
+
 
     cursor.close()
     dbCon.close() #return connection to pool
@@ -147,7 +155,7 @@ def view_cylinder(cylinder_id):
 
         "createdBy":"admin",
 
-        "numStrTargets":numStrTargets,
+
         "str_table":str_result
 
     }
@@ -158,7 +166,6 @@ def view_cylinder(cylinder_id):
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
     return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data, statusData = GLB_project_status)
-
 
 
 @bp.route("/submit", methods=['POST'])
@@ -193,10 +200,8 @@ def submit_cylinder():
 
     str_table_strength = request.form.getlist('str_table_strength')
     str_table_days = request.form.getlist('str_table_days')
+    #str_table_ids = request.form.getlist('str_table_id')
 
-
-    print(str_table_strength)
-    print(str_table_days)
 
     if(dateTransported == ""):
         dateTransported = None
@@ -243,34 +248,37 @@ def submit_cylinder():
         notes
     )
 
-    SQL_CYLINDERS_INSERT = (
-        f"INSERT INTO {TB_REPORT_DATA} ("
-        f"  date_created, "
-        f"  created_by, "
-        f"  report_title, "
-        f"  status, "
-        f"  project_name, "
-        f"  ticket_num,"
-        f"  supplier, "
-        f"  load_num, "
-        f"  truck_num, "
-        f"  contractor, "
-        f"  sampled_from, "
-        f"  mix_id, "
-        f"  mould_type, "
-        f"  po_num, "
-        f"  placement_type, "
-        f"  cement_type, "
-        f"  load_volume, "
-        f"  date_cast, "
-        f"  time_batch, "
-        f"  time_sample, "
-        f"  time_cast, "
-        f"  date_transported, "
-        f"  notes"
-        f"  ) VALUES "
-        f"(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-         # 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
+    SQL_CYLINDERS_INSERT = (f"""
+        INSERT INTO {TB_REPORT_DATA} 
+        (
+            date_created,
+            created_by,
+            report_title,
+            status,
+            project_name,
+            ticket_num,
+            supplier,
+            load_num,
+            truck_num,
+            contractor,
+            sampled_from,
+            mix_id,
+            mould_type,
+            po_num,
+            placement_type,
+            cement_type,
+            load_volume,
+            date_cast,
+            time_batch,
+            time_sample,
+            time_cast,
+            date_transported,
+            notes
+      )
+      
+      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """)
+               # 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
 
 
     dbCon = db_connect()
@@ -282,19 +290,21 @@ def submit_cylinder():
     # Get the auto-increment ID
     id = cursor.lastrowid
 
-    str_targets_len = len(str_table_strength)
-    str_cyl_id = [id] * str_targets_len #Create a list of id's which will be the length of (str_table_strength)
-
-    #Zip the data (typles and lists) to create a list of tuples to be added to the mysql database in one query
-    str_table_data = list(zip(str_cyl_id, str_table_strength, str_table_days))
+    str_table_data = create_str_table(str_table_strength, str_table_days, id)
 
 
-    SQL_CYLINDERS_STR_INSERT = (
-        f"INSERT INTO {TB_STR_REQ} ("
-        f"  cyl_report_id, "
-        f"  target_strength, "
-        f"  target_days "
-        f"  ) VALUES (%s, %s, %s)")
+
+    print(str_table_data)
+
+    SQL_CYLINDERS_STR_INSERT = (f"""
+        INSERT INTO {TB_STR_REQ} 
+        (
+            cyl_report_id,
+            target_strength,
+            target_days
+        ) 
+        VALUES (%s, %s, %s)
+        """)
 
 
     cursor.executemany(SQL_CYLINDERS_STR_INSERT, str_table_data)
@@ -313,7 +323,7 @@ def submit_cylinder():
 
 @bp.route("/update", methods=['POST'])
 def update_cylinder():
-    id = request.form['cylinder_id']
+    report_id = request.form['cylinder_id']
 
     dateCreated = request.form['dateCreated']
     title = request.form['cylTitle']
@@ -339,8 +349,15 @@ def update_cylinder():
     castTime = request.form['cylCastTime']
     notes = request.form['cylNotes']
 
-    str_table_str = request.form.getlist('str_table_str')
+    str_table_str = request.form.getlist('str_table_strength')
     str_table_days = request.form.getlist('str_table_days')
+    str_table_id = request.form.getlist('str_table_id')
+
+    str_table_str = convertToInt(str_table_str)
+    str_table_days = convertToInt(str_table_days)
+    str_table_id = convertToInt(str_table_id)
+
+    print(f"str_table_str: {str_table_id}")
 
     if(dateTransported == ""):
         dateTransported = None
@@ -360,32 +377,33 @@ def update_cylinder():
     if(loadVolume == ""):
         loadVolume = 0
 
-    SQL_CYL_REPORT_UPDATE = (
-        f"UPDATE {TB_REPORT_DATA} SET "
-        f"date_created = %s, "
-        f"report_title = %s, "
-        f"status = %s, "
-        f"created_by = %s, "
-        f"project_name = %s, "
-        f"ticket_num = %s, "
-        f"supplier = %s, "
-        f"load_num = %s, "
-        f"truck_num = %s, "
-        f"contractor = %s, "
-        f"sampled_from = %s, "
-        f"mix_id = %s, "
-        f"mould_type = %s, "
-        f"po_num = %s, "
-        f"placement_type = %s, "
-        f"cement_type = %s, "
-        f"load_volume = %s, "
-        f"date_cast = %s, "
-        f"time_batch = %s, "
-        f"time_sample = %s, "
-        f"time_cast = %s, "
-        f"notes = %s, "
-        f"date_transported = %s "
-        f"WHERE auto_id = %s")
+    SQL_CYL_REPORT_UPDATE = (f"""
+        UPDATE {TB_REPORT_DATA} SET
+            date_created = %s, 
+            report_title = %s,
+            status = %s,
+            created_by = %s,
+            project_name = %s,
+            ticket_num = %s,
+            supplier = %s,
+            load_num = %s,
+            truck_num = %s,
+            contractor = %s,
+            sampled_from = %s,
+            mix_id = %s,
+            mould_type = %s,
+            po_num = %s,
+            placement_type = %s,
+            cement_type = %s,
+            load_volume = %s,
+            date_cast = %s,
+            time_batch = %s,
+            time_sample = %s,
+            time_cast = %s,
+            notes = %s,
+            date_transported = %s
+        WHERE auto_id = %s
+        """)
 
 
     values = (
@@ -412,7 +430,7 @@ def update_cylinder():
         castTime,
         notes,
         dateTransported,
-        id
+        report_id
     )
 
 
@@ -423,12 +441,31 @@ def update_cylinder():
     dbCon.commit()
 
 
+
+    SQL_CYL_STR_UPDATE = (f"""
+        UPDATE {TB_STR_REQ} SET 
+            target_strength = %s, 
+            target_days = %s 
+        WHERE auto_id = %s
+        """)
+
+    #str_table_data = create_str_table(str_table_str, str_table_days, id)
+    str_table_data = list(zip(str_table_str, str_table_days, str_table_id))
+
+    print(str_table_data)
+
+    for row in str_table_data:
+        print(f"Row: {row}")
+        cursor.execute(SQL_CYL_STR_UPDATE, row)
+
+
+
     dbCon.close()  # return connection to pool
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=id))
+    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=report_id))
 
 
 @bp.route("/delete/<int:cylinder_id>")
