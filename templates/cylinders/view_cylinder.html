@@ -91,9 +91,9 @@
 							<label for="cylTicket" class="col-sm-2 col-form-label cylFormText">Ticket #:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylTicket" name="cylTicket"  value="{{ data.ticket_num }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylTicket" name="cylTicket"  value="{{ data.ticketNum }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.ticket_num|e }}
+								{{ data.ticketNum|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -107,9 +107,9 @@
 							<label for="cylSampled" class="col-sm-2 col-form-label cylFormText">Sampled From:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylSampled" name="cylSampled"  value="{{ data.sampled_from }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylSampled" name="cylSampled"  value="{{ data.sampledFrom }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.sampled_from|e }}
+								{{ data.sampledFrom|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -121,9 +121,9 @@
 							<label for="cylCement" class="col-sm-2 col-form-label cylFormText">Cement Type:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylCement" name="cylCement"  value="{{ data.cement_type }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylCement" name="cylCement"  value="{{ data.cementType }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.cement_type|e }}
+								{{ data.cementType|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -152,9 +152,9 @@
 							<label for="cylMix" class="col-sm-2 col-form-label cylFormText">Mix ID:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylMix" name="cylMix"  value="{{ data.mix_id }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylMix" name="cylMix"  value="{{ data.mixId }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.mix_id|e }}
+								{{ data.mixId|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -169,9 +169,9 @@
 							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume: (m<sup>3</sup>)</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylVolume" name="cylVolume"  value="{{ data.load_volume }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylVolume" name="cylVolume"  value="{{ data.loadVolume }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.load_volume }}
+								{{ data.loadVolume }}
 							{% endif %}
 							</div>
 						</div>
@@ -183,9 +183,9 @@
 							<label for="cylLoadNum" class="col-sm-2 col-form-label cylFormText">Load #:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylLoadNum" name="cylLoadNum"  value="{{ data.load_num }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylLoadNum" name="cylLoadNum"  value="{{ data.loadNum }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.load_num|e }}
+								{{ data.loadNum|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -199,9 +199,9 @@
 							<label for="cylTruckNum" class="col-sm-2 col-form-label cylFormText">Truck #:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylTruckNum" name="cylTruckNum"  value="{{ data.truck_num }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylTruckNum" name="cylTruckNum"  value="{{ data.truckNum }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.truck_num|e }}
+								{{ data.truckNum|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -213,9 +213,9 @@
 							<label for="cylMouldType" class="col-sm-2 col-form-label cylFormText">Mould Type:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylMouldType" name="cylMouldType"  value="{{ data.mould_type }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylMouldType" name="cylMouldType"  value="{{ data.mouldType }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.mould_type|e }}
+								{{ data.mouldType|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -229,9 +229,9 @@
 							<label for="cylPONum" class="col-sm-2 col-form-label cylFormText">PO #:</label>
 							<div class="col">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylPONum" name="cylPONum"  value="{{ data.po_num }}" aria-describedby="textDesc">
+								<input type="text" class="form-control cylFormData" id="cylPONum" name="cylPONum"  value="{{ data.poNum }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.po_num|e }}
+								{{ data.poNum|e }}
 							{% endif %}
 							</div>
 						</div>
@@ -349,16 +349,11 @@
 		<tbody id="table-body">	
 		<tr>
 			<td colspan="3"><b>Strength Target:</b></td>
-			<input type="hidden" id="cyl_str_total_rows" value="{{ data.numStrTargets }}">
+			<!--<input type="hidden" id="cyl_str_total_rows" value="{{ data.numStrTargets }}">-->
 		</tr>
 	
 		<tr class="cylStrRow">
-			<td>
-				{% if editData %}
-					<button type="button" class="btn btn-primary" onclick="addInput()">Add Strength</button>
-					<button type="button" class="btn btn-primary" onclick="removeCylStrInput()">Remove Last</button>
-				{% endif %}
-			</td>
+			<td></td>
 			<td>Strength (MPa)</td>
 			<td>Days</td>
 		</tr>
@@ -393,6 +388,8 @@
 				</td>
 
 			</tr>
+		
+			<input type="hidden" name="str_table_id" value="{{ row.auto_id }}">
 		
 		{% endfor %}
 
