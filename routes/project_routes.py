@@ -1,12 +1,13 @@
-from _datetime import datetime
+from datetime import datetime
 from dataclasses import dataclass
 
 from flask import Flask, render_template, request, redirect, url_for, Blueprint
 
 from db import db_connect
-from helpers import get_SQL_timestamp, GLB_project_status, get_simple_date
 
+import helpers as HP
 
+import GLOBALS as GB
 
 #Define blueprint for projects.py
 bp = Blueprint('projects_bp', __name__, url_prefix='/projects')
@@ -56,7 +57,7 @@ def new_project():
 
     #return render_template("projects/view_project.html", data=data, breadcrumb=bcData)
 
-    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GLB_project_status, newProject = newProject)
+    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GB.PROJECT_STATUS, newProject = newProject)
 
 
 
@@ -176,7 +177,7 @@ def view_project(project_id):
     bcData = {}
     bcData['breadCrumbTitle'] = "View Project"
 
-    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GLB_project_status)
+    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GB.PROJECT_STATUS)
 
 
 

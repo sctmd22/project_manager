@@ -1,10 +1,11 @@
+from datetime import datetime
 
+from GLOBALS import HTML_TIME_FORMAT
 from flask import Flask, render_template, request, redirect, url_for
 
 #Custom file routes
 from routes import project_routes, cylinder_routes
-
-from helpers import GLB_project_status
+import GLOBALS as GB
 
 app = Flask(__name__)
 
@@ -56,7 +57,6 @@ def strip_time_filter(date):
     if(date == None):
         return ""
 
-
     try:
         timeless = date.strftime('%Y-%m-%d')
 
@@ -79,12 +79,33 @@ def short_description(description):
 def project_status(status):
     '''Convert status into to text'''
     try:
-        statusText = GLB_project_status[status]
+        statusText = GB.PROJECT_STATUS[status]
 
     except:
         return status
 
     return statusText
+
+@app.template_filter('strip_seconds')
+def strip_seconds(inputTime):
+
+    strTime = str(inputTime)
+
+    lenTime = len(strTime)
+
+    if(lenTime == 8):
+        return strTime[:5]
+
+    return ""
+
+
+
+@app.template_filter('mould_format')
+def mould_format(mould):
+    if(not mould):
+        return ""
+
+    return GB.MOULD_TYPES[mould]
 
 
 
@@ -97,18 +118,6 @@ def home():
     return render_template("index.html", breadcrumb=bcData)
 
 
-
-@app.route("/test")
-def home_2():
-
-    return render_template("/test/jsformtest.html")
-
-
-@app.route('/submit', methods=['POST'])
-def submit():
-    dynamic_inputs = request.form.getlist('dynamicInput')  # List of dynamic input values
-    print(dynamic_inputs)
-    return "Form submitted!"
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000, host='192.168.0.194')

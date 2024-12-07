@@ -1,9 +1,9 @@
 from _datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, Blueprint
 
-from helpers import GLB_project_status, num_str_targets, create_str_table, convertToInt
-
-from db import db_connect
+import GLOBALS as GB
+import helpers as HLP
+import db as DB
 
 TB_REPORT_DATA = "cyl_report_data"
 TB_STR_REQ = "cyl_str_req"
@@ -20,7 +20,7 @@ def cylinders():
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    dbCon = db_connect();
+    dbCon = DB.db_connect();
     cursor = dbCon.cursor(dictionary=True)
 
     SQL_PROJECT_GET_ALL = (f"SELECT * FROM {TB_REPORT_DATA} ORDER BY date_created DESC")
@@ -43,7 +43,7 @@ def new_cylinder():
     newCylinder = True
 
     str_list = []
-    for i in range(num_str_targets()):
+    for i in range(HLP.num_str_targets()):
         str_list.append({"auto_id": -1, "target_strength": "", "target_days": ""})
 
     #numTargets = 1
@@ -52,7 +52,7 @@ def new_cylinder():
         "id":-1,
         "dateCreated": datetime.today(),
         "title": "Report Title",
-        "status": 0,
+        "status": "active",
         "projectName": "",
         "ticketNum": "",
         "supplier": "",
@@ -61,11 +61,12 @@ def new_cylinder():
         "contractor": "",
         "sampledFrom": "",
         "mixId": "",
-        "mouldType": "",
+        "mouldType": "100x200_plastic",
         "poNum": "",
         "placementType": "",
         "cementType": "",
         "loadVolume": "",
+        "loadVolumeUnits": "meters",
         "dateCast": "",
         "batchTime": "",
         "sampleTime": "",
@@ -75,7 +76,10 @@ def new_cylinder():
 
         "createdBy": "admin",
 
-        "str_table": str_list
+        "str_table": str_list,
+
+        "statusData":GB.PROJECT_STATUS,
+        "mouldData":GB.MOULD_TYPES
 
 
     }
@@ -83,7 +87,7 @@ def new_cylinder():
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, statusData = GLB_project_status, newCylinder = newCylinder)
+    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder = newCylinder)
 
 
 @bp.route("/<int:cylinder_id>")
@@ -97,7 +101,7 @@ def view_cylinder(cylinder_id):
         if(get_edit.lower() == 'true'):
             editing = True
 
-    dbCon = db_connect()
+    dbCon = DB.db_connect()
     cursor = dbCon.cursor(dictionary=True)
 
     SQL_CYLINDER_GET = (f"SELECT * FROM {TB_REPORT_DATA} WHERE auto_id = %s")
@@ -108,14 +112,12 @@ def view_cylinder(cylinder_id):
 
     result = cursor.fetchone()
 
-
+    #Get strength table data
     SQL_CYLINDER_STR_GET = (f"SELECT * FROM {TB_STR_REQ} WHERE cyl_report_id = %s")
     values = (cylinder_id,)
     cursor.execute(SQL_CYLINDER_STR_GET, values)
 
     str_result = cursor.fetchall()
-
-    print(str_result)
 
     if(not editing):
         #Iterate through the strength table backwards and remove any that meet the criteria
@@ -124,6 +126,21 @@ def view_cylinder(cylinder_id):
                 str_result.pop(i)
                 print(str_result)
 
+
+    #Prevent HTML errors from None types being in time inputs
+    batchTime = HLP.removeNone(result['time_batch'])
+    sampleTime = HLP.removeNone(result['time_sample'])
+    castTime = HLP.removeNone(result['time_cast'])
+
+    #Get measuerment/conditions table data
+
+
+    '''
+    print(f"batchTime type from batchTime: {type(batchTime)}")
+    print(f"loadvolume type from myssql: {type(sampleTime)}")
+    print(f"dateCast type from myssql: {type(result['date_cast'])}")
+    print(f"dateTransported type from myssql: {type(result['date_transported'])}")
+    '''
 
     cursor.close()
     dbCon.close() #return connection to pool
@@ -146,26 +163,28 @@ def view_cylinder(cylinder_id):
         "placementType":result['placement_type'],
         "cementType":result['cement_type'],
         "loadVolume":result['load_volume'],
+        "loadVolumeUnits":result['load_volume_units'],
         "dateCast":result['date_cast'],
-        "batchTime":result['time_batch'],
-        "sampleTime":result['time_sample'],
-        "castTime":result['time_cast'],
+        "batchTime":batchTime,
+        "sampleTime":sampleTime,
+        "castTime":castTime,
         "dateTransported":result['date_transported'],
         "notes":result['notes'],
 
         "createdBy":"admin",
 
+        "str_table":str_result,
+        "statusData":GB.PROJECT_STATUS,
+        "mouldData":GB.MOULD_TYPES,
 
-        "str_table":str_result
 
     }
-
 
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data, statusData = GLB_project_status)
+    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data)
 
 
 @bp.route("/submit", methods=['POST'])
@@ -189,6 +208,7 @@ def submit_cylinder():
     placementType = request.form['cylPlacement']
     cementType = request.form['cylCement']
     loadVolume = request.form['cylVolume']
+    loadVolumeUnits = request.form['cylVolumeUnits']
     dateCast = request.form['cylCastDate']
     batchTime = request.form['cylBatchTime']
     sampleTime = request.form['cylSampleTime']
@@ -196,31 +216,20 @@ def submit_cylinder():
     dateTransported = request.form['cylDateTransported']
     notes = request.form['cylNotes']
 
-    print(request.form)
-
     str_table_strength = request.form.getlist('str_table_strength')
     str_table_days = request.form.getlist('str_table_days')
-    #str_table_ids = request.form.getlist('str_table_id')
+
+    #Convert string dates to datetime objects
+    dateTransported = HLP.formToDate(dateTransported)
+    dateCast = HLP.formToDate(dateCast)
+
+    #Convert string times to datetime objects (MYSQL could handle strings but this is stricter)
+    batchTime = HLP.formToTime(batchTime)
+    sampleTime = HLP.formToTime(sampleTime)
+    castTime = HLP.formToTime(castTime)
 
 
-    if(dateTransported == ""):
-        dateTransported = None
-
-    if(dateCast == ""):
-        dateCast = None
-
-    if(batchTime == ""):
-        batchTime = None
-
-    if(sampleTime == ""):
-        sampleTime = None
-
-    if(castTime == ""):
-        castTime = None
-
-    if(loadVolume == ""):
-        loadVolume = 0
-
+    loadVolume = HLP.strToFloat(loadVolume)
 
     data = (
         dateCreated,
@@ -240,6 +249,7 @@ def submit_cylinder():
         placementType,
         cementType,
         loadVolume,
+        loadVolumeUnits,
         dateCast,
         batchTime,
         sampleTime,
@@ -268,6 +278,7 @@ def submit_cylinder():
             placement_type,
             cement_type,
             load_volume,
+            load_volume_units,
             date_cast,
             time_batch,
             time_sample,
@@ -281,7 +292,7 @@ def submit_cylinder():
                # 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
 
 
-    dbCon = db_connect()
+    dbCon = DB.db_connect()
     cursor = dbCon.cursor()
 
     cursor.execute(SQL_CYLINDERS_INSERT, data)
@@ -290,9 +301,7 @@ def submit_cylinder():
     # Get the auto-increment ID
     id = cursor.lastrowid
 
-    str_table_data = create_str_table(str_table_strength, str_table_days, id)
-
-
+    str_table_data = HLP.create_str_table(str_table_strength, str_table_days, id)
 
     print(str_table_data)
 
@@ -353,29 +362,14 @@ def update_cylinder():
     str_table_days = request.form.getlist('str_table_days')
     str_table_id = request.form.getlist('str_table_id')
 
-    str_table_str = convertToInt(str_table_str)
-    str_table_days = convertToInt(str_table_days)
-    str_table_id = convertToInt(str_table_id)
+    dateTransported = HLP.formToDate(dateTransported)
+    dateCast = HLP.formToDate(dateCast)
 
-    print(f"str_table_str: {str_table_id}")
+    batchTime = HLP.formToTime(batchTime)
+    sampleTime = HLP.formToTime(sampleTime)
+    castTime = HLP.formToTime(castTime)
 
-    if(dateTransported == ""):
-        dateTransported = None
-
-    if(dateCast == ""):
-        dateCast = None
-
-    if(batchTime == ""):
-        batchTime = None
-
-    if(sampleTime == ""):
-        sampleTime = None
-
-    if(castTime == ""):
-        castTime = None
-
-    if(loadVolume == ""):
-        loadVolume = 0
+    loadVolume = HLP.strToFloat(loadVolume)
 
     SQL_CYL_REPORT_UPDATE = (f"""
         UPDATE {TB_REPORT_DATA} SET
@@ -434,7 +428,7 @@ def update_cylinder():
     )
 
 
-    dbCon = db_connect()
+    dbCon = DB.db_connect()
     cursor = dbCon.cursor()
 
     cursor.execute(SQL_CYL_REPORT_UPDATE, values)
@@ -457,7 +451,7 @@ def update_cylinder():
     for row in str_table_data:
         print(f"Row: {row}")
         cursor.execute(SQL_CYL_STR_UPDATE, row)
-
+        dbCon.commit()
 
 
     dbCon.close()  # return connection to pool
@@ -486,7 +480,7 @@ def delete_cylinder():
 
         cylinder_id = request.form['cylinder_id']
 
-        dbCon = db_connect()
+        dbCon = DB.db_connect()
         cursor = dbCon.cursor(dictionary=True)
 
         SQL_PROJECT_GET = (f"DELETE FROM {TB_REPORT_DATA} WHERE auto_id = %s")
