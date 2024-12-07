@@ -1,12 +1,20 @@
-.cylrow {
-	margin-bottom:  6px;
-	margin-top:  6px
+/* */
+.testRow {
+	display: flex;
+	align-items: center;
+}
 
+.cylFormRow {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	
 }
 
 .cylFormText {
-	width: 160px
-	
+	width: 160px;
+	display: flex;
+	align-items: center;
+
 }
 
 .cylFormTime {
@@ -17,6 +25,21 @@
 	width: 200px
 }
 
+.cylFormVolume {
+	width: 70px;
+
+}	
+
+.cylFormVolumeCol {
+	flex: 1 0 0%;
+}
+
+.cylFormVolumeRow {
+	width: 226px;
+	display: flex;
+	align-items: center;
+
+}
 
 .cylStrRow {
 	text-align: center;
@@ -33,10 +56,6 @@
 	text-align: center
 }
 
-.cylStrTable {
-
-}
-
 
 .cylMeasureLabel {
 	width: 130px
@@ -50,8 +69,12 @@
 }
 
 
-.dataValues {
-	padding: 7px
+.cylinder_width {
+	max-width: 1600px
+}
+
+.view_cylinder {
+	max-width: 800px
 }
 
 .table-container-measurements {
@@ -66,4 +89,3 @@ table {
   border-collapse: collapse; /* Optional: For consistent borders */
 
 }
-

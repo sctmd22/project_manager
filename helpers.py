@@ -1,17 +1,8 @@
-from _datetime import datetime
-
-GLB_project_status = {
-    0: "Active",
-    1: "Complete",
-    2: "Deleted",
-    3: "Canceled"
-}
-
-SQL_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-SIMPLE_DATE_FORMAT = '%Y-%m-%d'
+from datetime import datetime
+from GLOBALS import *
 
 def get_SQL_timestamp():
-    return datetime.today().strftime(SQL_TIME_FORMAT)
+    return datetime.today().strftime(SQL_DATETIME_FORMAT)
 
 
 def get_simple_date():
@@ -58,7 +49,8 @@ def create_str_table(str, days, id):
 
     return str_table_data
 
-def convertToInt(list):
+
+def listStrtoInt(list):
     newList = []
     for i in range(len(list)):
         try:
@@ -67,3 +59,89 @@ def convertToInt(list):
             return list
 
     return newList
+
+
+def strToInt(val):
+    try:
+        newVal = int(val)
+
+    except:
+        print(f"Error: Could not convert '{val}' to integer")
+        return None
+
+    return newVal
+
+def strToFloat(val):
+    if(val == ""):
+        return 0
+
+
+    try:
+        newVal = float(val)
+
+    except:
+        print(f"Error: Could not convert '{val}' to float")
+        return None
+
+    return newVal
+
+#Convert a date string of HTML_DATE_FORMAT to a python datetime
+def formToDate(strDate):
+    funcName = "strToDate"
+
+    if(strDate == ""):
+        print(f"Error: {funcName}: strTime is empty")
+        return None
+
+    try:
+        newDate = datetime.strptime(strDate, HTML_DATE_FORMAT) #Convert to datetime object
+
+    except:
+        print(f"Error: {funcName} Could not convert '{strDate}' to DATETIME using '{HTML_DATE_FORMAT}'")
+        return None
+
+    return newDate
+
+
+#Convert a time string of either HTML time input or MYSQL time to a python datetime
+    #MySQL will convert a python datetime to a TIME object automatically when inserting
+def formToTime(strTime):
+    funcName = "formToDate"
+
+    size = len(strTime)
+
+    if(not size):
+        print(f"Error: {funcName}: date is empty")
+        return None
+
+    #HH:MM
+    elif(size == len(HTML_TIME_FORMAT)):
+        try:
+            newTime = datetime.strptime(strTime, HTML_TIME_FORMAT)
+
+        except:
+            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{HTML_TIME_FORMAT}'")
+            return None
+
+        return newTime
+
+    #HH:MM:SS
+    elif(size == len(SQL_TIME_FORMAT)):
+        try:
+            newTime = datetime.strptime(strTime, SQL_TIME_FORMAT)
+
+        except:
+            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{SQL_TIME_FORMAT}'")
+            return None
+
+        return newTime
+
+    return None
+
+
+
+def removeNone(val):
+    if(not val):
+        return ""
+
+    return val

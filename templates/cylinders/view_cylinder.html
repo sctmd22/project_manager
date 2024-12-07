@@ -1,7 +1,8 @@
 {% extends "index.html" %}
-
+ 
 {% block content %}
 
+	
 {% if editData %}
 	{% if newCylinder %}
 		<form action="{{ url_for('cylinders_bp.submit_cylinder') }}" method="POST" id="cylReportForm">		
@@ -15,7 +16,7 @@
 		<input type="hidden" name="dateCreated" value="{{ data.dateCreated }}">
 {% endif %}
 
-<div class="card card-primary card-outline mb-4" style="max-width: 800px">
+<div class="card card-primary card-outline mb-4 view_cylinder">
 	<div class="card-header">
 		<div class="card-title">
 
@@ -41,11 +42,11 @@
 		<tr>
 			<td>
 	
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylProject" class="col-sm-2 col-form-label cylFormText">Project:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylProject" name="cylProject"  value="{{ data.projectName }}" aria-describedby="textDesc">
 							{% else %}
@@ -56,10 +57,10 @@
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 						
 							<label for="cylContractor" class="col-sm-2 col-form-label cylFormText">Contractor:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylContractor" name="cylContractor"  value="{{ data.contractor }}" aria-describedby="textDesc">
 							{% else %}
@@ -71,11 +72,11 @@
 						
 				</div>
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylPlacement" class="col-sm-2 col-form-label cylFormText">Type of Placement:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylPlacement" name="cylPlacement"  value="{{ data.placementType }}" aria-describedby="textDesc">
 							{% else %}
@@ -86,10 +87,10 @@
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 						
 							<label for="cylTicket" class="col-sm-2 col-form-label cylFormText">Ticket #:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylTicket" name="cylTicket"  value="{{ data.ticketNum }}" aria-describedby="textDesc">
 							{% else %}
@@ -101,11 +102,11 @@
 						
 				</div>
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylSampled" class="col-sm-2 col-form-label cylFormText">Sampled From:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylSampled" name="cylSampled"  value="{{ data.sampledFrom }}" aria-describedby="textDesc">
 							{% else %}
@@ -116,10 +117,10 @@
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 						
 							<label for="cylCement" class="col-sm-2 col-form-label cylFormText">Cement Type:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylCement" name="cylCement"  value="{{ data.cementType }}" aria-describedby="textDesc">
 							{% else %}
@@ -132,11 +133,11 @@
 				</div>
 				
 				
-					<div class="form-group row">
+					<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylSupplier" class="col-sm-2 col-form-label cylFormText">Supplier:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylSupplier" name="cylSupplier"  value="{{ data.supplier }}" aria-describedby="textDesc">
 							{% else %}
@@ -147,10 +148,10 @@
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 						
 							<label for="cylMix" class="col-sm-2 col-form-label cylFormText">Mix ID:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylMix" name="cylMix"  value="{{ data.mixId }}" aria-describedby="textDesc">
 							{% else %}
@@ -163,25 +164,45 @@
 				</div>
 				
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
-							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume: (m<sup>3</sup>)</label>
-							<div class="col">
+						<div class="row cylFormRow">
+							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume: </label>
+							<div class="col col-form-label">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylVolume" name="cylVolume"  value="{{ data.loadVolume }}" aria-describedby="textDesc">
+								<div class="row cylFormVolumeRow">
+									<div class="cylFormVolumeCol">
+										<input type="text" class="form-control cylFormVolume" id="cylVolume" name="cylVolume"  value="{{ data.loadVolume }}" aria-describedby="textDesc">
+									</div>
+									<div class="cylFormVolumeCol">
+										<input class="form-check-input" type="radio" name="cylVolumeUnits" id="gridRadios1" value="" checked=""> 
+										<label class="form-check-label" for="gridRadios1">
+											m<sup>3</sup>
+										</label>
+									</div>
+									<div class="cylFormVolumeCol">
+										<input class="form-check-input" type="radio" name="cylVolumeUnits" id="gridRadios2" value=""> 
+										<label class="form-check-label" for="gridRadios2">
+											yd<sup>3</sup>
+										</label> 
+									</div>
+								</div>
+								
 							{% else %}
 								{{ data.loadVolume }}
+								
+								{{ data.loadVolumeUnits }}
+
 							{% endif %}
 							</div>
 						</div>
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 						
 							<label for="cylLoadNum" class="col-sm-2 col-form-label cylFormText">Load #:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylLoadNum" name="cylLoadNum"  value="{{ data.loadNum }}" aria-describedby="textDesc">
 							{% else %}
@@ -193,11 +214,11 @@
 						
 				</div>
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylTruckNum" class="col-sm-2 col-form-label cylFormText">Truck #:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylTruckNum" name="cylTruckNum"  value="{{ data.truckNum }}" aria-describedby="textDesc">
 							{% else %}
@@ -208,26 +229,34 @@
 					</div>
 						
 					<div class="col">
-						<div class="form-group row cylrow">
-						
-							<label for="cylMouldType" class="col-sm-2 col-form-label cylFormText">Mould Type:</label>
-							<div class="col">
-							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylMouldType" name="cylMouldType"  value="{{ data.mouldType }}" aria-describedby="textDesc">
-							{% else %}
-								{{ data.mouldType|e }}
-							{% endif %}
+						<div class="row cylFormRow">
+								<label for="cylMouldType" class="col-sm-2 col-form-label cylFormText">Mould Type:</label>
+								
+								<div class="col col-form-label">
+								{% if editData %}
+								<select class="form-select cylFormData" name="cylMouldType" id="cylMouldType">
+								{% for key,value in data.mouldData.items() %}	
+									<option value="{{ key }}" {% if key == data.mouldType %}selected{% endif %}>{{ value }}</option>
+								{% endfor %}
+								</select>
+								{% else %}
+									{{ data.mouldType | mould_format }}
+								{% endif %}
+								
 							</div>
+							
+							
+							
 						</div>
 					</div>
 						
 				</div>
 
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row cylFormRow">
 							<label for="cylPONum" class="col-sm-2 col-form-label cylFormText">PO #:</label>
-							<div class="col">
+							<div class="col col-form-label">
 							{% if editData %}
 								<input type="text" class="form-control cylFormData" id="cylPONum" name="cylPONum"  value="{{ data.poNum }}" aria-describedby="textDesc">
 							{% else %}
@@ -256,12 +285,12 @@
 			<td colspan="2">
 				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row">
 						
-							<label for="cylinderCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
+							<label for="cylCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input class="form-control cylFormData" type="date" name="cylCastDate" value="{{ data.dateCast | strip_time }}">
+								<input class="form-control cylFormData" type="date" name="cylCastDate" id="cylCastDate" value="{{ data.dateCast | strip_time }}">
 							{% else %}
 								{{ data.dateCast | strip_time }}
 							{% endif %}
@@ -269,9 +298,9 @@
 						</div>
 					</div>
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row">
 						
-							<label for="cylinderDateTransported" class="col-sm-2 col-form-label cylFormText">Date Transported:</label>
+							<label for="cylDateTransported" class="col-sm-2 col-form-label cylFormText">Date Transported:</label>
 							<div class="col col-form-label">
 							{% if editData %}
 								<input class="form-control cylFormData" type="date" name="cylDateTransported" value="{{ data.dateTransported | strip_time }}">
@@ -288,15 +317,15 @@
 		<tr>
 
 			<td colspan="2">
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
-							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Batch Time:</label>
+						<div class="row">
+							<label for="cylBatchTime" class="col-sm-2 col-form-label cylFormData">Batch Time:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input type="time" class="form-control cylFormTime" id="cylBatchTime" name="cylBatchTime"  value="{{ data.time_batch }}" aria-describedby="textDesc">
+								<input type="time" class="form-control cylFormTime" id="cylBatchTime" name="cylBatchTime"  value="{{ data.batchTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.batchTime | strip_date }}
+								{{ data.batchTime | strip_seconds }}
 							{% endif %}
 							</div>
 						</div>
@@ -304,15 +333,15 @@
 				
 				</div>
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
-							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Sample Time:</label>
+						<div class="row">
+							<label for="cylSampleTime" class="col-sm-2 col-form-label cylFormData">Sample Time:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input type="time" class="form-control cylFormTime" id="cylSampleTime" name="cylSampleTime"  value="{{ data.time_sample }}" aria-describedby="textDesc">
+								<input type="time" class="form-control cylFormTime" id="cylSampleTime" name="cylSampleTime"  value="{{ data.sampleTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.sampleTime | strip_date }}
+								{{ data.sampleTime | strip_seconds }}
 							{% endif %}
 							</div>
 						</div>
@@ -320,15 +349,15 @@
 				
 				</div>
 				
-				<div class="form-group row">
+				<div class="row">
 					<div class="col">
-						<div class="form-group row cylrow">
+						<div class="row">
 							<label for="cylinderStatus" class="col-sm-2 col-form-label cylFormData">Cast Time:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input type="time" class="form-control cylFormTime" id="cylCastTime" name="cylCastTime"  value="{{ data.time_cast }}" aria-describedby="textDesc">
+								<input type="time" class="form-control cylFormTime" id="cylCastTime" name="cylCastTime"  value="{{ data.castTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.castTime | strip_date }}
+								{{ data.castTime | strip_seconds }}
 							{% endif %}
 							</div>
 						</div>
@@ -495,7 +524,7 @@
 				<td>
 				{% if editData %}
 						<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
-						{% for key,value in statusData.items() %}	
+						{% for key,value in data.statusData.items() %}	
 							<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
 						{% endfor %}
 						</select>
