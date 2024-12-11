@@ -167,31 +167,31 @@
 				<div class="row">
 					<div class="col">
 						<div class="row cylFormRow">
-							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume: </label>
+							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume ({{ data.loadVolumeUnits | volume_units_format }}<sup>3</sup>):</label>
 							<div class="col col-form-label">
 							{% if editData %}
 								<div class="row cylFormVolumeRow">
 									<div class="cylFormVolumeCol">
 										<input type="text" class="form-control cylFormVolume" id="cylVolume" name="cylVolume"  value="{{ data.loadVolume }}" aria-describedby="textDesc">
 									</div>
+									
+									{% for key,value in data.loadVolumeData.items() %}
+									
+									
 									<div class="cylFormVolumeCol">
-										<input class="form-check-input" type="radio" name="cylVolumeUnits" id="gridRadios1" value="" checked=""> 
+										<input class="form-check-input" type="radio" name="cylVolumeUnits" id="gridRadios1" value="{{ key }}" {% if key == data.loadVolumeUnits %} checked {% endif %}> 
 										<label class="form-check-label" for="gridRadios1">
-											m<sup>3</sup>
+											{{ value }}<sup>3</sup>
 										</label>
 									</div>
-									<div class="cylFormVolumeCol">
-										<input class="form-check-input" type="radio" name="cylVolumeUnits" id="gridRadios2" value=""> 
-										<label class="form-check-label" for="gridRadios2">
-											yd<sup>3</sup>
-										</label> 
-									</div>
+		
+									{% endfor %}
 								</div>
 								
 							{% else %}
 								{{ data.loadVolume }}
 								
-								{{ data.loadVolumeUnits }}
+
 
 							{% endif %}
 							</div>
@@ -383,8 +383,8 @@
 	
 		<tr class="cylStrRow">
 			<td></td>
-			<td>Strength (MPa)</td>
-			<td>Days</td>
+			<td style="width: 280px">Strength (MPa)</td>
+			<td style="width: 280px">Days</td>
 		</tr>
 
 		{% for row in data.str_table %}
@@ -434,7 +434,7 @@
 				<td colspan="5"><b>Measurements:</b></td>
 			</tr>
 
-			<tr class="cylStrRow">
+			<tr class="cylMeasureRow">
 				<td></td>
 				<td>Actual</td>
 				<td>Min</td>
@@ -442,51 +442,31 @@
 				<td>Notes</td>
 			</tr>
 			
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Slump (mm)</label></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Air (%)</label></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Unit Density (kg/m<sup>3</sup>)</label></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Sample Temp (&deg;C)</label></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Ambient Temp (&deg;C)</label></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
-			<tr class="cylStrRow">
-				<td><label class="col-sm-2 col-form-label cylMeasureLabel">Initial Curing Conditions (&deg;C)</label></td>
-				<td><input type="number" step="0.1" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" step="0.1" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="number" step="0.1" class="form-control cylStrData" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-				<td><input type="text" class="form-control cylMeasureNotes" id="cylProject" name="cylProject"  value="{{ data.project }}" aria-describedby="textDesc"></td>
-			</tr>
+			
+			{% for row in data.conditionsTableData %}
+	
+			<tr class="cylMeasureRow">
 
+					<td><label class="col-form-label cylMeasureLabel">{{ row.name | safe }}</label></td>
 				
+				{% if editData %}
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Actual" name="{{ row.id }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Min" name="{{ row.id }}Min"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Max" name="{{ row.id }}Max"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotes" id="{{ row.notesID }}" name="{{ row.notesID }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
+				{% else %}
+					<td>{{ row.data.val_actual }}</td>
+					<td>{{ row.data.val_min }}</td>
+					<td>{{ row.data.val_max }}</td>
+					<td>{{ row.data.notes }}</td>
+					
+				{% endif %}
 				
+
+			</tr>
+			
+			{% endfor %}
+
 		</table>		
 	</div>
 		
