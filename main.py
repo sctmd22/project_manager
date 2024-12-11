@@ -102,11 +102,40 @@ def strip_seconds(inputTime):
 
 @app.template_filter('mould_format')
 def mould_format(mould):
+    funcName = "mould_format() (filter)"
     if(not mould):
         return ""
 
-    return GB.MOULD_TYPES[mould]
+    try:
+        fMould = GB.MOULD_TYPES[mould]
 
+    except:
+        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {GB.MOULD_TYPES}")
+        return mould
+
+
+    return fMould
+
+@app.template_filter('volume_units_format')
+def  volume_units_format(units):
+    funcName = "volume_units_format() (filter)"
+    if(not units):
+        return ""
+
+    try:
+        fUnits = GB.LOAD_VOLUME_UNITS[units]
+
+    except:
+        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {GB.LOAD_VOLUME_UNITS}")
+        return units
+
+    return fUnits
+
+@app.template_filter('volume_precision_format')
+def volume_precision_format(volume):
+    funcName = "volume_precision_format() (filter)"
+
+    return volume
 
 
 @app.route("/")

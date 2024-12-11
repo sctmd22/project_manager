@@ -1,4 +1,15 @@
 /* */
+
+
+.cylinder_width {
+	max-width: 1600px
+}
+
+.view_cylinder {
+	max-width: 800px
+}
+
+
 .testRow {
 	display: flex;
 	align-items: center;
@@ -9,6 +20,7 @@
 	margin-bottom: 5px;
 	
 }
+
 
 .cylFormText {
 	width: 160px;
@@ -56,36 +68,40 @@
 	text-align: center
 }
 
+/* Cylinder Form: Measurements START */
 
 .cylMeasureLabel {
-	width: 130px
+	width: 130px;
+	text-align: left
 	
 }
 
 .cylMeasureNotes {
 	width: 200px;
+	text-align: left
+
+}
+
+
+.cylMeasureRow {
+	text-align: center;
+	vertical-align: middle
+}
+
+.cylConditionsData {
+	width: 80px;
 	display: inline;
-	vertical-align: middle;
+	text-align: center
 }
 
-
-.cylinder_width {
-	max-width: 1600px
-}
-
-.view_cylinder {
-	max-width: 800px
-}
 
 .table-container-measurements {
   overflow-x: auto; /* Enables horizontal scrolling */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile devices */
   max-width: 100%; /* Ensures the container doesn't exceed the screen width */
+
+  vertical-align: middle
 }
 
 
-table {
-  width: 100%; /* Ensures the table uses full width of the container */
-  border-collapse: collapse; /* Optional: For consistent borders */
-
-}
+/* Cylinder Form: Measurements END*/

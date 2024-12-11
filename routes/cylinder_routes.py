@@ -79,7 +79,8 @@ def new_cylinder():
         "str_table": str_list,
 
         "statusData":GB.PROJECT_STATUS,
-        "mouldData":GB.MOULD_TYPES
+        "mouldData":GB.MOULD_TYPES,
+        "loadVolumeData":GB.LOAD_VOLUME_UNITS
 
 
     }
@@ -120,11 +121,35 @@ def view_cylinder(cylinder_id):
     str_result = cursor.fetchall()
 
     if(not editing):
-        #Iterate through the strength table backwards and remove any that meet the criteria
+        #Looping backwards, drop any entries that are 0 up up until the first entry with nonzero data
         for i in range(len(str_result)-1, 0, -1):
-            if(str_result[i]['target_strength'] == 0 and str_result[i]['target_days'] == 0):
+            if(str_result[i]['target_strength'] == 0 and  str_result[i]['target_days'] == 0):
                 str_result.pop(i)
-                print(str_result)
+            else:
+                break
+
+
+    SQL_CYLINDER_CONDITIONS_GET = (f"SELECT * FROM {TB_CONDITIONS} WHERE cyl_report_id = %s")
+    values = (cylinder_id,)
+    cursor.execute(SQL_CYLINDER_CONDITIONS_GET, values)
+
+
+
+    conditions_result = cursor.fetchall()
+
+    print(conditions_result)
+
+
+    conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
+    #Build conditions table. Match database results to stored conditions table
+    for i, conditions in enumerate(conditions_table):
+
+
+        for j, conditions_row in enumerate(conditions_result):
+            if(conditions['property'] == conditions_row['property']):
+                conditions_table[i]['data'] = conditions_row
+                conditions_result.pop(j) #Shorten the list each match to improve speed
+                break
 
 
     #Prevent HTML errors from None types being in time inputs
@@ -176,6 +201,8 @@ def view_cylinder(cylinder_id):
         "str_table":str_result,
         "statusData":GB.PROJECT_STATUS,
         "mouldData":GB.MOULD_TYPES,
+        "loadVolumeData":GB.LOAD_VOLUME_UNITS,
+        "conditionsTableData":conditions_table
 
 
     }
@@ -216,6 +243,8 @@ def submit_cylinder():
     dateTransported = request.form['cylDateTransported']
     notes = request.form['cylNotes']
 
+
+
     str_table_strength = request.form.getlist('str_table_strength')
     str_table_days = request.form.getlist('str_table_days')
 
@@ -229,7 +258,7 @@ def submit_cylinder():
     castTime = HLP.formToTime(castTime)
 
 
-    loadVolume = HLP.strToFloat(loadVolume)
+    #loadVolume = HLP.strToFloat(loadVolume)
 
     data = (
         dateCreated,
@@ -287,9 +316,9 @@ def submit_cylinder():
             notes
       )
       
-      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """)
-               # 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
+             #1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24
 
 
     dbCon = DB.db_connect()
@@ -303,7 +332,7 @@ def submit_cylinder():
 
     str_table_data = HLP.create_str_table(str_table_strength, str_table_days, id)
 
-    print(str_table_data)
+    #print(str_table_data)
 
     SQL_CYLINDERS_STR_INSERT = (f"""
         INSERT INTO {TB_STR_REQ} 
@@ -351,6 +380,7 @@ def update_cylinder():
     placementType = request.form['cylPlacement']
     cementType = request.form['cylCement']
     loadVolume = request.form['cylVolume']
+    loadVolumeUnits = request.form['cylVolumeUnits']
     dateCast = request.form['cylCastDate']
     dateTransported = request.form['cylDateTransported']
     batchTime = request.form['cylBatchTime']
@@ -369,7 +399,7 @@ def update_cylinder():
     sampleTime = HLP.formToTime(sampleTime)
     castTime = HLP.formToTime(castTime)
 
-    loadVolume = HLP.strToFloat(loadVolume)
+    #loadVolume = HLP.strToFloat(loadVolume)
 
     SQL_CYL_REPORT_UPDATE = (f"""
         UPDATE {TB_REPORT_DATA} SET
@@ -390,6 +420,7 @@ def update_cylinder():
             placement_type = %s,
             cement_type = %s,
             load_volume = %s,
+            load_volume_units = %s,
             date_cast = %s,
             time_batch = %s,
             time_sample = %s,
@@ -418,6 +449,7 @@ def update_cylinder():
         placementType,
         cementType,
         loadVolume,
+        loadVolumeUnits,
         dateCast,
         batchTime,
         sampleTime,
@@ -446,10 +478,10 @@ def update_cylinder():
     #str_table_data = create_str_table(str_table_str, str_table_days, id)
     str_table_data = list(zip(str_table_str, str_table_days, str_table_id))
 
-    print(str_table_data)
+    #print(str_table_data)
 
     for row in str_table_data:
-        print(f"Row: {row}")
+        #print(f"Row: {row}")
         cursor.execute(SQL_CYL_STR_UPDATE, row)
         dbCon.commit()
 
