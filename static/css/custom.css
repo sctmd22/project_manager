@@ -71,17 +71,20 @@
 /* Cylinder Form: Measurements START */
 
 .cylMeasureLabel {
-	width: 130px;
-	text-align: left
+	width: 160px;
+	text-align: center
 	
 }
 
 .cylMeasureNotes {
-	width: 200px;
 	text-align: left
 
 }
 
+.cylMeasureNotesText {
+	min-width: 200px
+
+}
 
 .cylMeasureRow {
 	text-align: center;

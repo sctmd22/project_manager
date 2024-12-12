@@ -2,7 +2,7 @@
  
 {% block content %}
 
-	
+
 {% if editData %}
 	{% if newCylinder %}
 		<form action="{{ url_for('cylinders_bp.submit_cylinder') }}" method="POST" id="cylReportForm">		
@@ -435,7 +435,7 @@
 			</tr>
 
 			<tr class="cylMeasureRow">
-				<td></td>
+				<td  class="cylMeasureLabel"></td>
 				<td>Actual</td>
 				<td>Min</td>
 				<td>Max</td>
@@ -447,18 +447,18 @@
 	
 			<tr class="cylMeasureRow">
 
-					<td><label class="col-form-label cylMeasureLabel">{{ row.name | safe }}</label></td>
+					<td>{{ row.name | safe }}</td>
 				
 				{% if editData %}
 					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Actual" name="{{ row.id }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Min" name="{{ row.id }}Min"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Max" name="{{ row.id }}Max"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotes" id="{{ row.notesID }}" name="{{ row.notesID }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}{{ row.suffix.min }}" name="{{ row.id }}{{ row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}{{ row.suffix.max }}" name="{{ row.id }}{{ row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.id }}{{ row.suffix.notes }}" name="{{ row.id }}{{ row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
 				{% else %}
 					<td>{{ row.data.val_actual }}</td>
 					<td>{{ row.data.val_min }}</td>
 					<td>{{ row.data.val_max }}</td>
-					<td>{{ row.data.notes }}</td>
+					<td class="cylMeasureNotes">{{ row.data.notes }}</td>
 					
 				{% endif %}
 				

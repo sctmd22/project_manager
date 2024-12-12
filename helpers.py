@@ -44,7 +44,7 @@ def create_str_table(str, days, id):
 
     idList = [id] * num_str_targets() #Create a list of id's
 
-    #Zip the data (typles and lists) to create a list of tuples to be added to the mysql database in one query
+    #Zip the data (tuples and lists) to create a list of tuples to be added to the mysql database in one query
     str_table_data = list(zip(idList, strList, daysList))
 
     return str_table_data
@@ -145,3 +145,4 @@ def removeNone(val):
         return ""
 
     return val
+
