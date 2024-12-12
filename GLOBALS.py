@@ -51,16 +51,22 @@ CYL_DATA_LIMITS = {
 
 }
 
+CYL_CONDITIONS_SUFFIX ={
+    'actual':'Actual',
+    'min':'Min',
+    'max':'Max',
+    'notes':'Notes'
+}
 
 CYL_CONDITIONS_TABLE = [
-    {'name':'Flow (mm)', 'property': 'flow', 'id':'cylConFlow', 'notesID':'cylConFlowNotes', 'SCC':True, 'CYL': False},
-    {'name':'T<sub>50</sub>(s)', 'property': 't_50', 'id':'cylConT50', 'notesID':'cylConT50Notes', 'SCC':True, 'CYL': False},
-    {'name':'VSI', 'property': 'vsi', 'id':'cylConVSI', 'notesID':'cylConVSINotes', 'SCC':True, 'CYL': False},
-    {'name':'Slump (mm)', 'property': 'slump', 'id':'cylConSlump', 'notesID':'cylConSlumpNotes', 'SCC':False, 'CYL':True},
-    {'name':'Air (%)', 'property':'air', 'id':'cylConAir', 'notesID':'cylConAirNotes', 'SCC':True, 'CYL':True},
-    {'name':'Unit Density (kg/m<sup>3</sup>)', 'property':'density', 'id':'cylConDensity', 'notesID':'cylConDensityNotes', 'SCC':True, 'CYL': True},
-    {'name':'Sample Temp (&deg;C)', 'property':'sampleTemp', 'id':'cylConSampleTemp', 'notesID':'cylConSampleTempNotes', 'SCC':True, 'CYL': True},
-    {'name':'Ambient Temp (&deg;C)', 'property':'ambientTemp', 'id':'cylConAmbientTemp', 'notesID':'cylConAmbientTempNotes', 'SCC':True, 'CYL': True},
-    {'name':'Initial Curing Conditions (&deg;C)', 'property':'initialTemp', 'id':'cylConInitialTemp', 'notesID':'cylConInitialTempNotes', 'SCC':True, 'CYL': True},
+    {'name':'Flow (mm)', 'property': 'flow', 'id':'cylConFlow', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'T<sub>50</sub>(s)', 'property': 't_50', 'id':'cylConT50', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'VSI', 'property': 'vsi', 'id':'cylConVSI', 'notesID':'cylConVSINotes', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Slump (mm)', 'property': 'slump', 'id':'cylConSlump', 'SCC':False, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Air (%)', 'property':'air', 'id':'cylConAir', 'notesID':'cylConAirNotes', 'SCC':True, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Unit Density (kg/m<sup>3</sup>)', 'property':'density', 'id':'cylConDensity', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Sample Temp (&deg;C)', 'property':'sampleTemp', 'id':'cylConSampleTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Ambient Temp (&deg;C)', 'property':'ambientTemp', 'id':'cylConAmbientTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'name':'Initial Curing Conditions (&deg;C)', 'property':'initialTemp', 'id':'cylConInitialTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
 ]
 

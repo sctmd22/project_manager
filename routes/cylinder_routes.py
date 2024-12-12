@@ -46,7 +46,16 @@ def new_cylinder():
     for i in range(HLP.num_str_targets()):
         str_list.append({"auto_id": -1, "target_strength": "", "target_days": ""})
 
-    #numTargets = 1
+    conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
+
+    for index, row in enumerate(GB.CYL_CONDITIONS_TABLE):
+        conditions_table[index]['data'] = {
+            "val_actual":0,
+            "val_min":0,
+            "val_max":0,
+            "notes":""
+        }
+
 
     data = {
         "id":-1,
@@ -80,7 +89,8 @@ def new_cylinder():
 
         "statusData":GB.PROJECT_STATUS,
         "mouldData":GB.MOULD_TYPES,
-        "loadVolumeData":GB.LOAD_VOLUME_UNITS
+        "loadVolumeData":GB.LOAD_VOLUME_UNITS,
+        "conditionsTableData": conditions_table
 
 
     }
@@ -129,22 +139,16 @@ def view_cylinder(cylinder_id):
                 break
 
 
-    SQL_CYLINDER_CONDITIONS_GET = (f"SELECT * FROM {TB_CONDITIONS} WHERE cyl_report_id = %s")
+    SQL_CYLINDER_CONDITIONS_GET = (f"SELECT * FROM {TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC")
     values = (cylinder_id,)
     cursor.execute(SQL_CYLINDER_CONDITIONS_GET, values)
 
-
-
     conditions_result = cursor.fetchall()
-
-    print(conditions_result)
 
 
     conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
     #Build conditions table. Match database results to stored conditions table
     for i, conditions in enumerate(conditions_table):
-
-
         for j, conditions_row in enumerate(conditions_result):
             if(conditions['property'] == conditions_row['property']):
                 conditions_table[i]['data'] = conditions_row
@@ -156,16 +160,6 @@ def view_cylinder(cylinder_id):
     batchTime = HLP.removeNone(result['time_batch'])
     sampleTime = HLP.removeNone(result['time_sample'])
     castTime = HLP.removeNone(result['time_cast'])
-
-    #Get measuerment/conditions table data
-
-
-    '''
-    print(f"batchTime type from batchTime: {type(batchTime)}")
-    print(f"loadvolume type from myssql: {type(sampleTime)}")
-    print(f"dateCast type from myssql: {type(result['date_cast'])}")
-    print(f"dateTransported type from myssql: {type(result['date_transported'])}")
-    '''
 
     cursor.close()
     dbCon.close() #return connection to pool
@@ -217,7 +211,6 @@ def view_cylinder(cylinder_id):
 @bp.route("/submit", methods=['POST'])
 def submit_cylinder():
 
-    # dateCreated = datetime.strptime(rawDateCreated, "%Y-%m-%d %H:%M:%S.%f")
     dateCreated = request.form['dateCreated']
     title = request.form['cylTitle']
     status = request.form['cylStatus']
@@ -242,6 +235,19 @@ def submit_cylinder():
     castTime = request.form['cylCastTime']
     dateTransported = request.form['cylDateTransported']
     notes = request.form['cylNotes']
+
+
+    measurementData = []
+
+    for row in GB.CYL_CONDITIONS_TABLE:
+        measureDict = {}
+        measureDict['val_actual'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['actual']]
+        measureDict['val_min'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['min']]
+        measureDict['val_max'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['max']]
+        measureDict['notes'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['notes']]
+        measureDict['property'] = row['property']
+
+        measurementData.append(measureDict)
 
 
 
@@ -332,6 +338,8 @@ def submit_cylinder():
 
     str_table_data = HLP.create_str_table(str_table_strength, str_table_days, id)
 
+    print(str_table_data)
+
     #print(str_table_data)
 
     SQL_CYLINDERS_STR_INSERT = (f"""
@@ -347,6 +355,28 @@ def submit_cylinder():
 
     cursor.executemany(SQL_CYLINDERS_STR_INSERT, str_table_data)
     dbCon.commit()
+
+    SQL_CYLINDERS_MEASURE_INSERT = (f"""
+           INSERT INTO {TB_CONDITIONS} 
+           (
+               cyl_report_id,
+               property,
+               val_actual,
+               val_min,
+               val_max,
+               notes,
+               val_actual_precision,
+               val_min_precision,
+               val_max_precision
+           ) 
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+           """)
+
+
+
+    for row in measurementData:
+        cursor.execute(SQL_CYLINDERS_MEASURE_INSERT, (id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], 1, 1, 1))
+        dbCon.commit()
 
 
     cursor.close()
