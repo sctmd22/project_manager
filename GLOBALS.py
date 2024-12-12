@@ -7,8 +7,6 @@ SQL_TIME_FORMAT = "%H:%M:%S"
 HTML_TIME_FORMAT = "%H:%M"
 HTML_DATE_FORMAT = "%Y-%m-%d"
 
-
-
 MOULD_TYPES = {
     "100x200_plastic":"100x200 Plastic",
     "150x300_plastic":"150x300 Plastic",
@@ -22,6 +20,14 @@ LOAD_VOLUME_UNITS = {
 #Number of decimals to display when viewing a report
     #As of 2024-12-10 it is stored in myssql as 3 digits
 LOAD_VOLUME_PRECISION = 1
+
+CYL_NUM_STR_TARGETS = 5
+
+
+SCC_RADIO = {
+    'no':'No',
+    'yes':'Yes'
+}
 
 PROJECT_STATUS = {
     'active': "Active",
@@ -51,22 +57,53 @@ CYL_DATA_LIMITS = {
 
 }
 
+CYL_FORM_FIELD_LIST = [
+    'cylinderID',
+    'dateCreated',
+    'createdBy',
+    'cylTitle',
+    'cylStatus',
+    'cylProject',
+    'cylTicket',
+    'cylSupplier',
+    'cylLoadNum',
+    'cylTruckNum',
+    'cylContractor',
+    'cylSampled',
+    'cylMix',
+    'cylMouldType',
+    'cylPONum',
+    'cylPlacement',
+    'cylCement',
+    'cylVolume',
+    'cylVolumeUnits',
+    'cylCastDate',
+    'cylCastTime',
+    'cylBatchTime',
+    'cylSampleTime',
+    'cylDateTransported',
+    'cylNotes',
+    'cylSCC'
+]
+
+
 CYL_CONDITIONS_SUFFIX ={
     'actual':'Actual',
     'min':'Min',
     'max':'Max',
-    'notes':'Notes'
+    'notes':'Notes',
+    'id':'ID'
 }
 
 CYL_CONDITIONS_TABLE = [
-    {'name':'Flow (mm)', 'property': 'flow', 'id':'cylConFlow', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'T<sub>50</sub>(s)', 'property': 't_50', 'id':'cylConT50', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'VSI', 'property': 'vsi', 'id':'cylConVSI', 'notesID':'cylConVSINotes', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Slump (mm)', 'property': 'slump', 'id':'cylConSlump', 'SCC':False, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Air (%)', 'property':'air', 'id':'cylConAir', 'notesID':'cylConAirNotes', 'SCC':True, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Unit Density (kg/m<sup>3</sup>)', 'property':'density', 'id':'cylConDensity', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Sample Temp (&deg;C)', 'property':'sampleTemp', 'id':'cylConSampleTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Ambient Temp (&deg;C)', 'property':'ambientTemp', 'id':'cylConAmbientTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
-    {'name':'Initial Curing Conditions (&deg;C)', 'property':'initialTemp', 'id':'cylConInitialTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Flow (mm)', 'property': 'flow', 'name':'cylConFlow', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'T<sub>50</sub>(s)', 'property': 't_50', 'name':'cylConT50', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'VSI', 'property': 'vsi', 'name':'cylConVSI', 'SCC':True, 'CYL': False, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Slump (mm)', 'property': 'slump', 'name':'cylConSlump', 'SCC':False, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Air (%)', 'property':'air', 'name':'cylConAir', 'SCC':True, 'CYL':True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Unit Density (kg/m<sup>3</sup>)', 'property':'density', 'name':'cylConDensity', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Sample Temp (&deg;C)', 'property':'sampleTemp', 'name':'cylConSampleTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Ambient Temp (&deg;C)', 'property':'ambientTemp', 'name':'cylConAmbientTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
+    {'title':'Initial Curing Conditions (&deg;C)', 'property':'initialTemp', 'name':'cylConInitialTemp', 'SCC':True, 'CYL': True, 'suffix':CYL_CONDITIONS_SUFFIX},
 ]
 

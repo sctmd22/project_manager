@@ -1,4 +1,6 @@
-from _datetime import datetime
+from datetime import datetime
+from email.policy import default
+
 from flask import Flask, render_template, request, redirect, url_for, Blueprint
 
 import GLOBALS as GB
@@ -43,7 +45,7 @@ def new_cylinder():
     newCylinder = True
 
     str_list = []
-    for i in range(HLP.num_str_targets()):
+    for i in range(GB.CYL_NUM_STR_TARGETS):
         str_list.append({"auto_id": -1, "target_strength": "", "target_days": ""})
 
     conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
@@ -82,6 +84,7 @@ def new_cylinder():
         "castTime": "",
         "dateTransported": "",
         "notes": "",
+        "isSCC": "no",
 
         "createdBy": "admin",
 
@@ -90,27 +93,28 @@ def new_cylinder():
         "statusData":GB.PROJECT_STATUS,
         "mouldData":GB.MOULD_TYPES,
         "loadVolumeData":GB.LOAD_VOLUME_UNITS,
-        "conditionsTableData": conditions_table
-
+        "conditionsTableData": conditions_table,
+        "sccData":GB.SCC_RADIO
 
     }
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder = newCylinder)
+    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder=newCylinder)
 
 
 @bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
-
-    get_edit = request.args.get('edit', default=False)
+    FUNC_NAME = "view_cylinder()"
 
     editing = False
 
-    if(not(get_edit == False)):
-        if(get_edit.lower() == 'true'):
-            editing = True
+    get_edit = request.args.get('edit', default='false')
+
+    if(get_edit.lower() == 'true'):
+        editing = True
+
 
     dbCon = DB.db_connect()
     cursor = dbCon.cursor(dictionary=True)
@@ -144,7 +148,6 @@ def view_cylinder(cylinder_id):
     cursor.execute(SQL_CYLINDER_CONDITIONS_GET, values)
 
     conditions_result = cursor.fetchall()
-
 
     conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
     #Build conditions table. Match database results to stored conditions table
@@ -189,6 +192,7 @@ def view_cylinder(cylinder_id):
         "castTime":castTime,
         "dateTransported":result['date_transported'],
         "notes":result['notes'],
+        "isSCC":result['is_scc'],
 
         "createdBy":"admin",
 
@@ -196,7 +200,8 @@ def view_cylinder(cylinder_id):
         "statusData":GB.PROJECT_STATUS,
         "mouldData":GB.MOULD_TYPES,
         "loadVolumeData":GB.LOAD_VOLUME_UNITS,
-        "conditionsTableData":conditions_table
+        "conditionsTableData":conditions_table,
+        "sccData":GB.SCC_RADIO
 
 
     }
@@ -211,87 +216,38 @@ def view_cylinder(cylinder_id):
 @bp.route("/submit", methods=['POST'])
 def submit_cylinder():
 
-    dateCreated = request.form['dateCreated']
-    title = request.form['cylTitle']
-    status = request.form['cylStatus']
-    createdBy = request.form['createdBy']
-    projectName = request.form['cylProject']
-    ticketNum = request.form['cylTicket']
-    supplier = request.form['cylSupplier']
-    loadNum = request.form['cylLoadNum']
-    truckNum = request.form['cylTruckNum']
-    contractor = request.form['cylContractor']
-    sampledFrom = request.form['cylSampled']
-    mixId = request.form['cylMix']
-    mouldType = request.form['cylMouldType']
-    poNum = request.form['cylPONum']
-    placementType = request.form['cylPlacement']
-    cementType = request.form['cylCement']
-    loadVolume = request.form['cylVolume']
-    loadVolumeUnits = request.form['cylVolumeUnits']
-    dateCast = request.form['cylCastDate']
-    batchTime = request.form['cylBatchTime']
-    sampleTime = request.form['cylSampleTime']
-    castTime = request.form['cylCastTime']
-    dateTransported = request.form['cylDateTransported']
-    notes = request.form['cylNotes']
+    fieldData = HLP.get_cyl_field_data()
+    strengthData = HLP.get_cyl_str_data()
+    measurementData = HLP.get_cyl_conditions_data()
 
+    fieldDataList = [
+        fieldData['dateCreated'],
+        fieldData['createdBy'],
+        fieldData['cylTitle'],
+        fieldData['cylStatus'],
+        fieldData['cylProject'],
+        fieldData['cylTicket'],
+        fieldData['cylSupplier'],
+        fieldData['cylLoadNum'],
+        fieldData['cylTruckNum'],
+        fieldData['cylContractor'],
+        fieldData['cylSampled'],
+        fieldData['cylMix'],
+        fieldData['cylMouldType'],
+        fieldData['cylPONum'],
+        fieldData['cylPlacement'],
+        fieldData['cylCement'],
+        fieldData['cylVolume'],
+        fieldData['cylVolumeUnits'],
+        fieldData['cylCastDate'],
+        fieldData['cylBatchTime'],
+        fieldData['cylSampleTime'],
+        fieldData['cylCastTime'],
+        fieldData['cylDateTransported'],
+        fieldData['cylNotes'],
+        fieldData['cylSCC']
+    ]
 
-    measurementData = []
-
-    for row in GB.CYL_CONDITIONS_TABLE:
-        measureDict = {}
-        measureDict['val_actual'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['actual']]
-        measureDict['val_min'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['min']]
-        measureDict['val_max'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['max']]
-        measureDict['notes'] = request.form[row['id'] + GB.CYL_CONDITIONS_SUFFIX['notes']]
-        measureDict['property'] = row['property']
-
-        measurementData.append(measureDict)
-
-
-
-    str_table_strength = request.form.getlist('str_table_strength')
-    str_table_days = request.form.getlist('str_table_days')
-
-    #Convert string dates to datetime objects
-    dateTransported = HLP.formToDate(dateTransported)
-    dateCast = HLP.formToDate(dateCast)
-
-    #Convert string times to datetime objects (MYSQL could handle strings but this is stricter)
-    batchTime = HLP.formToTime(batchTime)
-    sampleTime = HLP.formToTime(sampleTime)
-    castTime = HLP.formToTime(castTime)
-
-
-    #loadVolume = HLP.strToFloat(loadVolume)
-
-    data = (
-        dateCreated,
-        createdBy,
-        title,
-        status,
-        projectName,
-        ticketNum,
-        supplier,
-        loadNum,
-        truckNum,
-        contractor,
-        sampledFrom,
-        mixId,
-        mouldType,
-        poNum,
-        placementType,
-        cementType,
-        loadVolume,
-        loadVolumeUnits,
-        dateCast,
-        batchTime,
-        sampleTime,
-        castTime,
-        dateTransported,
-        notes
-    )
 
     SQL_CYLINDERS_INSERT = (f"""
         INSERT INTO {TB_REPORT_DATA} 
@@ -319,28 +275,24 @@ def submit_cylinder():
             time_sample,
             time_cast,
             date_transported,
-            notes
+            notes,
+            is_scc
       )
       
-      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """)
-             #1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24
+             #1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25
 
 
     dbCon = DB.db_connect()
     cursor = dbCon.cursor()
 
-    cursor.execute(SQL_CYLINDERS_INSERT, data)
+    cursor.execute(SQL_CYLINDERS_INSERT, fieldDataList)
     dbCon.commit()
 
     # Get the auto-increment ID
     id = cursor.lastrowid
 
-    str_table_data = HLP.create_str_table(str_table_strength, str_table_days, id)
-
-    print(str_table_data)
-
-    #print(str_table_data)
 
     SQL_CYLINDERS_STR_INSERT = (f"""
         INSERT INTO {TB_STR_REQ} 
@@ -353,8 +305,10 @@ def submit_cylinder():
         """)
 
 
-    cursor.executemany(SQL_CYLINDERS_STR_INSERT, str_table_data)
-    dbCon.commit()
+    for row in strengthData:
+        cursor.execute(SQL_CYLINDERS_STR_INSERT, (id, row['strength'], row['days']))
+        dbCon.commit()
+
 
     SQL_CYLINDERS_MEASURE_INSERT = (f"""
            INSERT INTO {TB_CONDITIONS} 
@@ -371,7 +325,6 @@ def submit_cylinder():
            ) 
            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
            """)
-
 
 
     for row in measurementData:
@@ -391,52 +344,16 @@ def submit_cylinder():
 
 @bp.route("/update", methods=['POST'])
 def update_cylinder():
-    report_id = request.form['cylinder_id']
-
-    dateCreated = request.form['dateCreated']
-    title = request.form['cylTitle']
-    status = request.form['cylStatus']
-    createdBy = request.form['createdBy']
-    projectName = request.form['cylProject']
-    ticketNum = request.form['cylTicket']
-    supplier = request.form['cylSupplier']
-    loadNum = request.form['cylLoadNum']
-    truckNum = request.form['cylTruckNum']
-    contractor = request.form['cylContractor']
-    sampledFrom = request.form['cylSampled']
-    mixId = request.form['cylMix']
-    mouldType = request.form['cylMouldType']
-    poNum = request.form['cylPONum']
-    placementType = request.form['cylPlacement']
-    cementType = request.form['cylCement']
-    loadVolume = request.form['cylVolume']
-    loadVolumeUnits = request.form['cylVolumeUnits']
-    dateCast = request.form['cylCastDate']
-    dateTransported = request.form['cylDateTransported']
-    batchTime = request.form['cylBatchTime']
-    sampleTime = request.form['cylSampleTime']
-    castTime = request.form['cylCastTime']
-    notes = request.form['cylNotes']
-
-    str_table_str = request.form.getlist('str_table_strength')
-    str_table_days = request.form.getlist('str_table_days')
-    str_table_id = request.form.getlist('str_table_id')
-
-    dateTransported = HLP.formToDate(dateTransported)
-    dateCast = HLP.formToDate(dateCast)
-
-    batchTime = HLP.formToTime(batchTime)
-    sampleTime = HLP.formToTime(sampleTime)
-    castTime = HLP.formToTime(castTime)
-
-    #loadVolume = HLP.strToFloat(loadVolume)
+    fieldData = HLP.get_cyl_field_data()
+    strengthData = HLP.get_cyl_str_data()
+    measurementData = HLP.get_cyl_conditions_data()
 
     SQL_CYL_REPORT_UPDATE = (f"""
         UPDATE {TB_REPORT_DATA} SET
             date_created = %s, 
+            created_by = %s,
             report_title = %s,
             status = %s,
-            created_by = %s,
             project_name = %s,
             ticket_num = %s,
             supplier = %s,
@@ -455,48 +372,51 @@ def update_cylinder():
             time_batch = %s,
             time_sample = %s,
             time_cast = %s,
+            date_transported = %s,
             notes = %s,
-            date_transported = %s
+            is_scc = %s
+
         WHERE auto_id = %s
         """)
 
 
-    values = (
-        dateCreated,
-        title,
-        status,
-        createdBy,
-        projectName,
-        ticketNum,
-        supplier,
-        loadNum,
-        truckNum,
-        contractor,
-        sampledFrom,
-        mixId,
-        mouldType,
-        poNum,
-        placementType,
-        cementType,
-        loadVolume,
-        loadVolumeUnits,
-        dateCast,
-        batchTime,
-        sampleTime,
-        castTime,
-        notes,
-        dateTransported,
-        report_id
-    )
+    fieldDataList = [
+        fieldData['dateCreated'],
+        fieldData['createdBy'],
+        fieldData['cylTitle'],
+        fieldData['cylStatus'],
+        fieldData['cylProject'],
+        fieldData['cylTicket'],
+        fieldData['cylSupplier'],
+        fieldData['cylLoadNum'],
+        fieldData['cylTruckNum'],
+        fieldData['cylContractor'],
+        fieldData['cylSampled'],
+        fieldData['cylMix'],
+        fieldData['cylMouldType'],
+        fieldData['cylPONum'],
+        fieldData['cylPlacement'],
+        fieldData['cylCement'],
+        fieldData['cylVolume'],
+        fieldData['cylVolumeUnits'],
+        fieldData['cylCastDate'],
+        fieldData['cylBatchTime'],
+        fieldData['cylSampleTime'],
+        fieldData['cylCastTime'],
+        fieldData['cylDateTransported'],
+        fieldData['cylNotes'],
+        fieldData['cylSCC'],
+
+
+        fieldData['cylinderID']
+    ]
 
 
     dbCon = DB.db_connect()
     cursor = dbCon.cursor()
 
-    cursor.execute(SQL_CYL_REPORT_UPDATE, values)
+    cursor.execute(SQL_CYL_REPORT_UPDATE, fieldDataList)
     dbCon.commit()
-
-
 
     SQL_CYL_STR_UPDATE = (f"""
         UPDATE {TB_STR_REQ} SET 
@@ -505,15 +425,29 @@ def update_cylinder():
         WHERE auto_id = %s
         """)
 
-    #str_table_data = create_str_table(str_table_str, str_table_days, id)
-    str_table_data = list(zip(str_table_str, str_table_days, str_table_id))
-
-    #print(str_table_data)
-
-    for row in str_table_data:
-        #print(f"Row: {row}")
-        cursor.execute(SQL_CYL_STR_UPDATE, row)
+    for row in strengthData:
+        cursor.execute(SQL_CYL_STR_UPDATE, (row['strength'], row['days'], row['id']))
         dbCon.commit()
+
+
+    SQL_CYL_CON_UPDATE = (f"""
+        UPDATE {TB_CONDITIONS} SET 
+            property = %s, 
+            val_actual = %s,
+            val_min = %s,
+            val_max = %s,
+            notes = %s,
+            val_actual_precision = %s,
+            val_min_precision = %s,
+            val_max_precision = %s
+        WHERE auto_id = %s
+        """)
+
+
+    for row in measurementData:
+        cursor.execute(SQL_CYL_CON_UPDATE, (row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], 1, 1, 1, row['auto_id']))
+        dbCon.commit()
+
 
 
     dbCon.close()  # return connection to pool
@@ -521,7 +455,7 @@ def update_cylinder():
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=report_id))
+    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=fieldData['cylinderID']))
 
 
 @bp.route("/delete/<int:cylinder_id>")

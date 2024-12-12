@@ -36,13 +36,13 @@
 				
 			
 				<tr>
-					<td>{{ row.date_started | strip_time }}</td>
+					<td>{{ row.date_started | strip_time_f }}</td>
 					<td><a href="{{ url_for('projects_bp.view_project', project_id=row.auto_id ) }}" class="text-secondary">{{ row.title|e }}</a></td>
 
 					<td>{{ row.contractor|e }}</td>
 					<td>{{ row.location|e }}</td>
-					<td>{{ row.description | short_description | e }}</td>
-					<td>{{ row.status | project_status | e }}</td>
+					<td>{{ row.description | e | short_description_f  }}</td>
+					<td>{{ row.status | project_status_f | e }}</td>
 					<td>{{ row.created_by|e }}</td>
 				</tr>
 				

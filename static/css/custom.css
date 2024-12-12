@@ -50,6 +50,13 @@
 	width: 226px;
 	display: flex;
 	align-items: center;
+}
+
+
+.cylFormSCCRow {
+	width: 248px;
+	display: flex;
+	align-items: center;
 
 }
 
@@ -67,6 +74,8 @@
 	display: inline;
 	text-align: center
 }
+
+
 
 /* Cylinder Form: Measurements START */
 
@@ -96,6 +105,7 @@
 	display: inline;
 	text-align: center
 }
+
 
 
 .table-container-measurements {

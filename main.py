@@ -1,11 +1,12 @@
 from datetime import datetime
-
-from GLOBALS import HTML_TIME_FORMAT
 from flask import Flask, render_template, request, redirect, url_for
 
 #Custom file routes
 from routes import project_routes, cylinder_routes
 import GLOBALS as GB
+
+#Custom flask filters
+from filters import filters
 
 app = Flask(__name__)
 
@@ -13,129 +14,10 @@ app = Flask(__name__)
 app.register_blueprint(project_routes.bp)
 app.register_blueprint(cylinder_routes.bp)
 
-@app.template_filter('strip_date')
-def strip_date_filter(date):
-    if(date == None):
-        return ""
+#Register custom filters
+for name,func in filters.items():
+    app.jinja_env.filters[name] = func
 
-    try:
-        newDate = date.strftime('%I:%M')
-
-    except:
-        return date
-
-    return newDate
-
-@app.template_filter('date_created_format')
-def date_created_format(date):
-    """Custom Jinja filter to format start_dates in project reports"""
-
-    try:
-        newDate = date.strftime('%B %d, %Y - %I:%M:%S %p')
-
-    except:
-        return date
-
-    return newDate
-
-
-@app.template_filter('start_date_format')
-def strip_time_filter(date):
-    """Custom Jinja filter to format start_dates in project reports"""
-
-    try:
-        newDate = date.strftime('%B %d, %Y (%Y-%m-%d)')
-
-    except:
-        return date
-
-    return newDate
-
-@app.template_filter('strip_time')
-def strip_time_filter(date):
-    """Custom Jinja filter to strip time from a datetime."""
-    if(date == None):
-        return ""
-
-    try:
-        timeless = date.strftime('%Y-%m-%d')
-
-    except:
-        return date
-
-    return timeless
-
-@app.template_filter('short_description')
-def short_description(description):
-    charLimit = 50
-
-    if(description == ""):
-        return ""
-
-    return description[0:charLimit] + "..."
-
-
-@app.template_filter('project_status')
-def project_status(status):
-    '''Convert status into to text'''
-    try:
-        statusText = GB.PROJECT_STATUS[status]
-
-    except:
-        return status
-
-    return statusText
-
-@app.template_filter('strip_seconds')
-def strip_seconds(inputTime):
-
-    strTime = str(inputTime)
-
-    lenTime = len(strTime)
-
-    if(lenTime == 8):
-        return strTime[:5]
-
-    return ""
-
-
-
-@app.template_filter('mould_format')
-def mould_format(mould):
-    funcName = "mould_format() (filter)"
-    if(not mould):
-        return ""
-
-    try:
-        fMould = GB.MOULD_TYPES[mould]
-
-    except:
-        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {GB.MOULD_TYPES}")
-        return mould
-
-
-    return fMould
-
-@app.template_filter('volume_units_format')
-def  volume_units_format(units):
-    funcName = "volume_units_format() (filter)"
-    if(not units):
-        return ""
-
-    try:
-        fUnits = GB.LOAD_VOLUME_UNITS[units]
-
-    except:
-        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {GB.LOAD_VOLUME_UNITS}")
-        return units
-
-    return fUnits
-
-@app.template_filter('volume_precision_format')
-def volume_precision_format(volume):
-    funcName = "volume_precision_format() (filter)"
-
-    return volume
 
 
 @app.route("/")
