@@ -1,5 +1,6 @@
 from datetime import datetime
 from GLOBALS import *
+from flask import request
 
 def get_SQL_timestamp():
     return datetime.today().strftime(SQL_DATETIME_FORMAT)
@@ -8,10 +9,6 @@ def get_SQL_timestamp():
 def get_simple_date():
     return datetime.today().strftime(SIMPLE_DATE_FORMAT)
 
-
-def num_str_targets():
-    numStrTargets = 5
-    return numStrTargets
 
 
 #Replace empty strings with 0
@@ -34,22 +31,6 @@ def zero_fill(list):
 
     return list
 
-def create_str_table(str, days, id):
-    #Pad data to get to desired length
-    #str_table_str_padded = str + ['0'] * (num_str_targets() - len(str_table_strength))
-    #str_table_days_padded = days + ['0'] * (num_str_targets() - len(str_table_days))
-
-    strList = zero_fill(str)
-    daysList = zero_fill(days)
-
-    idList = [id] * num_str_targets() #Create a list of id's
-
-    #Zip the data (tuples and lists) to create a list of tuples to be added to the mysql database in one query
-    str_table_data = list(zip(idList, strList, daysList))
-
-    return str_table_data
-
-
 def listStrtoInt(list):
     newList = []
     for i in range(len(list)):
@@ -62,25 +43,30 @@ def listStrtoInt(list):
 
 
 def strToInt(val):
+    FUNC_NAME = "strToInt()"
+
+    if(val == ''):
+        return 0
+
     try:
         newVal = int(val)
 
     except:
-        print(f"Error: Could not convert '{val}' to integer")
+        print(f"Error: {FUNC_NAME}: Could not convert '{val}' to integer")
         return None
 
     return newVal
 
 def strToFloat(val):
+    FUNC_NAME = "strToFloat()"
     if(val == ""):
         return 0
-
 
     try:
         newVal = float(val)
 
     except:
-        print(f"Error: Could not convert '{val}' to float")
+        print(f"Error: {FUNC_NAME}: Could not convert '{val}' to float")
         return None
 
     return newVal
@@ -145,4 +131,86 @@ def removeNone(val):
         return ""
 
     return val
+
+
+#Iterate through 'Mix and field data' form inputs and build a dictionary of id's and values
+    #Format and validate the data before returning
+def get_cyl_field_data():
+    FUNC_NAME = "get_cyl_field_data()"
+
+    data = {}
+
+
+    for id in CYL_FORM_FIELD_LIST:
+        data[id] = request.form[id]
+
+    # Convert string dates to datetime objects
+    data['cylDateTransported'] = formToDate(data['cylDateTransported'])
+    data['cylCastDate'] = formToDate(data['cylCastDate'])
+
+    # Convert string times to datetime objects (MYSQL could handle strings but this is stricter)
+    data['cylBatchTime'] = formToTime(data['cylBatchTime'])
+    data['cylSampleTime'] = formToTime(data['cylSampleTime'])
+    data['cylCastTime'] = formToTime(data['cylCastTime'])
+
+
+    return data
+
+
+#Iterate through conditions table form id's and create a list of dictionaries with the actial, min, max, notes and property values
+def get_cyl_conditions_data():
+
+    data = []
+
+    for row in CYL_CONDITIONS_TABLE:
+        measureDict = {}
+        measureDict['auto_id'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['id']]
+        measureDict['val_actual'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['actual']]
+        measureDict['val_min'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['min']]
+        measureDict['val_max'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['max']]
+        measureDict['notes'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['notes']]
+        measureDict['property'] = row['property']
+
+        data.append(measureDict)
+
+
+    return data
+
+
+
+def get_cyl_str_data():
+    str_table_strength = request.form.getlist('str_table_strength')
+    str_table_days = request.form.getlist('str_table_days')
+    str_table_id = request.form.getlist('str_table_id')
+
+    strengthList = []
+
+    #Build a dictionary that contains strength, days, and auto_id for each strength table entry
+    for i in range(len(str_table_strength)):
+        strDict = {}
+        strDict['strength'] = strToInt(str_table_strength[i])
+        strDict['days'] = strToInt(str_table_days[i])
+        strDict['id'] = strToInt(str_table_id[i])
+        strengthList.append(strDict)
+
+    return strengthList
+
+def strToIntID(val):
+    FUNC_NAME = "strToIntID()"
+
+    try:
+        newInt = int(val)
+
+
+    except:
+        print(f"Error: {FUNC_NAME}: Could not convert '{val}' to a valid MySQL ID")
+        return False
+
+    if(newInt < 0):
+        print(f"Error: {FUNC_NAME}: {newInt} is negative and therefore cannot be a valid MySQL ID")
+        return False
+
+    return newInt
+
+
 

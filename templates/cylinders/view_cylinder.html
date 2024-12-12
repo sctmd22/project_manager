@@ -9,7 +9,7 @@
 	{% else %}
 		<form action="{{ url_for('cylinders_bp.update_cylinder') }}" method="POST" id="cylReportForm">
 	{% endif %}
-		<input type="hidden" name="cylinder_id" value="{{ data.id }}">
+		<input type="hidden" name="cylinderID" value="{{ data.id }}">
 
 		<input type="hidden" name="newCylinder" value="{{ newCylinder }}">
 		<input type="hidden" name="createdBy" value="{{ data.createdBy }}">
@@ -41,6 +41,7 @@
 		</tr>
 		<tr>
 			<td>
+		
 	
 				<div class="row">
 					<div class="col">
@@ -167,7 +168,7 @@
 				<div class="row">
 					<div class="col">
 						<div class="row cylFormRow">
-							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume ({{ data.loadVolumeUnits | volume_units_format }}<sup>3</sup>):</label>
+							<label for="cylVolume" class="col-sm-2 col-form-label cylFormText">Load Volume ({{ data.loadVolumeUnits | volume_units_f }}<sup>3</sup>):</label>
 							<div class="col col-form-label">
 							{% if editData %}
 								<div class="row cylFormVolumeRow">
@@ -190,9 +191,6 @@
 								
 							{% else %}
 								{{ data.loadVolume }}
-								
-
-
 							{% endif %}
 							</div>
 						</div>
@@ -240,7 +238,7 @@
 								{% endfor %}
 								</select>
 								{% else %}
-									{{ data.mouldType | mould_format }}
+									{{ data.mouldType | mould_f }}
 								{% endif %}
 								
 							</div>
@@ -265,9 +263,38 @@
 							</div>
 						</div>
 					</div>
+					
+					<div class="col">
+						<div class="row cylFormRow">
+							<label for="cylPONum" class="col-sm-2 col-form-label cylFormText">SCC:</label>
+							{% if editData %}
+								<div class="row cylFormSCCRow">
+
+									{% for key,value in data.sccData.items() %}
+									
+									<div class="cylFormVolumeCol">
+										<input class="form-check-input" type="radio" name="cylSCC" id="gridRadios2" value="{{ key }}" {% if key == data.isSCC %} checked {% endif %}> 
+										<label class="form-check-label" for="gridRadios2">
+											{{ value }}
+										</label>
+									</div>
+		
+									{% endfor %}
+								</div>
+								
+							{% else %}
+								<div class="row cylFormSCCRow">
+									<div class="cylFormVolumeCol">
+									{{ data.isSCC | scc_f }}
+									</div>
+								</div>
+							{% endif %}
+						</div>
+					</div>
 				
 				</div>
-
+				
+				
 		</td>
 	</tr>
 
@@ -290,9 +317,9 @@
 							<label for="cylCastDate" class="col-sm-2 col-form-label cylFormText">Cast Date:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input class="form-control cylFormData" type="date" name="cylCastDate" id="cylCastDate" value="{{ data.dateCast | strip_time }}">
+								<input class="form-control cylFormData" type="date" name="cylCastDate" id="cylCastDate" value="{{ data.dateCast | strip_time_f }}">
 							{% else %}
-								{{ data.dateCast | strip_time }}
+								{{ data.dateCast | strip_time_f }}
 							{% endif %}
 							</div>
 						</div>
@@ -303,9 +330,9 @@
 							<label for="cylDateTransported" class="col-sm-2 col-form-label cylFormText">Date Transported:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input class="form-control cylFormData" type="date" name="cylDateTransported" value="{{ data.dateTransported | strip_time }}">
+								<input class="form-control cylFormData" type="date" name="cylDateTransported" value="{{ data.dateTransported | strip_time_f }}">
 							{% else %}
-								{{ data.dateTransported | strip_time }}
+								{{ data.dateTransported | strip_time_f }}
 							{% endif %}
 							</div>
 						</div>
@@ -325,7 +352,7 @@
 							{% if editData %}
 								<input type="time" class="form-control cylFormTime" id="cylBatchTime" name="cylBatchTime"  value="{{ data.batchTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.batchTime | strip_seconds }}
+								{{ data.batchTime | strip_seconds_f }}
 							{% endif %}
 							</div>
 						</div>
@@ -341,7 +368,7 @@
 							{% if editData %}
 								<input type="time" class="form-control cylFormTime" id="cylSampleTime" name="cylSampleTime"  value="{{ data.sampleTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.sampleTime | strip_seconds }}
+								{{ data.sampleTime | strip_seconds_f }}
 							{% endif %}
 							</div>
 						</div>
@@ -357,7 +384,7 @@
 							{% if editData %}
 								<input type="time" class="form-control cylFormTime" id="cylCastTime" name="cylCastTime"  value="{{ data.castTime }}" aria-describedby="textDesc">
 							{% else %}
-								{{ data.castTime | strip_seconds }}
+								{{ data.castTime | strip_seconds_f }}
 							{% endif %}
 							</div>
 						</div>
@@ -444,16 +471,17 @@
 			
 			
 			{% for row in data.conditionsTableData %}
-	
+			
 			<tr class="cylMeasureRow">
 
-					<td>{{ row.name | safe }}</td>
+					<td>{{ row.title | safe }}</td>
 				
 				{% if editData %}
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}Actual" name="{{ row.id }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}{{ row.suffix.min }}" name="{{ row.id }}{{ row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.id }}{{ row.suffix.max }}" name="{{ row.id }}{{ row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.id }}{{ row.suffix.notes }}" name="{{ row.id }}{{ row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}Actual" name="{{ row.name }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}{{ row.suffix.min }}" name="{{ row.name }}{{ row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}{{ row.suffix.max }}" name="{{ row.name }}{{ row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.name }}{{ row.suffix.notes }}" name="{{ row.name }}{{ row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
+					<input type="hidden" name="{{ row.name }}{{ row.suffix.id }}" value="{{ row.data.auto_id }}">
 				{% else %}
 					<td>{{ row.data.val_actual }}</td>
 					<td>{{ row.data.val_min }}</td>
@@ -509,7 +537,7 @@
 						{% endfor %}
 						</select>
 				{% else %}
-					{{ data.status | project_status }}
+					{{ data.status | project_status_f }}
 				{% endif %}
 				</td>
 			
@@ -520,7 +548,7 @@
 			</tr>
 			<tr class="align-middle">
 				<td>Date Created:</td>
-				<td> {{data.dateCreated | date_created_format }} </td>
+				<td> {{data.dateCreated | date_created_f }} </td>
 			</tr>
 
 

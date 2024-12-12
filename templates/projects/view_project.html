@@ -38,9 +38,9 @@
 				<td style="width: 150px" class="align-middle">Start Date:</td>
 				<td>
 				{% if editData %}
-					<input style="width: 200px" class="form-control" type="date" name="projectDateStarted" value="{{ data.date_started | strip_time }}">
+					<input style="width: 200px" class="form-control" type="date" name="projectDateStarted" value="{{ data.date_started | strip_time_f }}">
 				{% else %}
-					{{ data.date_started | start_date_format }}
+					{{ data.date_started | start_date_f }}
 				{% endif %}
 				</td>
 			</tr>
@@ -55,7 +55,7 @@
 						{% endfor %}
 					</select>
 				{% else %}
-					{{ data.status | project_status }}
+					{{ data.status | project_status_f }}
 				{% endif %}
 				</td>
 			</tr>
@@ -86,7 +86,7 @@
 				<td>
 				{% if editData %}
 					<div class="form-group">
-                        <textarea name="projectDescription" id="projectDescription" class="form-control" rows="3" placeholder="">{{ data.description|e }}</textarea>
+                        <textarea name="projectDescription" id="projectDescription" class="form-control" rows="3" placeholder="">{{ data.description | e }}</textarea>
                       </div>
 				{% else %}
 					{{ data.description|e }}
@@ -113,7 +113,7 @@
 			</tr>
 			<tr class="align-middle">
 				<td>Date Created:</td>
-				<td> {{data.date_created | date_created_format }} </td>
+				<td> {{data.date_created | date_created_f }} </td>
 			</tr>
 
 
