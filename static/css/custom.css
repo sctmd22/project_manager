@@ -103,9 +103,14 @@
 .cylConditionsData {
 	width: 80px;
 	display: inline;
-	text-align: center
+	text-align: center;
 }
 
+
+.cylConditionsHidden {
+	display: none;
+	
+}
 
 
 .table-container-measurements {

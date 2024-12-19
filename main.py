@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 #Custom file routes
 from routes import project_routes, cylinder_routes
@@ -19,6 +19,18 @@ for name,func in filters.items():
     app.jinja_env.filters[name] = func
 
 
+@app.route("/test")
+def test():
+
+    return render_template("test.html")
+
+
+@app.route("/test/submit", methods=['POST'])
+def test_submit():
+    print(request.form)
+
+    return redirect(url_for("test"))
+
 
 @app.route("/")
 def home():
@@ -27,6 +39,8 @@ def home():
     bcData['breadCrumbTitle'] = "Dashboard"
 
     return render_template("index.html", breadcrumb=bcData)
+
+
 
 
 

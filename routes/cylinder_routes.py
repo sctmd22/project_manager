@@ -16,7 +16,6 @@ TB_CONDITIONS = "cyl_conditions_table"
 bp = Blueprint('cylinders_bp', __name__, url_prefix='/cylinders')
 
 
-
 @bp.route("/")
 def cylinders():
     bcData = {}
@@ -52,9 +51,9 @@ def new_cylinder():
 
     for index, row in enumerate(GB.CYL_CONDITIONS_TABLE):
         conditions_table[index]['data'] = {
-            "val_actual":0,
-            "val_min":0,
-            "val_max":0,
+            "val_actual":"",
+            "val_min":"",
+            "val_max":"",
             "notes":""
         }
 
@@ -91,30 +90,25 @@ def new_cylinder():
         "str_table": str_list,
 
         "statusData":GB.PROJECT_STATUS,
-        "mouldData":GB.MOULD_TYPES,
-        "loadVolumeData":GB.LOAD_VOLUME_UNITS,
+        "mouldData":GB.CYL_MOULD_TYPES,
+        "loadVolumeData":GB.CYL_LOAD_VOLUME_UNITS,
         "conditionsTableData": conditions_table,
-        "sccData":GB.SCC_RADIO
+        "sccData":GB.CYL_SCC_RADIO
 
     }
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder=newCylinder)
+    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder=newCylinder, conTable = GB.CYL_CONDITIONS_TABLE)
 
 
 @bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
     FUNC_NAME = "view_cylinder()"
 
-    editing = False
-
-    get_edit = request.args.get('edit', default='false')
-
-    if(get_edit.lower() == 'true'):
-        editing = True
-
+    #Read and interpret the GET 'edit'
+    editing = HLP.cyl_get_editing('edit');
 
     dbCon = DB.db_connect()
     cursor = dbCon.cursor(dictionary=True)
@@ -128,11 +122,12 @@ def view_cylinder(cylinder_id):
     result = cursor.fetchone()
 
     #Get strength table data
-    SQL_CYLINDER_STR_GET = (f"SELECT * FROM {TB_STR_REQ} WHERE cyl_report_id = %s")
+    SQL_CYLINDER_STR_GET = (f"SELECT * FROM {TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC")
     values = (cylinder_id,)
     cursor.execute(SQL_CYLINDER_STR_GET, values)
 
     str_result = cursor.fetchall()
+
 
     if(not editing):
         #Looping backwards, drop any entries that are 0 up up until the first entry with nonzero data
@@ -157,6 +152,7 @@ def view_cylinder(cylinder_id):
                 conditions_table[i]['data'] = conditions_row
                 conditions_result.pop(j) #Shorten the list each match to improve speed
                 break
+
 
 
     #Prevent HTML errors from None types being in time inputs
@@ -198,10 +194,10 @@ def view_cylinder(cylinder_id):
 
         "str_table":str_result,
         "statusData":GB.PROJECT_STATUS,
-        "mouldData":GB.MOULD_TYPES,
-        "loadVolumeData":GB.LOAD_VOLUME_UNITS,
+        "mouldData":GB.CYL_MOULD_TYPES,
+        "loadVolumeData":GB.CYL_LOAD_VOLUME_UNITS,
         "conditionsTableData":conditions_table,
-        "sccData":GB.SCC_RADIO
+        "sccData":GB.CYL_SCC_RADIO
 
 
     }
@@ -210,7 +206,7 @@ def view_cylinder(cylinder_id):
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data)
+    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data, conTable = GB.CYL_CONDITIONS_TABLE)
 
 
 @bp.route("/submit", methods=['POST'])
@@ -218,7 +214,7 @@ def submit_cylinder():
 
     fieldData = HLP.get_cyl_field_data()
     strengthData = HLP.get_cyl_str_data()
-    measurementData = HLP.get_cyl_conditions_data()
+    measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
 
     fieldDataList = [
         fieldData['dateCreated'],
@@ -328,7 +324,7 @@ def submit_cylinder():
 
 
     for row in measurementData:
-        cursor.execute(SQL_CYLINDERS_MEASURE_INSERT, (id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], 1, 1, 1))
+        cursor.execute(SQL_CYLINDERS_MEASURE_INSERT, (id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], -1, -1, -1))
         dbCon.commit()
 
 
@@ -344,9 +340,13 @@ def submit_cylinder():
 
 @bp.route("/update", methods=['POST'])
 def update_cylinder():
+
     fieldData = HLP.get_cyl_field_data()
     strengthData = HLP.get_cyl_str_data()
-    measurementData = HLP.get_cyl_conditions_data()
+    measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
+
+    for row in measurementData:
+        print(row)
 
     SQL_CYL_REPORT_UPDATE = (f"""
         UPDATE {TB_REPORT_DATA} SET

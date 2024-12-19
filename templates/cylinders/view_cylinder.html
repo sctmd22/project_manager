@@ -4,6 +4,8 @@
 
 
 {% if editData %}
+
+
 	{% if newCylinder %}
 		<form action="{{ url_for('cylinders_bp.submit_cylinder') }}" method="POST" id="cylReportForm">		
 	{% else %}
@@ -273,8 +275,8 @@
 									{% for key,value in data.sccData.items() %}
 									
 									<div class="cylFormVolumeCol">
-										<input class="form-check-input" type="radio" name="cylSCC" id="gridRadios2" value="{{ key }}" {% if key == data.isSCC %} checked {% endif %}> 
-										<label class="form-check-label" for="gridRadios2">
+										<input class="form-check-input" type="radio" name="cylSCC" id="gridRadios{{ value }}" value="{{ key }}" {% if key == data.isSCC %} checked {% endif %}> 
+										<label class="form-check-label" for="gridRadios{{ value }}">
 											{{ value }}
 										</label>
 									</div>
@@ -471,28 +473,34 @@
 			
 			
 			{% for row in data.conditionsTableData %}
-			
-			<tr class="cylMeasureRow">
+
+
+			<tr class="cylMeasureRow" id="{{ row.name + row.suffix.id }}Row">
 
 					<td>{{ row.title | safe }}</td>
 				
 				{% if editData %}
+					
 					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}Actual" name="{{ row.name }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}{{ row.suffix.min }}" name="{{ row.name }}{{ row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}{{ row.suffix.max }}" name="{{ row.name }}{{ row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.name }}{{ row.suffix.notes }}" name="{{ row.name }}{{ row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
-					<input type="hidden" name="{{ row.name }}{{ row.suffix.id }}" value="{{ row.data.auto_id }}">
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name + row.suffix.min }}" name="{{ row.name + row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name + row.suffix.max }}" name="{{ row.name + row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.name + row.suffix.notes }}" name="{{ row.name + row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
+					<input type="hidden" name="{{ row.name + row.suffix.id }}" value="{{ row.data.auto_id }}">
+
 				{% else %}
-					<td>{{ row.data.val_actual }}</td>
-					<td>{{ row.data.val_min }}</td>
-					<td>{{ row.data.val_max }}</td>
+					
+	
+					<td>{{ row.data.val_actual | measurements_f }}</td>
+					<td>{{ row.data.val_min | measurements_f }}</td>
+					<td>{{ row.data.val_max | measurements_f }}</td>
 					<td class="cylMeasureNotes">{{ row.data.notes }}</td>
+		
 					
 				{% endif %}
 				
 
 			</tr>
-			
+
 			{% endfor %}
 
 		</table>		
@@ -583,5 +591,13 @@
 	</form>
 {% endif %}
 
+	<script>
+		//Jsonify the data passed through Flask for the cyl_from_scc.js script
+        const conditions_table_json = {{ conTable | tojson }};
+		const cyl_editing_json = {{ editData | tojson }};
+		const cyl_isSCC_json = {{ data.isSCC | tojson }};
+    </script>
+
+	 <script src="{{ url_for('static', filename='js/cyl_form_scc.js') }}"></script> 
 
 {% endblock %}
