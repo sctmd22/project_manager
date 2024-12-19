@@ -91,10 +91,10 @@ def mould_f(mould):
         return ""
 
     try:
-        fMould = GB.MOULD_TYPES[mould]
+        fMould = GB.CYL_MOULD_TYPES[mould]
 
     except:
-        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {GB.MOULD_TYPES}")
+        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {GB.CYL_MOULD_TYPES}")
         return mould
 
 
@@ -106,10 +106,10 @@ def  volume_units_f(units):
         return ""
 
     try:
-        fUnits = GB.LOAD_VOLUME_UNITS[units]
+        fUnits = GB.CYL_LOAD_VOLUME_UNITS[units]
 
     except:
-        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {GB.LOAD_VOLUME_UNITS}")
+        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {GB.CYL_LOAD_VOLUME_UNITS}")
         return units
 
     return fUnits
@@ -123,12 +123,18 @@ def volume_precision_f(volume):
 def scc_f(str):
 
     try:
-        fStr = GB.SCC_RADIO[str]
+        fStr = GB.CYL_SCC_RADIO[str]
 
     except:
         return str
 
     return fStr
+
+def measurements_f(val):
+
+
+
+    return val
 
 
 filters = {
@@ -142,7 +148,7 @@ filters = {
     'mould_f':mould_f,
     'volume_units_f':volume_units_f,
     'volume_precision_f':volume_precision_f,
-    'scc_f':scc_f
-
+    'scc_f':scc_f,
+    'measurements_f':measurements_f
 
 }

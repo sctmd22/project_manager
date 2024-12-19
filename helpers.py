@@ -158,17 +158,42 @@ def get_cyl_field_data():
 
 
 #Iterate through conditions table form id's and create a list of dictionaries with the actial, min, max, notes and property values
-def get_cyl_conditions_data():
+def get_cyl_conditions_data(scc_val):
+    sccCylKey = 'CYL'
+
+    if(scc_val == 'yes'):
+        sccCylKey = 'SCC'
 
     data = []
 
+    #Loop through the CYL_CONDITIONS_TABLE getting the result of each entry
+        #If scc_val is set, reset the rows where CYL = True to default values
     for row in CYL_CONDITIONS_TABLE:
         measureDict = {}
-        measureDict['auto_id'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['id']]
-        measureDict['val_actual'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['actual']]
-        measureDict['val_min'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['min']]
-        measureDict['val_max'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['max']]
-        measureDict['notes'] = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['notes']]
+
+        #autoID's are stored in a hidden input and can always be read.
+            #Technically ALL the inputs can be read as they are only hidden via JavaScript which keeps them in HTML
+        autoID = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['id']]
+
+        if(row[sccCylKey] == True):
+            valActual = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['actual']]
+            valMin = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['min']]
+            valMax = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['max']]
+            notes = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['notes']]
+
+        else:
+            #Defaults for any where the key value is not true
+            valActual = 0
+            valMin = 0
+            valMax = 0
+            notes = ''
+
+
+        measureDict['auto_id'] = autoID
+        measureDict['val_actual'] = valActual
+        measureDict['val_min'] = valMin
+        measureDict['val_max'] = valMax
+        measureDict['notes'] = notes
         measureDict['property'] = row['property']
 
         data.append(measureDict)
@@ -211,6 +236,24 @@ def strToIntID(val):
         return False
 
     return newInt
+
+
+
+def cyl_get_editing(getID):
+    FUNC_NAME = "cyl_get_editing(getID)"
+    #Default is a string 'false' not a bool. Keep it this way.
+    try:
+        get_edit = request.args.get(getID, default='false')
+
+    except:
+        print(f"Error: {FUNC_NAME}: Cannot GET '{getID}'")
+        return False
+
+    if(get_edit.lower() == 'true'):
+        return True
+
+    return False
+
 
 
 
