@@ -7,12 +7,14 @@ import GLOBALS as GB
 import helpers as HLP
 import db as DB
 
+from classes import CylinderReport
+
 TB_REPORT_DATA = "cyl_report_data"
 TB_STR_REQ = "cyl_str_req"
 TB_CYLINDERS = "cyl_items"
 TB_CONDITIONS = "cyl_conditions_table"
 
-#Define blueprint for projects.py
+#Define blueprint for cylinder_routes.py
 bp = Blueprint('cylinders_bp', __name__, url_prefix='/cylinders')
 
 
@@ -39,174 +41,33 @@ def cylinders():
 
 @bp.route("/new")
 def new_cylinder():
-
     editing = True
     newCylinder = True
 
-    str_list = []
-    for i in range(GB.CYL_NUM_STR_TARGETS):
-        str_list.append({"auto_id": -1, "target_strength": "", "target_days": ""})
+    #Create the CylinderReport object with defaults
+    cylReport = CylinderReport.create_default()
 
-    conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
-
-    for index, row in enumerate(GB.CYL_CONDITIONS_TABLE):
-        conditions_table[index]['data'] = {
-            "val_actual":"",
-            "val_min":"",
-            "val_max":"",
-            "notes":""
-        }
-
-
-    data = {
-        "id":-1,
-        "dateCreated": datetime.today(),
-        "title": "Report Title",
-        "status": "active",
-        "projectName": "",
-        "ticketNum": "",
-        "supplier": "",
-        "loadNum": "",
-        "truckNum": "",
-        "contractor": "",
-        "sampledFrom": "",
-        "mixId": "",
-        "mouldType": "100x200_plastic",
-        "poNum": "",
-        "placementType": "",
-        "cementType": "",
-        "loadVolume": "",
-        "loadVolumeUnits": "meters",
-        "dateCast": "",
-        "batchTime": "",
-        "sampleTime": "",
-        "castTime": "",
-        "dateTransported": "",
-        "notes": "",
-        "isSCC": "no",
-
-        "createdBy": "admin",
-
-        "str_table": str_list,
-
-        "statusData":GB.PROJECT_STATUS,
-        "mouldData":GB.CYL_MOULD_TYPES,
-        "loadVolumeData":GB.CYL_LOAD_VOLUME_UNITS,
-        "conditionsTableData": conditions_table,
-        "sccData":GB.CYL_SCC_RADIO
-
-    }
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinders"
 
-    return render_template("cylinders/view_cylinder.html", data=data, breadcrumb=bcData, editData=editing, newCylinder=newCylinder, conTable = GB.CYL_CONDITIONS_TABLE)
+    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadcrumb=bcData, editData=editing, newCylinder=newCylinder)
 
 
 @bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
     FUNC_NAME = "view_cylinder()"
 
-    #Read and interpret the GET 'edit'
-    editing = HLP.cyl_get_editing('edit');
+    #Check the GET request to see if 'edit' is set
+    editing = HLP.get_edit();
 
-    dbCon = DB.db_connect()
-    cursor = dbCon.cursor(dictionary=True)
-
-    SQL_CYLINDER_GET = (f"SELECT * FROM {TB_REPORT_DATA} WHERE auto_id = %s")
-
-    #Sending query as a tuple to reduce the risk of SQL injection
-    values = (cylinder_id,)
-    cursor.execute(SQL_CYLINDER_GET, values)
-
-    result = cursor.fetchone()
-
-    #Get strength table data
-    SQL_CYLINDER_STR_GET = (f"SELECT * FROM {TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC")
-    values = (cylinder_id,)
-    cursor.execute(SQL_CYLINDER_STR_GET, values)
-
-    str_result = cursor.fetchall()
-
-
-    if(not editing):
-        #Looping backwards, drop any entries that are 0 up up until the first entry with nonzero data
-        for i in range(len(str_result)-1, 0, -1):
-            if(str_result[i]['target_strength'] == 0 and  str_result[i]['target_days'] == 0):
-                str_result.pop(i)
-            else:
-                break
-
-
-    SQL_CYLINDER_CONDITIONS_GET = (f"SELECT * FROM {TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC")
-    values = (cylinder_id,)
-    cursor.execute(SQL_CYLINDER_CONDITIONS_GET, values)
-
-    conditions_result = cursor.fetchall()
-
-    conditions_table = GB.CYL_CONDITIONS_TABLE.copy()
-    #Build conditions table. Match database results to stored conditions table
-    for i, conditions in enumerate(conditions_table):
-        for j, conditions_row in enumerate(conditions_result):
-            if(conditions['property'] == conditions_row['property']):
-                conditions_table[i]['data'] = conditions_row
-                conditions_result.pop(j) #Shorten the list each match to improve speed
-                break
-
-
-
-    #Prevent HTML errors from None types being in time inputs
-    batchTime = HLP.removeNone(result['time_batch'])
-    sampleTime = HLP.removeNone(result['time_sample'])
-    castTime = HLP.removeNone(result['time_cast'])
-
-    cursor.close()
-    dbCon.close() #return connection to pool
-
-    data = {
-        "id": result['auto_id'],
-        "dateCreated": result['date_created'],
-        "title":result['report_title'],
-        "status": result['status'],
-        "projectName":result['project_name'],
-        "ticketNum":result['ticket_num'],
-        "supplier":result['supplier'],
-        "loadNum":result['load_num'],
-        "truckNum":result['truck_num'],
-        "contractor":result['contractor'],
-        "sampledFrom":result['sampled_from'],
-        "mixId":result['mix_id'],
-        "mouldType":result['mould_type'],
-        "poNum":result['po_num'],
-        "placementType":result['placement_type'],
-        "cementType":result['cement_type'],
-        "loadVolume":result['load_volume'],
-        "loadVolumeUnits":result['load_volume_units'],
-        "dateCast":result['date_cast'],
-        "batchTime":batchTime,
-        "sampleTime":sampleTime,
-        "castTime":castTime,
-        "dateTransported":result['date_transported'],
-        "notes":result['notes'],
-        "isSCC":result['is_scc'],
-
-        "createdBy":"admin",
-
-        "str_table":str_result,
-        "statusData":GB.PROJECT_STATUS,
-        "mouldData":GB.CYL_MOULD_TYPES,
-        "loadVolumeData":GB.CYL_LOAD_VOLUME_UNITS,
-        "conditionsTableData":conditions_table,
-        "sccData":GB.CYL_SCC_RADIO
-
-
-    }
-
+    #Create the CylinderReport object loading the data from the database
+    cylReport = CylinderReport.create_from_db(cylinder_id, editing)
 
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return render_template("cylinders/view_cylinder.html", breadcrumb=bcData, editData = editing, data=data, conTable = GB.CYL_CONDITIONS_TABLE)
+    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables = cylReport.tables_to_dict(), breadcrumb=bcData, editData = editing)
 
 
 @bp.route("/submit", methods=['POST'])

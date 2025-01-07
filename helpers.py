@@ -239,17 +239,18 @@ def strToIntID(val):
 
 
 
-def cyl_get_editing(getID):
+def get_edit():
     FUNC_NAME = "cyl_get_editing(getID)"
-    #Default is a string 'false' not a bool. Keep it this way.
+    arg = 'edit'
+
     try:
-        get_edit = request.args.get(getID, default='false')
+        result = request.args.get(arg, default='false') #Default is a string 'false' not a bool. Keep it this way.
 
     except:
-        print(f"Error: {FUNC_NAME}: Cannot GET '{getID}'")
+        print(f"Error: {FUNC_NAME}: Cannot GET aregument={arg}")
         return False
 
-    if(get_edit.lower() == 'true'):
+    if(result.lower() == 'true'):
         return True
 
     return False

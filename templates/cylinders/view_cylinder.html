@@ -51,7 +51,7 @@
 							<label for="cylProject" class="col-sm-2 col-form-label cylFormText">Project:</label>
 							<div class="col col-form-label">
 							{% if editData %}
-								<input type="text" class="form-control cylFormData" id="cylProject" name="cylProject"  value="{{ data.projectName }}" aria-describedby="textDesc">
+								<input type="text" maxlength="50" class="form-control cylFormData" id="cylProject" name="cylProject"  value="{{ data.projectName }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.projectName|e }}
 							{% endif %}
@@ -178,7 +178,7 @@
 										<input type="text" class="form-control cylFormVolume" id="cylVolume" name="cylVolume"  value="{{ data.loadVolume }}" aria-describedby="textDesc">
 									</div>
 									
-									{% for key,value in data.loadVolumeData.items() %}
+									{% for key,value in tables.loadVolumeData.items() %}
 									
 									
 									<div class="cylFormVolumeCol">
@@ -235,7 +235,7 @@
 								<div class="col col-form-label">
 								{% if editData %}
 								<select class="form-select cylFormData" name="cylMouldType" id="cylMouldType">
-								{% for key,value in data.mouldData.items() %}	
+								{% for key,value in tables.mouldData.items() %}	
 									<option value="{{ key }}" {% if key == data.mouldType %}selected{% endif %}>{{ value }}</option>
 								{% endfor %}
 								</select>
@@ -272,7 +272,7 @@
 							{% if editData %}
 								<div class="row cylFormSCCRow">
 
-									{% for key,value in data.sccData.items() %}
+									{% for key,value in tables.sccData.items() %}
 									
 									<div class="cylFormVolumeCol">
 										<input class="form-check-input" type="radio" name="cylSCC" id="gridRadios{{ value }}" value="{{ key }}" {% if key == data.isSCC %} checked {% endif %}> 
@@ -540,7 +540,7 @@
 				<td>
 				{% if editData %}
 						<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
-						{% for key,value in data.statusData.items() %}	
+						{% for key,value in tables.statusData.items() %}	
 							<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
 						{% endfor %}
 						</select>
@@ -593,7 +593,7 @@
 
 	<script>
 		//Jsonify the data passed through Flask for the cyl_from_scc.js script
-        const conditions_table_json = {{ conTable | tojson }};
+        const conditions_table_json = {{ tables.conTable | tojson }};
 		const cyl_editing_json = {{ editData | tojson }};
 		const cyl_isSCC_json = {{ data.isSCC | tojson }};
     </script>
