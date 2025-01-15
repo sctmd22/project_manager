@@ -1,5 +1,6 @@
 from datetime import datetime
-import db as DB
+from helpers import helpers as HLP
+import db as db
 
 
 class Reports:
@@ -9,6 +10,65 @@ class Reports:
         'deleted': "Deleted",
         'canceled': "Canceled"
     }
+
+
+
+    @classmethod
+    def sql_fetchone(cls, query, values=None):
+        FUNC_NAME = "__sql_fetchone()"
+        try:
+            dbCon = db.db_connect()
+            cursor = dbCon.cursor(dictionary=True)
+
+            if (values):
+                cursor.execute(query, values)
+            else:
+                cursor.execute(query)
+
+            result = cursor.fetchone()
+
+            cursor.close()
+            dbCon.close()  # return connection to pool
+
+            return result
+
+        except:
+            print(f"Error: {FUNC_NAME}: Could not process provided query and or values")
+            return None
+
+
+    @classmethod
+    def sql_fetchall(cls, query, values=None):
+        func_name = "__sql_fetchall()"
+        try:
+            dbCon = db.db_connect()
+            cursor = dbCon.cursor(dictionary=True)
+
+            if (values):
+                cursor.execute(query, values)
+            else:
+                cursor.execute(query)
+
+            result = cursor.fetchall()
+
+            cursor.close()
+            dbCon.close()  # return connection to pool
+
+            return result
+
+        except:
+            print(f"Error: {func_name}: Could not process provided query and or values")
+            return None
+
+
+
+    #Return a blank string if val is False/None
+    @classmethod
+    def remove_none(cls, val):
+        if(not val):
+            return ""
+
+        return val
 
 
 class CylinderReport(Reports):
@@ -50,7 +110,88 @@ class CylinderReport(Reports):
         'yes': 'Yes'
     }
 
-    #Field/measurement data and properties for creation of the HTML table
+    SQL_REPORT_DATA_COLS = [
+        'date_created',
+        'created_by',
+        'report_title',
+        'status',
+        'project_name',
+        'ticket_num',
+        'supplier',
+        'load_num',
+        'truck_num',
+        'contractor',
+        'sampled_from',
+        'mix_id',
+        'mould_type',
+        'po_num',
+        'placement_type',
+        'cement_type',
+        'load_volume',
+        'load_volume_units',
+        'date_cast',
+        'time_batch',
+        'time_sample',
+        'time_cast',
+        'date_transported',
+        'notes',
+        'is_scc'
+    ]
+
+    SQL_STR_DATA_COLS = [
+        'cyl_report_id',
+        'target_strength',
+        'target_days'
+    ]
+
+    SQL_CON_DATA_COLS = [
+        'cyl_report_id',
+        'property',
+        'val_actual',
+        'val_min',
+        'val_max',
+        'notes',
+        'val_actual_precision',
+        'val_min_precision',
+        'val_max_precision'
+    ]
+
+
+    FORM_FIELD_LIST = [
+        'cylinderID',
+        'dateCreated',
+        'createdBy',
+        'cylTitle',
+        'cylStatus',
+        'cylProject',
+        'cylTicket',
+        'cylSupplier',
+        'cylLoadNum',
+        'cylTruckNum',
+        'cylContractor',
+        'cylSampled',
+        'cylMix',
+        'cylMouldType',
+        'cylPONum',
+        'cylPlacement',
+        'cylCement',
+        'cylVolume',
+        'cylVolumeUnits',
+        'cylCastDate',
+        'cylCastTime',
+        'cylBatchTime',
+        'cylSampleTime',
+        'cylDateTransported',
+        'cylNotes',
+        'cylSCC'
+    ]
+
+    FIELD_DATA = [
+        {''}
+
+    ]
+
+    #Field/measurement data and properties
     CONDITIONS_TABLE = [
         {'title':'Flow (mm)',                           'property':'flow',          'name':'cylConFlow',            'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
         {'title':'T<sub>50</sub>(s)',                   'property':'t_50',          'name':'cylConT50',             'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
@@ -67,8 +208,6 @@ class CylinderReport(Reports):
 
     #Constructor
     def __init__(self, data):
-
-
         self.id = data['id']
         self.date_created = data['dateCreated']
         self.title = data['title']
@@ -96,8 +235,10 @@ class CylinderReport(Reports):
         self.is_scc = data['isSCC']
         self.created_by = data['createdBy']
 
-        self.strength_table = data['str_table']
-        self.conditions_table = data['conditionsTableData']
+        self.strength_table = data['strTable']
+        self.conditions_table = data['conditionsTable']
+
+        self.submitted_id = -1
 
 
     #Create a new cylinder report with default values
@@ -134,34 +275,32 @@ class CylinderReport(Reports):
             "isSCC": "no",
             "createdBy": "admin",
 
-            "str_table": str_list,
-            "conditionsTableData": cls.CONDITIONS_TABLE
+            "strTable": str_list,
+            "conditionsTable": cls.CONDITIONS_TABLE
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
         return cls(defaultData)
 
-
-
     @classmethod
     def create_from_db(cls, id, editing):
 
         #Get database values
-        report_result = cls.__sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
-        str_result = cls.__sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
-        con_result = cls.__sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
+        report_result = super().sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
+        str_result = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
+        con_result = super().sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
 
         if (not editing):
-            # Looping backwards, drop any entries that are 0 up up until the first entry with nonzero data
+            # Looping backwards, drop any entries that are 0 up until the first entry with nonzero data
             for i in range(len(str_result) - 1, 0, -1):
                 if (str_result[i]['target_strength'] == 0 and str_result[i]['target_days'] == 0):
                     str_result.pop(i)
                 else:
                     break
 
-
-
         conditions_table = cls.CONDITIONS_TABLE.copy()
+
+
         # Build conditions table. Match database results to stored conditions table
         for i, conditions in enumerate(conditions_table):
             for j, conditions_row in enumerate(con_result):
@@ -170,11 +309,10 @@ class CylinderReport(Reports):
                     con_result.pop(j)  # Shorten the list each match to improve speed
                     break
 
-
         # Prevent HTML errors from None types being in time inputs
-        batchTime = cls.__remove_none(report_result['time_batch'])
-        sampleTime = cls.__remove_none(report_result['time_sample'])
-        castTime = cls.__remove_none(report_result['time_cast'])
+        batchTime = super().remove_none(report_result['time_batch'])
+        sampleTime = super().remove_none(report_result['time_sample'])
+        castTime = super().remove_none(report_result['time_cast'])
 
         data = {
             "id": report_result['auto_id'],
@@ -205,10 +343,8 @@ class CylinderReport(Reports):
 
             "createdBy": "admin",
 
-            "str_table": str_result,
-            "conditionsTableData": cls.CONDITIONS_TABLE
-
-
+            "strTable": str_result,
+            "conditionsTable": conditions_table,
 
         }
 
@@ -224,66 +360,75 @@ class CylinderReport(Reports):
 
         return str_list
 
+    #Read form data and create SQL entry
+    def form_submit(self):
 
-    @classmethod
-    def __sql_fetchone(cls, query, values=None):
-        FUNC_NAME = "__sql_fetchone()"
-        try:
-            dbCon = DB.db_connect()
-            cursor = dbCon.cursor(dictionary=True)
+        fieldData = HLP.get_form_values(self.FORM_FIELD_LIST)
 
-            if (values):
-                cursor.execute(query, values)
-            else:
-                cursor.execute(query)
+        fieldData = self.__sanitize_field_data(fieldData)
 
-            result = cursor.fetchone()
+        strengthData = HLP.get_cyl_str_data()
+        measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
 
-            cursor.close()
-            dbCon.close()  # return connection to pool
+        self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, self.SQL_REPORT_DATA_COLS, fieldDataList)
 
-            return result
+        for row in strengthData:
+            HLP.sql_insert(self.TB_STR_REQ, self.SQL_STR_DATA_COLS, [self.submitted_id, row['strength'], row['days']])
 
-        except:
-            print(f"Error: {FUNC_NAME}: Could not process provided query and or values")
-            return None
+        for row in measurementData:
+            HLP.sql_insert(self.TB_CONDITIONS, self.SQL_CON_DATA_COLS, [self.submitted_id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], -1, -1, -1])
 
+    def __sanitize_field_data(self, fieldData):
+        """
+        Prepare the field data for entry into the database
+            -Format dates
+            -Ensure data for each column is within size specified in SQL database
+            -Return a dictionary of SQL cols:values to be inserted into the database
 
-    @classmethod
-    def __sql_fetchall(cls, query, values=None):
-        FUNC_NAME = "__sql_fetchall()"
-        try:
-            dbCon = DB.db_connect()
-            cursor = dbCon.cursor(dictionary=True)
+        fielData: Dictionary of elementName:value pairs of the read HTML form data
+        """
 
-            if (values):
-                cursor.execute(query, values)
-            else:
-                cursor.execute(query)
+        sqlData = db.SQL_CYL_REPORT_PROPERTIES.copy()
 
-            result = cursor.fetchall()
-
-            cursor.close()
-            dbCon.close()  # return connection to pool
-
-            return result
-
-        except:
-            print(f"Error: {FUNC_NAME}: Could not process provided query and or values")
-            return None
-
-    #Return a blank string if val is False/None
-    @classmethod
-    def __remove_none(cls, val):
-        if(not val):
-            return ""
-
-        return val
-
-
+        #Match HTML form data to SQL data
+        sqlData['project_id']['data'] = -1
+        sqlData['date_created']['data'] = fieldData['dateCreated']
+        sqlData['created_by']['data'] = fieldData['createdBy']
+        sqlData['report_title']['data'] = fieldData['cylTitle']
+        sqlData['status']['data'] = fieldData['cylStatus']
+        sqlData['is_scc']['data'] = fieldData['cylSCC']
+        sqlData['ticket_num']['data'] = fieldData['cylTicket']
+        sqlData['project_name']['data'] = fieldData['cylProject']
+        sqlData['supplier']['data'] = fieldData['cylSupplier']
+        sqlData['load_num']['data'] = fieldData['cylLoadNum']
+        sqlData['truck_num']['data'] = fieldData['cylTruckNum']
+        sqlData['contractor']['data'] = fieldData['cylContractor']
+        sqlData['sampled_from']['data'] = fieldData['cylSampled']
+        sqlData['mould_type']['data'] = fieldData['cylMouldType']
+        sqlData['mix_id']['data'] = fieldData['cylMix']
+        sqlData['po_num']['data'] = fieldData['cylPONum']
+        sqlData['placement_type']['data'] = fieldData['cylPlacement']
+        sqlData['cement_type']['data'] = fieldData['cylCement']
+        sqlData['load_volume']['data'] = fieldData['cylVolume']
+        sqlData['load_volume_units']['data'] = fieldData['cylVolumeUnits']
+        sqlData['date_cast']['data'] = fieldData['cylCastDate']
+        sqlData['time_batch']['data'] = fieldData['cylBatchTime']
+        sqlData['time_sample']['data'] = fieldData['cylSampleTime']
+        sqlData['time_cast']['data'] = fieldData['cylSampleTime']
+        sqlData['date_transported']['data'] = fieldData['cylDateTransported']
+        sqlData['notes']['data'] = fieldData['cylNotes']
 
 
-    #Convert object dict for jinja
+        for key,value in sqlData.items():
+            print(value)
+            sqlData[key]['data'] = HLP.sql_sanitize(value)
+
+        print(sqlData)
+
+
+        return {}
+
+    #Convert object dict
     def to_dict(self):
         objectData = {
             "id": self.id,
@@ -313,8 +458,8 @@ class CylinderReport(Reports):
             "isSCC": self.is_scc,
             "createdBy": self.created_by,
 
-            "str_table": self.strength_table,
-            "conditionsTableData": self.conditions_table
+            "strTable": self.strength_table,
+            "conditionsTable": self.conditions_table
         }
 
         return objectData
@@ -325,10 +470,10 @@ class CylinderReport(Reports):
             "loadVolumeData": self.LOAD_VOLUME_UNITS,
             "mouldData": self.MOULD_TYPES,
             "sccData": self.SCC_RADIO,
-            "statusData": self.STATUS_TABLE,
-            "conTable":self.CONDITIONS_TABLE
+            "statusData": self.STATUS_TABLE
         }
 
         return dataTables
+
 
 
