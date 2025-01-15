@@ -1,6 +1,9 @@
 from datetime import datetime
 from GLOBALS import *
 from flask import request
+import db as db
+
+
 
 def get_SQL_timestamp():
     return datetime.today().strftime(SQL_DATETIME_FORMAT)
@@ -133,6 +136,32 @@ def removeNone(val):
     return val
 
 
+
+
+def get_form_values(formList):
+    """
+    Iterate through a list of HTML form elements and return a dict containing all the elementName:value
+    """
+
+    FUNC_NAME = "get_form_values(formList)"
+
+
+    data = {}
+
+    if(not formList):
+        print(f"Error: {FUNC_NAME}: formList is empty")
+        return None
+
+    if(not isinstance(formList, list)):
+        print(f"Error: {FUNC_NAME}: formList is not a list")
+        return None
+
+    for element in formList:
+        data[element] = request.form[element]
+
+    return data
+
+
 #Iterate through 'Mix and field data' form inputs and build a dictionary of id's and values
     #Format and validate the data before returning
 def get_cyl_field_data():
@@ -182,7 +211,7 @@ def get_cyl_conditions_data(scc_val):
             notes = request.form[row['name'] + CYL_CONDITIONS_SUFFIX['notes']]
 
         else:
-            #Defaults for any where the key value is not true
+            #Defaults for anywhere the key value is not true
             valActual = 0
             valMin = 0
             valMax = 0
@@ -220,12 +249,14 @@ def get_cyl_str_data():
 
     return strengthList
 
+
+
+
 def strToIntID(val):
     FUNC_NAME = "strToIntID()"
 
     try:
         newInt = int(val)
-
 
     except:
         print(f"Error: {FUNC_NAME}: Could not convert '{val}' to a valid MySQL ID")
@@ -238,23 +269,145 @@ def strToIntID(val):
     return newInt
 
 
-
+#Get the 'edit' argument from the url and check if it is true or false
 def get_edit():
-    FUNC_NAME = "cyl_get_editing(getID)"
     arg = 'edit'
 
-    try:
-        result = request.args.get(arg, default='false') #Default is a string 'false' not a bool. Keep it this way.
-
-    except:
-        print(f"Error: {FUNC_NAME}: Cannot GET aregument={arg}")
-        return False
+    result = request.args.get(arg, default='false') #Default is a string 'false' not a bool. Keep it this way.
 
     if(result.lower() == 'true'):
         return True
-
-    return False
-
-
+    else:
+        return False
 
 
+
+
+def sql_insert(sql_table, columns, values):
+    """
+    Insert values into corresponding columns of a SQL table
+
+    sql_table:  The SQL table name to insert data into
+    columns:    A list of the SQL column names
+    values:     A list of values corresponding to the column names
+    """
+    FUNC_NAME = "sql_insert()"
+
+    if(not sql_table):
+        print(f"Error: {FUNC_NAME}: TABLE is None")
+        return -1
+
+    if(not columns):
+        print(f"Error: {FUNC_NAME}: columns argument is None")
+        return -1
+
+    if(not values):
+        print(f"Error: {FUNC_NAME}: values argument is None")
+        return -1
+
+    if(not isinstance(columns, list)):
+        print(f"Error: {FUNC_NAME}: columns={columns} is not a list")
+        return -1
+
+    if (not isinstance(values, list)):
+        print(f"Error: {FUNC_NAME}: values={values} is not a list")
+        return -1
+
+    if(len(columns) != len(values)):
+        print(f"Error: {FUNC_NAME}: values={values} and columns={columns} are not equal length")
+        return -1
+
+
+    #Separate list items with commas
+    valueString = ', '.join(columns)
+
+
+    valueList = []
+    #Create %s string for values
+    for index in range(len(columns)):
+        valueList.append('%s')
+
+    valueList = ', '.join(valueList)
+
+    try:
+        dbCon = db.db_connect()
+        cursor = dbCon.cursor()
+
+        QUERY = (f"INSERT INTO {sql_table} ({valueString}) VALUES ({valueList})")
+
+        cursor.execute(QUERY, values)
+        dbCon.commit()
+
+        # Get the auto-increment ID
+        id = cursor.lastrowid
+
+        cursor.close()
+        dbCon.close()  # return connection to pool
+
+        return id
+
+    except:
+        print(f"Error: {FUNC_NAME}: Could not submit into sql_table={sql_table} where columns={columns} and values={values}")
+        return -1
+
+
+
+def sql_sanitize(value):
+    """
+        Ensure all the incoming data is formatted and truncated for the SQL database
+        value: A dictionary with three keys: [data], [dataType], [size]
+                    data:       The data to be formatted
+                    dataType:   Enumerable which contains the SQL data type
+                    size:       For VARCHARS or TEXT types: The max number of characters the data can be
+                                For INT types:  Contains a dict with the [min] and [max] size the int can be
+    """
+    FUNC_NAME = "sql_sanitize(value)"
+
+    type = value['dataType']
+    data = value['data']
+
+
+    if(type == db.SQL_DATATYPES.VARCHAR):
+        sizeLimit = value['size']
+        data = str(data)
+        dataLen = len(data)
+
+        if(dataLen > sizeLimit):
+            data = data[0:sizeLimit]
+            print(f'WARNING: {FUNC_NAME}: VARCHAR data of length={dataLen} truncated to {sizeLimit} characters')
+
+    elif(type == db.SQL_DATATYPES.TEXT):
+        sizeLimit = value['size']
+        data = str(data)
+        dataLen = len(data)
+
+        if(dataLen > sizeLimit):
+            data = data[0:sizeLimit]
+            print(f'WARNING: {FUNC_NAME}: TEXT data of length={dataLen} truncated to {sizeLimit} characters')
+
+
+    elif(type == db.SQL_DATATYPES.TINY_INT):
+        minSize = value['size']['min']
+        minSize = value['size']['max']
+
+
+    elif(type == db.SQL_DATATYPES.SMALL_INT):
+
+        pass
+
+    elif(type == db.SQL_DATATYPES.INT):
+
+        pass
+
+
+    elif(type == db.SQL_DATATYPES.DATETIME):
+        pass
+    elif(type == db.SQL_DATATYPES.TIME):
+        pass
+    elif(type == db.SQL_DATATYPES.ENUM):
+        pass
+    else:
+        pass
+
+
+    return data

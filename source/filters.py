@@ -1,7 +1,4 @@
-from datetime import datetime
-from flask import Flask
 import GLOBALS as GB
-
 
 
 def strip_date_f(date):

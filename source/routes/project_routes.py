@@ -1,11 +1,8 @@
 from datetime import datetime
-from dataclasses import dataclass
 
-from flask import Flask, render_template, request, redirect, url_for, Blueprint
+from flask import render_template, request, redirect, url_for, Blueprint
 
-from db import db_connect
-
-import helpers as HP
+from db.database import db_connect
 
 import GLOBALS as GB
 

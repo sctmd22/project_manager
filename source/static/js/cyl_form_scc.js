@@ -1,17 +1,17 @@
-//Get the conditions table data from the <script></script> tags in the HTML page
+//Get data from the <script></script> tags passed from Python to Jinja
 const CONDITIONS_TABLE = conditions_table_json;
 const CYL_EDITING = cyl_editing_json;
 const IS_SCC = cyl_isSCC_json
 
 
  
- // Get references to the radio buttons and the target element
+// Get references to the radio buttons and the target element
 const sccRadioButtons = document.querySelectorAll('input[name="cylSCC"]');
 
 
 // Function to show or hide the element based on the selected radio button
 function toggleElement() {
-	console.log("Triggered");
+	//console.log("Triggered");
 	let sccVal = IS_SCC;
 	let currentKey = 'CYL';
 	let prevKey = 'SCC';
@@ -23,7 +23,7 @@ function toggleElement() {
 
 	}
 	
-	
+	//Reverse current and prev keys if sccVal set
 	if (sccVal === 'yes'){
 		currentKey = 'SCC';
 		prevKey = 'CYL';
@@ -45,6 +45,7 @@ function toggleElement() {
 				//All inputs are text EXCEPT auto_id which is hidden, which we do not want to reset
 			const inputs = targetElement.querySelectorAll('input[type="text"]');
 			
+		
 			
 		   inputs.forEach(input => {
 				input.value = '';

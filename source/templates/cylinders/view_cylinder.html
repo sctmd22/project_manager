@@ -416,7 +416,7 @@
 			<td style="width: 280px">Days</td>
 		</tr>
 
-		{% for row in data.str_table %}
+		{% for row in data.strTable %}
 		
 			<tr class="cylStrRow" id="cylStrRow-{{loop.index}}">
 				<td>
@@ -472,7 +472,7 @@
 			</tr>
 			
 			
-			{% for row in data.conditionsTableData %}
+			{% for row in data.conditionsTable %}
 
 
 			<tr class="cylMeasureRow" id="{{ row.name + row.suffix.id }}Row">
@@ -593,7 +593,7 @@
 
 	<script>
 		//Jsonify the data passed through Flask for the cyl_from_scc.js script
-        const conditions_table_json = {{ tables.conTable | tojson }};
+        const conditions_table_json = {{ data.conditionsTable | tojson }};
 		const cyl_editing_json = {{ editData | tojson }};
 		const cyl_isSCC_json = {{ data.isSCC | tojson }};
     </script>

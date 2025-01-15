@@ -1,9 +1,7 @@
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 
 #Custom file routes
 from routes import project_routes, cylinder_routes
-import GLOBALS as GB
 
 #Custom flask filters
 from filters import filters
@@ -41,9 +39,6 @@ def home():
     return render_template("index.html", breadcrumb=bcData)
 
 
-
-
-
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, host='192.168.0.194')
+    app.run(debug=True, port=5000, host='192.168.0.203')
 

@@ -1,6 +1,5 @@
 # created by virtualenv automatically
-/Lib/
-/templates/scratch.html
-/templates/test/
-/routes/__pycache__/
-/__pycache__/
+/.idea/
+/.venv/
+/myssql/
+/tests/
