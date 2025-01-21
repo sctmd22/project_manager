@@ -475,25 +475,25 @@
 			{% for row in data.conditionsTable %}
 
 
-			<tr class="cylMeasureRow" id="{{ row.name + row.suffix.id }}Row">
+			<tr class="cylMeasureRow" id="{{ row.name }}Row">
 
 					<td>{{ row.title | safe }}</td>
 				
 				{% if editData %}
 					
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name }}Actual" name="{{ row.name }}Actual"  value="{{ row.data.val_actual }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name + row.suffix.min }}" name="{{ row.name + row.suffix.min }}"  value="{{ row.data.val_min }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.name + row.suffix.max }}" name="{{ row.name + row.suffix.max }}"  value="{{ row.data.val_max }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.name + row.suffix.notes }}" name="{{ row.name + row.suffix.notes }}"  value="{{ row.data.notes }}" aria-describedby="textDesc"></td>
-					<input type="hidden" name="{{ row.name + row.suffix.id }}" value="{{ row.data.auto_id }}">
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.actual }}" name="{{ row.labels.actual }}"  value="{{ row.values.actual }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.min }}" name="{{ row.labels.min }}"  value="{{ row.values.min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.max }}" name="{{ row.labels.max }}"  value="{{ row.values.max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.labels.notes }}" name="{{ row.labels.notes }}"  value="{{ row.values.notes }}" aria-describedby="textDesc"></td>
+					<input type="hidden" name="{{ row.labels.id }}" value="{{ row.values.id }}">
 
 				{% else %}
 					
 	
-					<td>{{ row.data.val_actual | measurements_f }}</td>
-					<td>{{ row.data.val_min | measurements_f }}</td>
-					<td>{{ row.data.val_max | measurements_f }}</td>
-					<td class="cylMeasureNotes">{{ row.data.notes }}</td>
+					<td>{{ row.values.actual | measurements_f }}</td>
+					<td>{{ row.values.min | measurements_f }}</td>
+					<td>{{ row.values.max | measurements_f }}</td>
+					<td class="cylMeasureNotes">{{ row.values.notes }}</td>
 		
 					
 				{% endif %}

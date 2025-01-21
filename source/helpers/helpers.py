@@ -3,16 +3,7 @@ from GLOBALS import *
 from flask import request
 import db as db
 
-
-
-def get_SQL_timestamp():
-    return datetime.today().strftime(SQL_DATETIME_FORMAT)
-
-
-def get_simple_date():
-    return datetime.today().strftime(SIMPLE_DATE_FORMAT)
-
-
+from db import sql_data as SQL
 
 #Replace empty strings with 0
 def zero_fill(list):
@@ -115,18 +106,17 @@ def formToTime(strTime):
         return newTime
 
     #HH:MM:SS
-    elif(size == len(SQL_TIME_FORMAT)):
+    elif(size == len(SQL.TIME_FORMAT)):
         try:
-            newTime = datetime.strptime(strTime, SQL_TIME_FORMAT)
+            newTime = datetime.strptime(strTime, SQL.TIME_FORMAT)
 
         except:
-            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{SQL_TIME_FORMAT}'")
+            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{SQL.TIME_FORMAT}'")
             return None
 
         return newTime
 
     return None
-
 
 
 def removeNone(val):
@@ -136,28 +126,51 @@ def removeNone(val):
     return val
 
 
-
-
-def get_form_values(formList):
-    """
-    Iterate through a list of HTML form elements and return a dict containing all the elementName:value
+def get_form_values(formData):
     """
 
-    FUNC_NAME = "get_form_values(formList)"
+    """
+    FUNC_NAME = "get_form_values(formData)"
+
+    if(not formData):
+        print(f"Error: {FUNC_NAME}: formData is empty")
+        return None
+
+    if(not isinstance(formData, list)):
+        print(f"Error: {FUNC_NAME}: formData is not a list")
+        print(f"formData = {formData}")
+        return None
+
+
+    dataList = formData.copy()
+
+    for row in dataList:
+
+        #If the labels key exists and has data, iterate through the elements requesting the form data
+        if('labels' in row):
+            for key, val in row['labels'].items():
+                row['values'][key] = request.form[row['labels'][key]]
+
+                #Custom function to combine the above with the SQL data
+                #Sanitize function: work through the list
+                #Sql insert : work through the list\
+
+
+        else:
+            #Directly read the 'name' key to get form elements
+            row['value'] = request.form[row['name']]
+
+
 
 
     data = {}
 
-    if(not formList):
-        print(f"Error: {FUNC_NAME}: formList is empty")
-        return None
-
-    if(not isinstance(formList, list)):
-        print(f"Error: {FUNC_NAME}: formList is not a list")
-        return None
-
-    for element in formList:
-        data[element] = request.form[element]
+    #Convert list of dicts to dictionary for easier value assignment. Use the value in the 'name' key as the new
+        #key for each dict entry
+    for row in dataList:
+        key = row['name']
+        del row['name']
+        data[key] = row
 
     return data
 
@@ -173,6 +186,10 @@ def get_cyl_field_data():
     for id in CYL_FORM_FIELD_LIST:
         data[id] = request.form[id]
 
+    print(data['cylBatchTime'])
+    print(data['cylSampleTime'])
+    print(data['cylCastTime'])
+
     # Convert string dates to datetime objects
     data['cylDateTransported'] = formToDate(data['cylDateTransported'])
     data['cylCastDate'] = formToDate(data['cylCastDate'])
@@ -184,6 +201,7 @@ def get_cyl_field_data():
 
 
     return data
+
 
 
 #Iterate through conditions table form id's and create a list of dictionaries with the actial, min, max, notes and property values
@@ -281,61 +299,55 @@ def get_edit():
         return False
 
 
-
-
-def sql_insert(sql_table, columns, values):
+def sql_insert(sql_table, dataDict):
     """
     Insert values into corresponding columns of a SQL table
-
-    sql_table:  The SQL table name to insert data into
-    columns:    A list of the SQL column names
-    values:     A list of values corresponding to the column names
     """
     FUNC_NAME = "sql_insert()"
 
     if(not sql_table):
-        print(f"Error: {FUNC_NAME}: TABLE is None")
+        print(f"Error: {FUNC_NAME}: TABLE not specified")
         return -1
 
-    if(not columns):
-        print(f"Error: {FUNC_NAME}: columns argument is None")
+    if(not dataDict):
+        print(f"Error: {FUNC_NAME}: dataDict empty")
         return -1
 
-    if(not values):
-        print(f"Error: {FUNC_NAME}: values argument is None")
+    if(not isinstance(dataDict, dict)):
+        print(f"Error: {FUNC_NAME}: dataDict is not a dictionary")
         return -1
 
-    if(not isinstance(columns, list)):
-        print(f"Error: {FUNC_NAME}: columns={columns} is not a list")
-        return -1
 
-    if (not isinstance(values, list)):
-        print(f"Error: {FUNC_NAME}: values={values} is not a list")
-        return -1
+    colList = []
+    valList = []
 
-    if(len(columns) != len(values)):
-        print(f"Error: {FUNC_NAME}: values={values} and columns={columns} are not equal length")
-        return -1
+    #Grab dictionary values to create a list of SQL column names and a list of corresponding values
+    for key, value in dataDict.items():
+        colList.append(key)
+        valList.append(value['data'])
 
+    """
+    for index, item in enumerate(colList):
+        print(f"{item} <> {valList[index]}")
+    """
 
     #Separate list items with commas
-    valueString = ', '.join(columns)
+    colNames = ', '.join(colList)
 
+    escapeList = []
+    #Create %s placeholder string for values
+    for index in range(len(colList)):
+        escapeList.append('%s')
 
-    valueList = []
-    #Create %s string for values
-    for index in range(len(columns)):
-        valueList.append('%s')
-
-    valueList = ', '.join(valueList)
+    placeholders = ', '.join(escapeList)
 
     try:
         dbCon = db.db_connect()
         cursor = dbCon.cursor()
 
-        QUERY = (f"INSERT INTO {sql_table} ({valueString}) VALUES ({valueList})")
+        QUERY = (f"INSERT INTO {sql_table} ({colNames}) VALUES ({placeholders})")
 
-        cursor.execute(QUERY, values)
+        cursor.execute(QUERY, valList)
         dbCon.commit()
 
         # Get the auto-increment ID
@@ -347,10 +359,8 @@ def sql_insert(sql_table, columns, values):
         return id
 
     except:
-        print(f"Error: {FUNC_NAME}: Could not submit into sql_table={sql_table} where columns={columns} and values={values}")
+        print(f"Error: {FUNC_NAME}: Could not submit into sql_table={sql_table} where dataDict = {dataDict}")
         return -1
-
-
 
 def sql_sanitize(value):
     """
@@ -359,16 +369,25 @@ def sql_sanitize(value):
                     data:       The data to be formatted
                     dataType:   Enumerable which contains the SQL data type
                     size:       For VARCHARS or TEXT types: The max number of characters the data can be
-                                For INT types:  Contains a dict with the [min] and [max] size the int can be
+                                For INT types:  Contains a dict with the [MIN] and [MAX] size the int can be
     """
     FUNC_NAME = "sql_sanitize(value)"
 
-    type = value['dataType']
+    sizeMin = 0
+    sizeMax = 0
+
+    dataType = value['dataType']
     data = value['data']
+    sizeLimit = value['size']
+
+    #print(f"data={data}, sizeLimit={sizeLimit}, type={type}")
+
+    if(isinstance(sizeLimit, dict)):
+        sizeMin = sizeLimit['MIN']
+        sizeMax = sizeLimit['MAX']
 
 
-    if(type == db.SQL_DATATYPES.VARCHAR):
-        sizeLimit = value['size']
+    if(dataType == SQL.DATATYPES.VARCHAR):
         data = str(data)
         dataLen = len(data)
 
@@ -376,8 +395,7 @@ def sql_sanitize(value):
             data = data[0:sizeLimit]
             print(f'WARNING: {FUNC_NAME}: VARCHAR data of length={dataLen} truncated to {sizeLimit} characters')
 
-    elif(type == db.SQL_DATATYPES.TEXT):
-        sizeLimit = value['size']
+    elif(dataType == SQL.DATATYPES.TEXT):
         data = str(data)
         dataLen = len(data)
 
@@ -386,28 +404,110 @@ def sql_sanitize(value):
             print(f'WARNING: {FUNC_NAME}: TEXT data of length={dataLen} truncated to {sizeLimit} characters')
 
 
-    elif(type == db.SQL_DATATYPES.TINY_INT):
-        minSize = value['size']['min']
-        minSize = value['size']['max']
+    elif(dataType == SQL.DATATYPES.TINY_INT):
+        data = toInt(data)
+        data = compare_int_size(data, sizeMin, sizeMax)
 
 
-    elif(type == db.SQL_DATATYPES.SMALL_INT):
+    elif(dataType == SQL.DATATYPES.SMALL_INT):
+        data = toInt(data)
+        data = compare_int_size(data, sizeMin, sizeMax)
 
-        pass
-
-    elif(type == db.SQL_DATATYPES.INT):
-
-        pass
+    elif(dataType == SQL.DATATYPES.INT):
+        data = toInt(data)
+        data = compare_int_size(data, sizeMin, sizeMax)
 
 
-    elif(type == db.SQL_DATATYPES.DATETIME):
-        pass
-    elif(type == db.SQL_DATATYPES.TIME):
-        pass
-    elif(type == db.SQL_DATATYPES.ENUM):
-        pass
+    elif(dataType == SQL.DATATYPES.DATETIME):
+
+        data = toStr(data)
+
+        # Attempt to convert from string to a date time object using one of two SQL formats
+        try:
+            data = datetime.strptime(data, SQL.DATETIME_FORMAT)
+
+        except ValueError as e:
+            print(f"Warning {FUNC_NAME}: {e}. Trying alternate date format.")
+
+            try:
+                data = datetime.strptime(data, SQL.DATETIME_FORMAT_U)
+
+            except ValueError as e:
+                print(f"Warning {FUNC_NAME}: {e}. Returning None type.")
+                data = None
+
+    elif(dataType == SQL.DATATYPES.TIME):
+        data = toStr(data)
+
+        try:
+            data = datetime.strptime(data, HTML_TIME_FORMAT)
+
+        except ValueError as e:
+            print(f"Warning {FUNC_NAME}: {e}. Trying alternate time format.")
+
+            try:
+
+                data = datetime.strptime(data, HTML_TIME_FORMAT_S)
+
+            except ValueError as e:
+                print(f"Warning {FUNC_NAME}: {e}. Returning None type.")
+                data = None
+
+
+    elif(dataType == SQL.DATATYPES.ENUM):
+        #Checking to ensure passed enum exists in passed dict
+        enums = value['enums']
+
+        if (data not in enums):
+            print(f"Could not find item={data} in enumeration list={enums}")
+            data = None
+
     else:
-        pass
+        data = None
 
 
     return data
+
+
+def compare_int_size(integer, min, max):
+    funcName = "compare_int_size(integer, min, max)"
+    fallback = None
+
+    val = integer
+
+    if(not isinstance(integer, int)):
+        return fallback
+
+    if(integer < min):
+        val = fallback
+        print(f"Error: {funcName}: integer={integer} less than mininum size={min}. Returning {fallback}")
+
+    elif(integer > max):
+        val = fallback
+        print(f"Error: {funcName}: integer={integer} greater than max size={max}. Returning {fallback}")
+
+    return val
+
+
+def toInt(val):
+    funcName = "toInt(val)"
+    try:
+        val = int(val)
+        return val
+
+    except ValueError as e:
+        print(f"Error: {funcName}: Cannot cast val={val} to integer. Error message: {e}")
+        return None
+
+
+def toStr(val):
+    funcName = "toStr(val)"
+
+    try:
+        val = str(val)
+        return val
+
+    except ValueError as e:
+        print(f"Error: {funcName}: Cannot cast val={val} to string. Error msg: {e}")
+        return None
+
