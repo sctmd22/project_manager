@@ -2,6 +2,8 @@ from datetime import datetime
 from helpers import helpers as HLP
 import db as db
 
+from db import sql_data as SQL
+
 
 class Reports:
     STATUS_TABLE = {
@@ -80,7 +82,67 @@ class CylinderReport(Reports):
     TB_CYLINDERS = "cyl_items"
     TB_CONDITIONS = "cyl_conditions_table"
 
-    CONDITIONS_SUFFIX = {
+    SCC_OPTIONS = {
+        'yes': 'Yes',
+        'no': 'No'
+    }
+
+    MOULD_OPTIONS = {
+        '100x200_plastic': '100x200 Plastic',
+        '150x300_plastic': '150x300 Plastic'
+    }
+
+    UNITS_OPTIONS = {
+        'meters': 'Meters',
+        'yards': 'Yards'
+    }
+
+    FORM_FIELD_TABLE = [
+        {'name': 'cylinderID',          'title': ''},
+        {'name': 'dateCreated',         'title': ''},
+        {'name': 'createdBy',           'title': ''},
+        {'name': 'cylTitle',            'title': ''},
+        {'name': 'cylStatus',           'title': ''},
+        {'name': 'cylProject',          'title': ''},
+        {'name': 'cylTicket',           'title': ''},
+        {'name': 'cylSupplier',         'title': ''},
+        {'name': 'cylLoadNum',          'title': ''},
+        {'name': 'cylTruckNum',         'title': ''},
+        {'name': 'cylContractor',       'title': ''},
+        {'name': 'cylSampled',          'title': ''},
+        {'name': 'cylMix',              'title': ''},
+        {'name': 'cylMouldType',        'title': ''},
+        {'name': 'cylPONum',            'title': ''},
+        {'name': 'cylPlacement',        'title': ''},
+        {'name': 'cylCement',           'title': ''},
+        {'name': 'cylVolume',           'title': ''},
+        {'name': 'cylVolumeUnits',      'title': ''},
+        {'name': 'cylCastDate',         'title': ''},
+        {'name': 'cylCastTime',         'title': ''},
+        {'name': 'cylBatchTime',        'title': ''},
+        {'name': 'cylSampleTime',       'title': ''},
+        {'name': 'cylDateTransported',  'title': ''},
+        {'name': 'cylNotes',            'title': ''},
+        {'name': 'cylSCC',              'title': ''},
+
+    ]
+
+
+    STR_LABELS = {
+        'strength':'Strength',
+        'days':'Days',
+        'id':'ID'
+    }
+
+    #Template for the HTML strength table which gets repeated X number of times
+    #'labels' and 'values' are used for writing to HTML data and reading HTML forms
+        #When the table is built it will look like: {'name':'str',   'title':'Target {n}',   'labels':{'strength':'strStrength', 'days':'strDays', 'id':'strID'}, 'values':{'strength':'', 'days', 'id':''}}
+    FORM_STR_TABLE = {
+        'name':'strTable',   'title':'Target {n}',   'labels': {},    'values':{}
+    }
+
+
+    CONDITIONS_LABELS = {
         'actual':'Actual',
         'min':'Min',
         'max':'Max',
@@ -88,111 +150,33 @@ class CylinderReport(Reports):
         'id':'ID'
     }
 
+
+    '''
     CONDITIONS_DATA = {
         "val_actual": "",
         "val_min": "",
         "val_max": "",
         "notes": ""
     }
+    '''
 
-    MOULD_TYPES = {
-        "100x200_plastic": "100x200 Plastic",
-        "150x300_plastic": "150x300 Plastic",
-    }
-
-    LOAD_VOLUME_UNITS = {
-        "meters": "m",
-        "yards": "yd"
-    }
-
-    SCC_RADIO = {
-        'no': 'No',
-        'yes': 'Yes'
-    }
-
-    SQL_REPORT_DATA_COLS = [
-        'date_created',
-        'created_by',
-        'report_title',
-        'status',
-        'project_name',
-        'ticket_num',
-        'supplier',
-        'load_num',
-        'truck_num',
-        'contractor',
-        'sampled_from',
-        'mix_id',
-        'mould_type',
-        'po_num',
-        'placement_type',
-        'cement_type',
-        'load_volume',
-        'load_volume_units',
-        'date_cast',
-        'time_batch',
-        'time_sample',
-        'time_cast',
-        'date_transported',
-        'notes',
-        'is_scc'
+    #Template for field/measurement data and properties
+        #When the table is built, one entry will look like:
+            #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'data':{'actual':'', 'min':'', 'max':'', 'notes':''}}
+    FORM_CONDITIONS_TABLE = [
+        {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
+        {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
+        {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
+        {'name':'cylConSlump',              'title':'Slump (mm)',                          'property':'slump',          'SCC':False, 'CYL':True,    'labels':{}, 'values':{}},
+        {'name':'cylConAir',                'title':'Air (%)',                             'property':'air',            'SCC':True, 'CYL':True,     'labels':{}, 'values':{}},
+        {'name':'cylConDensity',            'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',        'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
+        {'name':'cylConSampleTemp',         'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',     'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
+        {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
+        {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
     ]
-
-    SQL_STR_DATA_COLS = [
-        'cyl_report_id',
-        'target_strength',
-        'target_days'
-    ]
-
-    SQL_CON_DATA_COLS = [
-        'cyl_report_id',
-        'property',
-        'val_actual',
-        'val_min',
-        'val_max',
-        'notes',
-        'val_actual_precision',
-        'val_min_precision',
-        'val_max_precision'
-    ]
-
-
-    FORM_FIELD_LIST = [
-        'cylinderID',
-        'dateCreated',
-        'createdBy',
-        'cylTitle',
-        'cylStatus',
-        'cylProject',
-        'cylTicket',
-        'cylSupplier',
-        'cylLoadNum',
-        'cylTruckNum',
-        'cylContractor',
-        'cylSampled',
-        'cylMix',
-        'cylMouldType',
-        'cylPONum',
-        'cylPlacement',
-        'cylCement',
-        'cylVolume',
-        'cylVolumeUnits',
-        'cylCastDate',
-        'cylCastTime',
-        'cylBatchTime',
-        'cylSampleTime',
-        'cylDateTransported',
-        'cylNotes',
-        'cylSCC'
-    ]
-
-    FIELD_DATA = [
-        {''}
-
-    ]
-
-    #Field/measurement data and properties
-    CONDITIONS_TABLE = [
+    '''
+    
+    FORM_CONDITIONS_TABLE = [
         {'title':'Flow (mm)',                           'property':'flow',          'name':'cylConFlow',            'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
         {'title':'T<sub>50</sub>(s)',                   'property':'t_50',          'name':'cylConT50',             'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
         {'title':'VSI',                                 'property':'vsi',           'name':'cylConVSI',             'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
@@ -203,6 +187,60 @@ class CylinderReport(Reports):
         {'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',   'name':'cylConAmbientTemp',     'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
         {'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',   'name':'cylConInitialTemp',     'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
     ]
+    '''
+
+    '''-------------------------------------SQL DATA-------------------------------------'''
+
+    SQL_STR_REQ_PROPERTIES = {
+        'cyl_report_id':      {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT']},
+        'target_strength':    {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT']},
+        'target_days':        {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT']}
+    }
+
+
+
+    SQL_CONDITIONS_PROPERTIES = {
+        'cyl_report_id':           {'dataType': SQL.DATATYPES.INT,      'size': SQL.INT_SIZES['INT']},
+        'property':                {'dataType': SQL.DATATYPES.VARCHAR,  'size': 255},
+        'val_actual':              {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
+        'val_min':                 {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
+        'val_max':                 {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
+        'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,  'size': 1000},
+        'val_actual_precision':    {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+        'val_min_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+        'val_max_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+    }
+
+
+
+    SQL_REPORT_PROPERTIES = {
+        'project_id':                  {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT']},
+        'date_created':                {'dataType': SQL.DATATYPES.DATETIME,    'size': None},
+        'created_by':                  {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'report_title':                {'dataType': SQL.DATATYPES.VARCHAR,     'size': 255},
+        'status':                      {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': Reports.STATUS_TABLE},
+        'is_scc':                      {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': SCC_OPTIONS},
+        'ticket_num':                  {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'project_name':                {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'supplier':                    {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'load_num':                    {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'truck_num':                   {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'contractor':                  {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'sampled_from':                {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'mould_type':                  {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': MOULD_OPTIONS},
+        'mix_id':                      {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'po_num':                      {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'placement_type':              {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'cement_type':                 {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'load_volume':                 {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50},
+        'load_volume_units':           {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': UNITS_OPTIONS},
+        'date_cast':                   {'dataType': SQL.DATATYPES.DATETIME,    'size': None},
+        'time_batch':                  {'dataType': SQL.DATATYPES.TIME,        'size': None},
+        'time_sample':                 {'dataType': SQL.DATATYPES.TIME,        'size': None},
+        'time_cast':                   {'dataType': SQL.DATATYPES.TIME,        'size': None},
+        'date_transported':            {'dataType': SQL.DATATYPES.DATETIME,    'size': None},
+        'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT']}
+    }
 
 
 
@@ -245,7 +283,8 @@ class CylinderReport(Reports):
     @classmethod
     def create_default(cls):
         id = -1
-        str_list = cls.__create_str_table(id)
+        strTable = cls.__create_data_n_table(id, cls.FORM_STR_TABLE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
+        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TABLE, cls.CONDITIONS_LABELS)
 
         defaultData = {
             "id": id,
@@ -260,7 +299,7 @@ class CylinderReport(Reports):
             "contractor": "",
             "sampledFrom": "",
             "mixId": "",
-            "mouldType": list(cls.MOULD_TYPES.keys())[0],   #Get keys from dict, convert to list, get 0th item
+            "mouldType": list(cls.MOULD_OPTIONS.keys())[0],   #Get keys from dict, convert to list, get 0th item
             "poNum": "",
             "placementType": "",
             "cementType": "",
@@ -275,8 +314,8 @@ class CylinderReport(Reports):
             "isSCC": "no",
             "createdBy": "admin",
 
-            "strTable": str_list,
-            "conditionsTable": cls.CONDITIONS_TABLE
+            "strTable": strTable,
+            "conditionsTable": conTable
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
@@ -298,7 +337,7 @@ class CylinderReport(Reports):
                 else:
                     break
 
-        conditions_table = cls.CONDITIONS_TABLE.copy()
+        conditions_table = cls.FORM_CONDITIONS_TABLE.copy()
 
 
         # Build conditions table. Match database results to stored conditions table
@@ -351,32 +390,62 @@ class CylinderReport(Reports):
         return cls(data)
 
 
-    #Create the strength table using the class specified number of strength targets and id
+    #Create a list of dicts
     @classmethod
-    def __create_str_table(cls, id):
-        str_list = []
-        for i in range(cls.NUM_STR_TARGETS):
-            str_list.append({"auto_id": id, "target_strength": "", "target_days": ""})
+    def __create_data_n_table(cls, id, templateRow, labels, n):
+        dataList = []
 
-        return str_list
+        for i in range(n):
+            data = templateRow.copy()
+
+            for key,value in labels.items():
+                data['labels'][key] = data['name'] + value
+                data['values'][key] = ''
+                data['values']['id'] = id
+
+            dataList.append(data)
+
+
+        return dataList
+
+
+    @classmethod
+    def __create_data_table(cls, template, labels):
+        dataList = []
+
+
+        for row in template:
+            newRow = {}
+            newRow = row.copy()
+
+            for key,val in labels.items():
+                newRow['labels'][key] = row['name'] + val
+                newRow['values'][key] = ''
+
+            dataList.append(newRow)
+
+        return dataList
+
 
     #Read form data and create SQL entry
     def form_submit(self):
 
-        fieldData = HLP.get_form_values(self.FORM_FIELD_LIST)
+        fieldData = HLP.get_form_values(self.FORM_FIELD_TABLE)
+        fieldDataSanitized = self.__sanitize_field_data(fieldData)
 
-        fieldData = self.__sanitize_field_data(fieldData)
+        conData = HLP.get_form_values(self.FORM_CONDITIONS_TABLE)
+        conDataSanitized = self.__santize_con_data(conData)
 
-        strengthData = HLP.get_cyl_str_data()
-        measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
+        #strengthData = HLP.get_cyl_str_data()
+        #measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
 
-        self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, self.SQL_REPORT_DATA_COLS, fieldDataList)
+        #self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataSanitized)
 
-        for row in strengthData:
-            HLP.sql_insert(self.TB_STR_REQ, self.SQL_STR_DATA_COLS, [self.submitted_id, row['strength'], row['days']])
+        #for row in strengthData:
+            #HLP.sql_insert(self.TB_STR_REQ, self.SQL_STR_DATA_COLS, [self.submitted_id, row['strength'], row['days']])
 
-        for row in measurementData:
-            HLP.sql_insert(self.TB_CONDITIONS, self.SQL_CON_DATA_COLS, [self.submitted_id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], -1, -1, -1])
+        #for row in measurementData:
+            #HLP.sql_insert(self.TB_CONDITIONS, self.SQL_CON_DATA_COLS, [self.submitted_id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], -1, -1, -1])
 
     def __sanitize_field_data(self, fieldData):
         """
@@ -388,45 +457,64 @@ class CylinderReport(Reports):
         fielData: Dictionary of elementName:value pairs of the read HTML form data
         """
 
-        sqlData = db.SQL_CYL_REPORT_PROPERTIES.copy()
+        sqlData = self.SQL_REPORT_PROPERTIES.copy()
 
         #Match HTML form data to SQL data
-        sqlData['project_id']['data'] = -1
-        sqlData['date_created']['data'] = fieldData['dateCreated']
-        sqlData['created_by']['data'] = fieldData['createdBy']
-        sqlData['report_title']['data'] = fieldData['cylTitle']
-        sqlData['status']['data'] = fieldData['cylStatus']
-        sqlData['is_scc']['data'] = fieldData['cylSCC']
-        sqlData['ticket_num']['data'] = fieldData['cylTicket']
-        sqlData['project_name']['data'] = fieldData['cylProject']
-        sqlData['supplier']['data'] = fieldData['cylSupplier']
-        sqlData['load_num']['data'] = fieldData['cylLoadNum']
-        sqlData['truck_num']['data'] = fieldData['cylTruckNum']
-        sqlData['contractor']['data'] = fieldData['cylContractor']
-        sqlData['sampled_from']['data'] = fieldData['cylSampled']
-        sqlData['mould_type']['data'] = fieldData['cylMouldType']
-        sqlData['mix_id']['data'] = fieldData['cylMix']
-        sqlData['po_num']['data'] = fieldData['cylPONum']
-        sqlData['placement_type']['data'] = fieldData['cylPlacement']
-        sqlData['cement_type']['data'] = fieldData['cylCement']
-        sqlData['load_volume']['data'] = fieldData['cylVolume']
-        sqlData['load_volume_units']['data'] = fieldData['cylVolumeUnits']
-        sqlData['date_cast']['data'] = fieldData['cylCastDate']
-        sqlData['time_batch']['data'] = fieldData['cylBatchTime']
-        sqlData['time_sample']['data'] = fieldData['cylSampleTime']
-        sqlData['time_cast']['data'] = fieldData['cylSampleTime']
-        sqlData['date_transported']['data'] = fieldData['cylDateTransported']
-        sqlData['notes']['data'] = fieldData['cylNotes']
+        #sqlData['project_id']['data'] = -1
+        sqlData.pop('project_id')
+
+        sqlData['date_created']['data'] = fieldData['dateCreated']['value']
+        sqlData['created_by']['data'] = fieldData['createdBy']['value']
+        sqlData['report_title']['data'] = fieldData['cylTitle']['value']
+        sqlData['status']['data'] = fieldData['cylStatus']['value']
+        sqlData['is_scc']['data'] = fieldData['cylSCC']['value']
+        sqlData['ticket_num']['data'] = fieldData['cylTicket']['value']
+        sqlData['project_name']['data'] = fieldData['cylProject']['value']
+        sqlData['supplier']['data'] = fieldData['cylSupplier']['value']
+        sqlData['load_num']['data'] = fieldData['cylLoadNum']['value']
+        sqlData['truck_num']['data'] = fieldData['cylTruckNum']['value']
+        sqlData['contractor']['data'] = fieldData['cylContractor']['value']
+        sqlData['sampled_from']['data'] = fieldData['cylSampled']['value']
+        sqlData['mould_type']['data'] = fieldData['cylMouldType']['value']
+        sqlData['mix_id']['data'] = fieldData['cylMix']['value']
+        sqlData['po_num']['data'] = fieldData['cylPONum']['value']
+        sqlData['placement_type']['data'] = fieldData['cylPlacement']['value']
+        sqlData['cement_type']['data'] = fieldData['cylCement']['value']
+        sqlData['load_volume']['data'] = fieldData['cylVolume']['value']
+        sqlData['load_volume_units']['data'] =  fieldData['cylVolumeUnits']['value']
+        sqlData['date_cast']['data'] = fieldData['cylCastDate']['value']
+        sqlData['time_batch']['data'] = fieldData['cylBatchTime']['value']
+        sqlData['time_sample']['data'] = fieldData['cylSampleTime']['value']
+        sqlData['time_cast']['data'] = fieldData['cylSampleTime']['value']
+        sqlData['date_transported']['data'] = fieldData['cylDateTransported']['value']
+        sqlData['notes']['data'] = fieldData['cylNotes']['value']
 
 
         for key,value in sqlData.items():
-            print(value)
             sqlData[key]['data'] = HLP.sql_sanitize(value)
+
+        return sqlData
+
+    def __santize_con_data(self, conData):
+        sqlData = self.SQL_CONDITIONS_PROPERTIES.copy()
+
+
+        for key, val in conData.items():
+            print(conData[key])
+
+            sqlData['cyl_report_id']['data'] = -1
+            sqlData['property']['data'] = conData[key]['property']
+            sqlData['val_actual']['data'] = conData[key]['values']['actual']
+            sqlData['val_min']['data'] = conData[key]['values']['min']
+            sqlData['val_max']['data'] = conData[key]['values']['max']
+            sqlData['notes']['data'] = conData[key]['values']['notes']
+            sqlData['val_actual_precision']['data'] = 0
+            sqlData['val_min_precision']['data'] = 0
+            sqlData['val_max_precision']['data'] = 0
 
         print(sqlData)
 
 
-        return {}
 
     #Convert object dict
     def to_dict(self):
@@ -467,9 +555,9 @@ class CylinderReport(Reports):
     #Return data tables as dicts
     def tables_to_dict(self):
         dataTables = {
-            "loadVolumeData": self.LOAD_VOLUME_UNITS,
-            "mouldData": self.MOULD_TYPES,
-            "sccData": self.SCC_RADIO,
+            "loadVolumeData": self.UNITS_OPTIONS,
+            "mouldData": self.MOULD_OPTIONS,
+            "sccData": self.SCC_OPTIONS,
             "statusData": self.STATUS_TABLE
         }
 

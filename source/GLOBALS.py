@@ -1,10 +1,6 @@
-from enum import Enum
-
-SQL_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-SIMPLE_DATE_FORMAT = '%Y-%m-%d'
-SQL_TIME_FORMAT = "%H:%M:%S"
-
 HTML_TIME_FORMAT = "%H:%M"
+HTML_TIME_FORMAT_S = HTML_TIME_FORMAT + ":%S"
+
 HTML_DATE_FORMAT = "%Y-%m-%d"
 
 
@@ -14,8 +10,6 @@ PROJECT_STATUS = {
     'deleted': "Deleted",
     'canceled': "Canceled"
 }
-
-
 
 CYL_MOULD_TYPES = {
     "100x200_plastic":"100x200 Plastic",
@@ -35,24 +29,7 @@ CYL_SCC_RADIO = {
     'yes':'Yes'
 }
 
-#Max characters for each VARCHAR type
-CYL_DATA_LIMITS = {
-    'created_by':50,
-    'report_title':255,
-    'ticket_num':50,
-    'project_name':50,
-    'supplier':50,
-    'load_num':50,
-    'truck_num':50,
-    'contractor':50,
-    'sampled_from':50,
-    'mix_id':50,
-    'po_num':50,
-    'placement_type':50,
-    'cement_type':50,
-    'load_volume':50
 
-}
 
 CYL_FORM_FIELD_LIST = [
     'cylinderID',
