@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 from GLOBALS import *
 from flask import request
+import decimal
 import db as db
 
 from db import sql_data as SQL
@@ -142,7 +143,7 @@ def get_form_values(formData):
         return None
 
 
-    dataList = formData.copy()
+    dataList = copy.deepcopy(formData)
 
     for row in dataList:
 
@@ -166,6 +167,7 @@ def get_form_values(formData):
         data[key] = row
 
     return data
+
 
 
 
@@ -198,69 +200,92 @@ def get_edit():
         return False
 
 
-def sql_insert(sql_table, dataDict):
+def sql_insert(sql_table, dataList):
     """
-    Insert values into corresponding columns of a SQL table
+    Iterate through the 'dataList', inserting each row of SQL formatted data into the 'sql_table' database
 
+    :param sql_table:
+    :param dataList:  A list of dictionaries with data, properties and column names of a SQL table
+    :return: A list of the last auto_increment ID of each row inserted. 'None' if the auto_increment ID cannot
+    be obtained from the database
     """
-    FUNC_NAME = "sql_insert()"
+
+    FUNC_NAME = "sql_insert(sql_table, dataList)"
 
     if(not sql_table):
         print(f"Error: {FUNC_NAME}: TABLE not specified")
-        return -1
+        return None
 
-    if(not dataDict):
-        print(f"Error: {FUNC_NAME}: dataDict empty")
-        return -1
+    if(not dataList):
+        print(f"Error: {FUNC_NAME}: dataList empty")
+        return None
 
-    if(not isinstance(dataDict, dict)):
-        print(f"Error: {FUNC_NAME}: dataDict is not a dictionary")
-        return -1
+    if(not isinstance(dataList, list)):
+        print(f"Error: {FUNC_NAME}: dataList is not a dictionary")
+        return None
 
 
-    colList = []
-    valList = []
+    IDList = [] #Store the lastrowid for each insertion
+    id = None
 
-    #Grab dictionary values to create a list of SQL column names and a list of corresponding values
-    for key, value in dataDict.items():
-        colList.append(key)
-        valList.append(value['data'])
+    for row in dataList:
 
-    """
-    for index, item in enumerate(colList):
-        print(f"{item} <> {valList[index]}")
-    """
+        colList = []
+        valList = []
+        escapeList = []
 
-    #Separate list items with commas
-    colNames = ', '.join(colList)
+        #Grab dictionary values to create a list of SQL column names and a list of corresponding values
+        for key, value in row.items():
+            colList.append(key)
+            valList.append(value['data'])
 
-    escapeList = []
-    #Create %s placeholder string for values
-    for index in range(len(colList)):
-        escapeList.append('%s')
+        """
+        for index, item in enumerate(colList):
+            print(f"{item} <> {valList[index]}")
+        """
 
-    placeholders = ', '.join(escapeList)
+        #Separate list items with commas
+        colNames = ', '.join(colList)
 
-    try:
-        dbCon = db.db_connect()
-        cursor = dbCon.cursor()
 
-        QUERY = (f"INSERT INTO {sql_table} ({colNames}) VALUES ({placeholders})")
+        #Create %s placeholder string
+        for index in range(len(colList)):
+            escapeList.append('%s')
 
-        cursor.execute(QUERY, valList)
-        dbCon.commit()
+        placeholders = ', '.join(escapeList)
 
-        # Get the auto-increment ID
-        id = cursor.lastrowid
+        try:
+            dbCon = db.db_connect()
+            cursor = dbCon.cursor()
 
-        cursor.close()
-        dbCon.close()  # return connection to pool
+            query = (f"INSERT INTO {sql_table} ({colNames}) VALUES ({placeholders})")
 
+            #print(f"query: {query}")
+            #print(f"values: {valList}")
+
+            cursor.execute(query, valList)
+            dbCon.commit()
+
+
+            id = cursor.lastrowid # Get the auto-increment ID. returns 0 if table has no auto_increment
+
+            if not id:
+                id = None
+
+            cursor.close()
+            dbCon.close()  # return connection to pool
+
+
+        except db.Error as err:
+            print(f"Error: {FUNC_NAME}: Error message: {err}")
+            id = None
+
+        IDList.append(id)
+
+    if(len(IDList) == 1):
         return id
 
-    except db.Error as err:
-        print(f"Error: {FUNC_NAME}: Could not submit into sql_table={sql_table} where dataDict = {dataDict}")
-        return -1
+    return IDList
 
 def sql_sanitize(valueList):
     """
@@ -271,15 +296,18 @@ def sql_sanitize(valueList):
     newList = []
 
     #Duplicate the list
+    '''
     for row in valueList:
         newRow = copy.deepcopy(row)
         newList.append(newRow)
-
-    #Iterate through the list of SQL PROPERTY dictionaries, again iterating through the key:values where the keys
+    '''
+    #Iterate through the list of SQL PROPERTY dictionaries, then iterate through the key:values where the keys
         #correspond to SQL columns. The data to be sanitized is stored the 'data' key of each SQL PROPERTY dict
 
-    for row in newList:
-        for key,val in row.items():
+    for row in valueList:
+        newRow = copy.deepcopy(row) #Copy the row as to not alter original
+
+        for key,val in newRow.items():
 
             dataType = val['dataType']
             data = val['data']
@@ -329,7 +357,7 @@ def sql_sanitize(valueList):
             elif(dataType == SQL.DATATYPES.INT):
                 data = toInt(data)
                 data = compare_int_size(data, sizeMin, sizeMax)
-    
+
     
             elif(dataType == SQL.DATATYPES.DATETIME):
     
@@ -371,18 +399,29 @@ def sql_sanitize(valueList):
                 #Checking to ensure passed enum exists in passed dict
     
                 if (data not in enums):
-                    print(f"Could not find item={data} in enumeration list={enums}")
+                    print(f"Error: {FUNC_NAME}: Could not find item={data} in enumeration list={enums}")
                     data = None
-    
+
+            elif(dataType == SQL.DATATYPES.VARCHAR_DECIMAL):
+                data = toStr(data)
+
+                try:
+                    decimal.Decimal(data)
+
+                except decimal.InvalidOperation as e:
+                    print(f"Error: {FUNC_NAME}: Could not convert {data} to Decimal")
+                    data = None
+
             else:
                 data = None
 
-            val['data'] = data
+
+            newRow[key]['data'] = data
+
+        newList.append(newRow)
 
 
     return newList
-
-
 
 def compare_int_size(integer, min, max):
     funcName = "compare_int_size(integer, min, max)"
@@ -403,15 +442,15 @@ def compare_int_size(integer, min, max):
 
     return val
 
-
 def toInt(val):
     funcName = "toInt(val)"
+
     try:
         val = int(val)
         return val
 
     except ValueError as e:
-        print(f"Error: {funcName}: Cannot cast val={val} to integer. Error message: {e}")
+        print(f"Warning: {funcName}: Cannot cast val={val} to integer. Error message: {e}")
         return None
 
 

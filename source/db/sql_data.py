@@ -14,7 +14,8 @@ class DATATYPES(Enum):
     SMALL_INT = 5,
     DATETIME = 6,
     TIME = 7,
-    ENUM = 8
+    ENUM = 8,
+    VARCHAR_DECIMAL = 9 #Exact decimal values stored as a VARCHAR in SQL
 
 INT_SIZES = {
     'TINY_INT':     {'MIN':0, 'MAX':255},
