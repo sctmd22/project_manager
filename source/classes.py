@@ -1,6 +1,7 @@
 from datetime import datetime
 from helpers import helpers as HLP
 import db as db
+import copy
 
 from db import sql_data as SQL
 
@@ -97,7 +98,7 @@ class CylinderReport(Reports):
         'yards': 'Yards'
     }
 
-    FORM_FIELD_TABLE = [
+    FORM_FIELD_TEMPLATE = [
         {'name': 'cylinderID',          'title': ''},
         {'name': 'dateCreated',         'title': ''},
         {'name': 'createdBy',           'title': ''},
@@ -137,7 +138,7 @@ class CylinderReport(Reports):
     #Template for the HTML strength table which gets repeated X number of times
     #'labels' and 'values' are used for writing to HTML data and reading HTML forms
         #When the table is built it will look like: {'name':'str',   'title':'Target {n}',   'labels':{'strength':'strStrength', 'days':'strDays', 'id':'strID'}, 'values':{'strength':'', 'days', 'id':''}}
-    FORM_STR_TABLE = {
+    FORM_STR_TEMPLATE = {
         'name':'strTable',   'title':'Target {n}',   'labels': {},    'values':{}
     }
 
@@ -161,9 +162,9 @@ class CylinderReport(Reports):
     '''
 
     #Template for field/measurement data and properties
-        #When the table is built, one entry will look like:
-            #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'data':{'actual':'', 'min':'', 'max':'', 'notes':''}}
-    FORM_CONDITIONS_TABLE = [
+    #When the table is built, one entry will look like:
+        #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'data':{'actual':'', 'min':'', 'max':'', 'notes':''}}
+    FORM_CONDITIONS_TEMPLATE = [
         {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
         {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
         {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'labels':{}, 'values':{}},
@@ -174,20 +175,6 @@ class CylinderReport(Reports):
         {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
         {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'values':{}},
     ]
-    '''
-    
-    FORM_CONDITIONS_TABLE = [
-        {'title':'Flow (mm)',                           'property':'flow',          'name':'cylConFlow',            'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'T<sub>50</sub>(s)',                   'property':'t_50',          'name':'cylConT50',             'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'VSI',                                 'property':'vsi',           'name':'cylConVSI',             'SCC':True, 'CYL': False, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Slump (mm)',                          'property':'slump',         'name':'cylConSlump',           'SCC':False, 'CYL':True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Air (%)',                             'property':'air',           'name':'cylConAir',             'SCC':True, 'CYL':True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',       'name':'cylConDensity',         'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',    'name':'cylConSampleTemp',      'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',   'name':'cylConAmbientTemp',     'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-        {'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',   'name':'cylConInitialTemp',     'SCC':True, 'CYL': True, 'suffix':CONDITIONS_SUFFIX, 'data':CONDITIONS_DATA},
-    ]
-    '''
 
     '''-------------------------------------SQL DATA-------------------------------------'''
 
@@ -283,8 +270,9 @@ class CylinderReport(Reports):
     @classmethod
     def create_default(cls):
         id = -1
-        strTable = cls.__create_data_n_table(id, cls.FORM_STR_TABLE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
-        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TABLE, cls.CONDITIONS_LABELS)
+
+        strTable = cls.__create_data_n_table(id, cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
+        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
         defaultData = {
             "id": id,
@@ -337,7 +325,7 @@ class CylinderReport(Reports):
                 else:
                     break
 
-        conditions_table = cls.FORM_CONDITIONS_TABLE.copy()
+        conditions_table = cls.FORM_CONDITIONS_TEMPLATE.copy()
 
 
         # Build conditions table. Match database results to stored conditions table
@@ -389,38 +377,84 @@ class CylinderReport(Reports):
 
         return cls(data)
 
-
-    #Create a list of dicts
     @classmethod
-    def __create_data_n_table(cls, id, templateRow, labels, n):
+    def __create_data_n_table(cls, id, templateRow, keyNames, n):
         dataList = []
 
-        for i in range(n):
-            data = templateRow.copy()
+        startVal = 1  #Start at 0 or 1
 
-            for key,value in labels.items():
-                data['labels'][key] = data['name'] + value
-                data['values'][key] = ''
+        for i in range(n):
+            index = str(i + startVal)
+            data = copy.deepcopy(templateRow)
+            data['title'] = data['title'].replace('{n}', index)   #Replace any instances of {n} in 'title' with index
+            name = data['name']
+            data['name'] = name + index
+
+            #Iterate through labels and assign/concatenate names to the 'labels' and 'values' subdicts
+                # Using the keys from 'keyNames' as keys for the 'labels' sub dictionary and assigning
+                    # a value which is a combination of data['name'] and keyName's key value plus an index string
+            for key,value in keyNames.items():
+                data['labels'][key] = name + value + index  #ex: {'name':'blah',  'labels':{'key':'blahKeyVal'}}
+                data['values'][key] = None
                 data['values']['id'] = id
 
             dataList.append(data)
-
 
         return dataList
 
 
     @classmethod
-    def __create_data_table(cls, template, labels):
+    def __create_data_table(cls, template, keyNames):
+        """
+        Inputs:
+            1. template: [{'name':'myName', 'labels':{}, 'values':{}}]
+            2. keyNames: {
+                'attr1':'Attr1Name',
+                'attr2':'Attr2Name',
+                etc...
+            }
+
+        Output: [{'name':'myName', 'labels':{'attr1':'myNameAttr1Name', 'attr2':'myNameAttr2Name'}, 'values':{'attr1':'', 'attr2':''}}]
+
+        This function takes the 'name' value from the template parameter and does two things:
+            1. Populates the 'labels' sub-dictionary with attribute:concatenated name pairs where it combines the 'name'
+                value of the 'template' parameter with the attribute names of each attribute key in the 'keyNames' parameter
+            2. Populates the 'values' sub-dictionary with attribute:'' pairs where the key attribute corresponds to the
+                keys of the 'keyNames' parameter
+
+        Explanation: The CylinderReport class has several lists of dicts that start with FORM_ and correspond to
+        HTML form input elements. Jinja (generally) reads these directly to create groups of form inputs, and they are also
+        used when submitting forms to get data from each input.
+
+         There are three types of form groupings:
+            1. Basic list of inputs
+            2. Tables with unique rows
+            3. Tables with identical rows
+
+            1: The FORM_TEMPLATE is simply a list of dicts of in the format of [{'name':'inputName'}]. These can be output
+                and read directly and don't require table generation (There maybe be other key:values corresponding to
+                possibly a title or maybe HTML attributes)
+
+
+            2: The FORM_TEMPLATE is still a list of dicts but the format is as follows [{'name':'rowName', 'labels':{}, 'values:'{}}]
+                -Every input in HTML should have a unique name. Creating a table of these manually would require a lot of
+                repetition so it's easier to generate a table combining the 'name' value with pre-defined suffixes, where the
+                suffixes come from the keyNames parameter dictionary
+
+            3: The FORM_TEMPLATE for this type is the simplest. It is just a single dict with the same format as previously
+                mentioned: {'name':'rowName', 'labels':{}, 'values:'{}}. The user specifies how many rows they want a list
+                is generated with the appropriate labels and values as in case 2 also using suffixes from keyName. The only
+                difference is an integer starting at 0? is assigned to each label to make them unique...
+
+        """
         dataList = []
 
-
         for row in template:
-            newRow = {}
-            newRow = row.copy()
+            newRow = copy.deepcopy(row) #copy.deepcopy(): copies nested dicts as copy() alone passes references to nested dicts
 
-            for key,val in labels.items():
+            for key,val in keyNames.items():
                 newRow['labels'][key] = row['name'] + val
-                newRow['values'][key] = ''
+                newRow['values'][key] = None
 
             dataList.append(newRow)
 
@@ -430,16 +464,20 @@ class CylinderReport(Reports):
     #Read form data and create SQL entry
     def form_submit(self):
 
-        fieldData = HLP.get_form_values(self.FORM_FIELD_TABLE)
-        fieldDataSanitized = self.__sanitize_field_data(fieldData)
+        fieldData = HLP.get_form_values(self.FORM_FIELD_TEMPLATE)
+        fieldDataClean = self.__sanitize_field_data(fieldData)
 
-        conData = HLP.get_form_values(self.FORM_CONDITIONS_TABLE)
-        conDataSanitized = self.__santize_con_data(conData)
+        #print(fieldDataClean)
 
-        #strengthData = HLP.get_cyl_str_data()
+        conData = HLP.get_form_values(self.conditions_table)
+        conDataClean = self.__santize_con_data(conData, -1)
+
+        strengthData = HLP.get_form_values(self.strength_table)
+        strDataClean = self.__santize_str_data(strengthData)
+
         #measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
 
-        #self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataSanitized)
+        #self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
 
         #for row in strengthData:
             #HLP.sql_insert(self.TB_STR_REQ, self.SQL_STR_DATA_COLS, [self.submitted_id, row['strength'], row['days']])
@@ -489,20 +527,21 @@ class CylinderReport(Reports):
         sqlData['date_transported']['data'] = fieldData['cylDateTransported']['value']
         sqlData['notes']['data'] = fieldData['cylNotes']['value']
 
+        #for key,value in sqlData.items():
+        #HLP.sql_sanitize(sqlData)
 
-        for key,value in sqlData.items():
-            sqlData[key]['data'] = HLP.sql_sanitize(value)
+        #return sqlData
 
-        return sqlData
-
-    def __santize_con_data(self, conData):
-        sqlData = self.SQL_CONDITIONS_PROPERTIES.copy()
-
+    def __santize_con_data(self, conData, parent_id):
+        #Create a list of dictionaries formatted to the SQL_CONDITIONS_PROPERTIES structure AND sanitize the data to
+            #prepare  for SQL insertion
+        dataList = []
+        sqlData = {}
 
         for key, val in conData.items():
-            print(conData[key])
+            sqlData = self.SQL_CONDITIONS_PROPERTIES.copy()
 
-            sqlData['cyl_report_id']['data'] = -1
+            sqlData['cyl_report_id']['data'] = parent_id
             sqlData['property']['data'] = conData[key]['property']
             sqlData['val_actual']['data'] = conData[key]['values']['actual']
             sqlData['val_min']['data'] = conData[key]['values']['min']
@@ -512,8 +551,24 @@ class CylinderReport(Reports):
             sqlData['val_min_precision']['data'] = 0
             sqlData['val_max_precision']['data'] = 0
 
-        print(sqlData)
+            dataList.append(sqlData)
 
+        HLP.sql_sanitize(dataList)
+
+
+
+
+    def __santize_str_data(self, strData):
+
+        dataList = []
+
+        for key, val in strData.items():
+            sqlData = self.SQL_STR_REQ_PROPERTIES.copy()
+
+            sqlData['cyl_report_id']['data'] = -1
+            sqlData['target_strength']['data'] = strData[key]['values']['strength']
+            sqlData['target_days']['data'] = strData[key]['values']['days']
+            dataList.append(sqlData)
 
 
     #Convert object dict

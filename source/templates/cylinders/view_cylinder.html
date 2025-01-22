@@ -425,10 +425,10 @@
 				<td>
 					
 					{% if editData %}
-						<input type="number" class="form-control cylStrData" id="str_table_str{{ loop.index }}" name="str_table_strength"  value="{{ row.target_strength }}" aria-describedby="textDesc">
+						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.strength }}"  value="{{ row.values.strength }}" aria-describedby="textDesc">
 					{% else %}
 						<div class="col-form-label">
-							{{ row.target_strength }}
+							{{ row.values.strength }}
 						</div>
 					{% endif %}
 					
@@ -436,10 +436,10 @@
 				
 				<td>
 					{% if editData %}
-						<input type="number" class="form-control cylStrData" id="str_table_days{{ loop.index }}" name="str_table_days"  value="{{ row.target_days }}" aria-describedby="textDesc">
+						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.days}}"  value="{{ row.values.days }}" aria-describedby="textDesc">
 					{% else %}
 						<div class="col-form-label">
-							{{ row.target_days }}
+							{{ row.values.days }}
 						</div>	
 					{% endif %}			
 				
@@ -447,7 +447,7 @@
 
 			</tr>
 		
-			<input type="hidden" name="str_table_id" value="{{ row.auto_id }}">
+			<input type="hidden" name="{{ row.labels.id }}" value="{{ row.values.id }}">
 		
 		{% endfor %}
 
