@@ -152,15 +152,6 @@ class CylinderReport(Reports):
     }
 
 
-    '''
-    CONDITIONS_DATA = {
-        "val_actual": "",
-        "val_min": "",
-        "val_max": "",
-        "notes": ""
-    }
-    '''
-
     #Template for field/measurement data and properties
     #When the table is built, one entry will look like:
         #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'data':{'actual':'', 'min':'', 'max':'', 'notes':''}}
@@ -187,16 +178,17 @@ class CylinderReport(Reports):
 
 
     SQL_CONDITIONS_PROPERTIES = {
-        'cyl_report_id':           {'dataType': SQL.DATATYPES.INT,      'size': SQL.INT_SIZES['INT']},
-        'property':                {'dataType': SQL.DATATYPES.VARCHAR,  'size': 255},
-        'val_actual':              {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
-        'val_min':                 {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
-        'val_max':                 {'dataType': SQL.DATATYPES.VARCHAR,  'size': 15},
-        'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,  'size': 1000},
-        'val_actual_precision':    {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
-        'val_min_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
-        'val_max_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+        'cyl_report_id':           {'dataType': SQL.DATATYPES.INT,              'size': SQL.INT_SIZES['INT']},
+        'property':                {'dataType': SQL.DATATYPES.VARCHAR,          'size': 255},
+        'val_actual':              {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15},
+        'val_min':                 {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15},
+        'val_max':                 {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15},
+        'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,          'size': 1000}
     }
+
+    """ 'val_actual_precision':    {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+        'val_min_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},
+        'val_max_precision':       {'dataType': SQL.DATATYPES.TINY_INT, 'size': SQL.INT_SIZES['TINY_INT']},"""
 
 
 
@@ -270,7 +262,9 @@ class CylinderReport(Reports):
     @classmethod
     def create_default(cls):
         id = -1
+        createdby = 'admin'
 
+        #Create data tables from templates
         strTable = cls.__create_data_n_table(id, cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
         conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
@@ -300,7 +294,7 @@ class CylinderReport(Reports):
             "dateTransported": "",
             "notes": "",
             "isSCC": "no",
-            "createdBy": "admin",
+            "createdBy": createdby,
 
             "strTable": strTable,
             "conditionsTable": conTable
@@ -311,19 +305,17 @@ class CylinderReport(Reports):
 
     @classmethod
     def create_from_db(cls, id, editing):
+        strTable = cls.__create_data_n_table(id, cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
 
         #Get database values
         report_result = super().sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
         str_result = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
         con_result = super().sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
 
-        if (not editing):
-            # Looping backwards, drop any entries that are 0 up until the first entry with nonzero data
-            for i in range(len(str_result) - 1, 0, -1):
-                if (str_result[i]['target_strength'] == 0 and str_result[i]['target_days'] == 0):
-                    str_result.pop(i)
-                else:
-                    break
+        str_result = cls.__sql_to_html_strength(str_result, strTable, editing)
+
+        print(str_result)
+
 
         conditions_table = cls.FORM_CONDITIONS_TEMPLATE.copy()
 
@@ -461,44 +453,54 @@ class CylinderReport(Reports):
         return dataList
 
 
+    @classmethod
+    def __sql_to_html_strength(self, sqlResult, strenTable, editing):
+        #Assign SQL data to FORM template
+        strData = []
+
+        strTable = copy.deepcopy(strenTable)
+
+        if (not editing):
+            # Looping backwards, drop any entries that are 0 up until the first entry with nonzero data
+            for i in range(len(sqlResult) - 1, 0, -1):
+                if (sqlResult[i]['target_strength'] == 0 and sqlResult[i]['target_days'] == 0):
+                    sqlResult.pop(i)
+                else:
+                    break
+
+
+        for i, row in enumerate(strTable):
+            row['values']['strength'] = sqlResult[i]['target_strength']
+            row['values']['days'] = sqlResult[i]['target_days']
+
+
+        return strTable
+
+
     #Read form data and create SQL entry
     def form_submit(self):
 
         fieldData = HLP.get_form_values(self.FORM_FIELD_TEMPLATE)
-        fieldDataClean = self.__sanitize_field_data(fieldData)
+        fieldDataClean = self.__field_form_to_sql(fieldData)
+        parentID = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
 
-        #print(fieldDataClean)
+        self.submitted_id = parentID #Populate submitted_id so the newly inserted cylinder can be loaded back from the DB
 
         conData = HLP.get_form_values(self.conditions_table)
-        conDataClean = self.__santize_con_data(conData, -1)
-
         strengthData = HLP.get_form_values(self.strength_table)
-        strDataClean = self.__santize_str_data(strengthData)
 
-        #measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])
+        conDataClean = self.__con_form_to_sql(conData, parentID)
+        strDataClean = self.__strength_form_to_sql(strengthData, parentID)
 
-        #self.submitted_id = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
+        HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
+        HLP.sql_insert(self.TB_STR_REQ, strDataClean)
 
-        #for row in strengthData:
-            #HLP.sql_insert(self.TB_STR_REQ, self.SQL_STR_DATA_COLS, [self.submitted_id, row['strength'], row['days']])
 
-        #for row in measurementData:
-            #HLP.sql_insert(self.TB_CONDITIONS, self.SQL_CON_DATA_COLS, [self.submitted_id, row['property'], row['val_actual'], row['val_min'], row['val_max'], row['notes'], -1, -1, -1])
 
-    def __sanitize_field_data(self, fieldData):
-        """
-        Prepare the field data for entry into the database
-            -Format dates
-            -Ensure data for each column is within size specified in SQL database
-            -Return a dictionary of SQL cols:values to be inserted into the database
 
-        fielData: Dictionary of elementName:value pairs of the read HTML form data
-        """
-
+    def __field_form_to_sql(self, fieldData):
         sqlData = self.SQL_REPORT_PROPERTIES.copy()
 
-        #Match HTML form data to SQL data
-        #sqlData['project_id']['data'] = -1
         sqlData.pop('project_id')
 
         sqlData['date_created']['data'] = fieldData['dateCreated']['value']
@@ -527,19 +529,30 @@ class CylinderReport(Reports):
         sqlData['date_transported']['data'] = fieldData['cylDateTransported']['value']
         sqlData['notes']['data'] = fieldData['cylNotes']['value']
 
-        #for key,value in sqlData.items():
-        #HLP.sql_sanitize(sqlData)
 
-        #return sqlData
-
-    def __santize_con_data(self, conData, parent_id):
-        #Create a list of dictionaries formatted to the SQL_CONDITIONS_PROPERTIES structure AND sanitize the data to
-            #prepare  for SQL insertion
         dataList = []
-        sqlData = {}
+        dataList.append(sqlData)
+
+        dataList = HLP.sql_sanitize(dataList)
+
+        return dataList
+
+    def __con_form_to_sql(self, conData, parent_id):
+        """
+        1. Assign the values from the 'conData' parameter to a specific SQL table
+        2. Convert the result to a list
+        3. Sanitize the data with a helper function
+        4. Return the list
+
+        :param conData: A dictionaries where each main key's value corresponds to HTML form input data. There is a 'values'
+            sub-dictionary which will be populated with key:values which correspond to some SQL database columns
+        :return: A list of dictionaries which correspond to a specific SQL table with clean data ready to be inserted into the
+            database
+        """
+        dataList = []
 
         for key, val in conData.items():
-            sqlData = self.SQL_CONDITIONS_PROPERTIES.copy()
+            sqlData = copy.deepcopy(self.SQL_CONDITIONS_PROPERTIES)
 
             sqlData['cyl_report_id']['data'] = parent_id
             sqlData['property']['data'] = conData[key]['property']
@@ -547,28 +560,43 @@ class CylinderReport(Reports):
             sqlData['val_min']['data'] = conData[key]['values']['min']
             sqlData['val_max']['data'] = conData[key]['values']['max']
             sqlData['notes']['data'] = conData[key]['values']['notes']
-            sqlData['val_actual_precision']['data'] = 0
-            sqlData['val_min_precision']['data'] = 0
-            sqlData['val_max_precision']['data'] = 0
+            #sqlData['val_actual_precision']['data'] = 0
+            #sqlData['val_min_precision']['data'] = 0
+            #sqlData['val_max_precision']['data'] = 0
 
             dataList.append(sqlData)
 
-        HLP.sql_sanitize(dataList)
+        dataList = HLP.sql_sanitize(dataList)
 
+        return dataList
 
+    def __strength_form_to_sql(self, strData, parent_id):
+        """
+        1. Assign the values from the 'strData' parameter to a specific SQL table
+        2. Convert the result to a list
+        3. Sanitize the data with a helper function
+        4. Return the list
 
-
-    def __santize_str_data(self, strData):
+        :param strData: A dictionaries where each main key's value corresponds to HTML form input data. There is a 'values'
+            sub-dictionary which will be populated with key:values which correspond to some SQL database columns
+        :return: A list of dictionaries which correspond to a specific SQL table with clean data ready to be inserted into the
+            database
+        """
+        print(f"strData: {strData}")
 
         dataList = []
 
         for key, val in strData.items():
-            sqlData = self.SQL_STR_REQ_PROPERTIES.copy()
+            sqlData = copy.deepcopy(self.SQL_STR_REQ_PROPERTIES.copy())
 
-            sqlData['cyl_report_id']['data'] = -1
+            sqlData['cyl_report_id']['data'] = parent_id
             sqlData['target_strength']['data'] = strData[key]['values']['strength']
             sqlData['target_days']['data'] = strData[key]['values']['days']
             dataList.append(sqlData)
+
+        dataList = HLP.sql_sanitize(dataList)
+
+        return dataList
 
 
     #Convert object dict
