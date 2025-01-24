@@ -82,10 +82,6 @@ def submit_cylinder():
 @bp.route("/update", methods=['POST'])
 def update_cylinder():
 
-
-
-
-
     fieldData = HLP.get_cyl_field_data()
     strengthData = HLP.get_cyl_str_data()
     measurementData = HLP.get_cyl_conditions_data(fieldData['cylSCC'])

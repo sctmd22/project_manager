@@ -3,10 +3,10 @@ const CONDITIONS_TABLE = conditions_table_json;
 const CYL_EDITING = cyl_editing_json;
 const IS_SCC = cyl_isSCC_json
 
-
+console.log(CONDITIONS_TABLE)
  
 // Get references to the radio buttons and the target element
-const sccRadioButtons = document.querySelectorAll('input[name="cylSCC"]');
+const sccRadioButtons = document.querySelectorAll('input[name="cylIsScc"]');
 
 
 // Function to show or hide the element based on the selected radio button
@@ -19,7 +19,7 @@ function toggleElement() {
 	//Get SCC value either directly from checkboxes or from the IS_SCC variable passed from flask/python
 	if(CYL_EDITING === true){
 		//input[name="cylSCC"] is CSS selector syntax
-		sccVal = document.querySelector('input[name="cylSCC"]:checked').value;
+		sccVal = document.querySelector('input[name="cylIsScc"]:checked').value;
 
 	}
 	
@@ -31,7 +31,7 @@ function toggleElement() {
 	}
 
 	for (let row of CONDITIONS_TABLE){
-		let targetElement = document.getElementById(row['name']+row['suffix']['id']+'Row');
+		let targetElement = document.getElementById(row['name']+'Row');
 		
 		//Show all table rows initially
 		targetElement.classList.remove('cylConditionsHidden');
