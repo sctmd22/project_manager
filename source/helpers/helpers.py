@@ -7,127 +7,6 @@ import db as db
 
 from db import sql_data as SQL
 
-#Replace empty strings with 0
-def zero_fill(list):
-    listLen = len(list)
-
-    if(listLen == 0):
-        print(f"List is length 0")
-        return 0
-
-    try:
-        for i in range(len(list)):
-            if(list[i] == ''):
-                list[i] = 0
-
-    except:
-        print(f"Could not iterate through list")
-        return 0
-
-
-    return list
-
-def listStrtoInt(list):
-    newList = []
-    for i in range(len(list)):
-        try:
-            newList.append(int(list[i]))
-        except:
-            return list
-
-    return newList
-
-
-def strToInt(val):
-    FUNC_NAME = "strToInt()"
-
-    if(val == ''):
-        return 0
-
-    try:
-        newVal = int(val)
-
-    except:
-        print(f"Error: {FUNC_NAME}: Could not convert '{val}' to integer")
-        return None
-
-    return newVal
-
-def strToFloat(val):
-    FUNC_NAME = "strToFloat()"
-    if(val == ""):
-        return 0
-
-    try:
-        newVal = float(val)
-
-    except:
-        print(f"Error: {FUNC_NAME}: Could not convert '{val}' to float")
-        return None
-
-    return newVal
-
-#Convert a date string of HTML_DATE_FORMAT to a python datetime
-def formToDate(strDate):
-    funcName = "strToDate"
-
-    if(strDate == ""):
-        print(f"Error: {funcName}: strTime is empty")
-        return None
-
-    try:
-        newDate = datetime.strptime(strDate, HTML_DATE_FORMAT) #Convert to datetime object
-
-    except:
-        print(f"Error: {funcName} Could not convert '{strDate}' to DATETIME using '{HTML_DATE_FORMAT}'")
-        return None
-
-    return newDate
-
-
-#Convert a time string of either HTML time input or MYSQL time to a python datetime
-    #MySQL will convert a python datetime to a TIME object automatically when inserting
-def formToTime(strTime):
-    funcName = "formToDate"
-
-    size = len(strTime)
-
-    if(not size):
-        print(f"Error: {funcName}: date is empty")
-        return None
-
-    #HH:MM
-    elif(size == len(HTML_TIME_FORMAT)):
-        try:
-            newTime = datetime.strptime(strTime, HTML_TIME_FORMAT)
-
-        except:
-            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{HTML_TIME_FORMAT}'")
-            return None
-
-        return newTime
-
-    #HH:MM:SS
-    elif(size == len(SQL.TIME_FORMAT)):
-        try:
-            newTime = datetime.strptime(strTime, SQL.TIME_FORMAT)
-
-        except:
-            print(f"Error: {funcName} Could not convert '{strTime}' to DATETIME using format '{SQL.TIME_FORMAT}'")
-            return None
-
-        return newTime
-
-    return None
-
-
-def removeNone(val):
-    if(not val):
-        return ""
-
-    return val
-
-
 def get_form_values(formData):
     """
 
@@ -150,11 +29,11 @@ def get_form_values(formData):
         #If the labels key exists and has data, iterate through the elements requesting the form data
         if('labels' in row):
             for key, val in row['labels'].items():
-                row['values'][key] = request.form[row['labels'][key]]
+                row['valData'][key] = request.form[row['labels'][key]]
 
         else:
             #Directly read the 'name' key to get form elements
-            row['value'] = request.form[row['name']]
+            row['valData'] = request.form[row['name']]
 
 
     data = {}
@@ -358,43 +237,50 @@ def sql_sanitize(valueList):
                 data = toInt(data)
                 data = compare_int_size(data, sizeMin, sizeMax)
 
-    
+
             elif(dataType == SQL.DATATYPES.DATETIME):
-    
                 data = toStr(data)
-    
-                # Attempt to convert from string to a date time object using one of two SQL formats
-                try:
-                    data = datetime.strptime(data, SQL.DATETIME_FORMAT)
-    
-                except ValueError as e:
-                    print(f"Warning {FUNC_NAME}: {e}. Trying alternate date format.")
-    
-                    try:
-                        data = datetime.strptime(data, SQL.DATETIME_FORMAT_U)
-    
-                    except ValueError as e:
-                        print(f"Warning {FUNC_NAME}: {e}. Returning None type.")
-                        data = None
-    
+                success = False
+
+                # Attempt to convert from string to a date time object using several formats
+                if(data):
+                    for format in DATE_FORMATS:
+                        try:
+                            data = datetime.strptime(data, format.value)
+
+                        except ValueError:
+                            continue
+
+                        else:
+                            success = True
+                            break
+
+                if(not success):
+                    print(f"Warning: {FUNC_NAME}: data={data} could not be formatted to a datetime object")
+                    data = None
+
+
             elif(dataType == SQL.DATATYPES.TIME):
                 data = toStr(data)
-    
-                try:
-                    data = datetime.strptime(data, HTML_TIME_FORMAT)
-    
-                except ValueError as e:
-                    print(f"Warning {FUNC_NAME}: {e}. Trying alternate time format.")
-    
-                    try:
-    
-                        data = datetime.strptime(data, HTML_TIME_FORMAT_S)
-    
-                    except ValueError as e:
-                        print(f"Warning {FUNC_NAME}: {e}. Returning None type.")
-                        data = None
-    
-    
+                success = False
+
+                # Attempt to convert from string to a date time object using several formats
+                if (data):
+                    for format in TIME_FORMATS:
+                        try:
+                            data = datetime.strptime(data, format.value)
+
+                        except ValueError:
+                            continue
+
+                        else:
+                            success = True
+                            break
+
+                if (not success):
+                    print(f"Warning: {FUNC_NAME}: data={data} could not be formatted to a datetime object")
+                    data = None
+
             elif(dataType == SQL.DATATYPES.ENUM):
                 #Checking to ensure passed enum exists in passed dict
     
@@ -464,4 +350,57 @@ def toStr(val):
     except ValueError as e:
         print(f"Error: {funcName}: Cannot cast val={val} to string. Error msg: {e}")
         return None
+
+
+
+def replaceNone(noneData):
+    """
+    Replace all instances of None with the returnType ('')
+
+    :param noneData: Any data which may contain None types
+        1. A single variable
+        2. A dictionary or nested dictionary
+        3. A list of dictionaries
+    :return: A copy of the input data with None replaced with the returnType
+    """
+    returnType = ''
+
+    if(noneData == None):
+        return returnType
+
+    elif(isinstance(noneData, dict)):
+        newDict = copy.deepcopy(noneData)
+
+        return replaceNoneDict(newDict, returnType)
+
+    elif(isinstance(noneData, list)):
+        newList = []
+
+        for row in noneData:
+            newRow = copy.deepcopy(row)
+            replaced = replaceNoneDict(newRow, returnType)
+            newList.append(replaced)
+
+        return newList
+
+    else:
+        return noneData
+
+
+def replaceNoneDict(data, returnType):
+    """
+    :param dataDict:     Recursively iterate through a dictionary, setting all values of None to ''
+        Dictionary (or list of dicts) with key:values containing None data
+    :return: A copy of dataDict
+    """
+
+    if(data == None):
+        return returnType
+
+    elif(isinstance(data, dict)):
+        for key, val in data.items():
+            data[key] = replaceNoneDict(data[key], returnType)
+
+    return data
+
 

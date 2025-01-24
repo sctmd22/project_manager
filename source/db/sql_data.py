@@ -1,20 +1,21 @@
 from enum import Enum
 
+"""
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 DATETIME_FORMAT_U = DATETIME_FORMAT + ".%f"
 SIMPLE_DATE_FORMAT = "%Y-%m-%d"
 TIME_FORMAT = "%H:%M:%S"
-
+"""
 
 class DATATYPES(Enum):
-    VARCHAR = 1,
-    TEXT = 2,
-    INT = 3,
-    TINY_INT = 4,
-    SMALL_INT = 5,
-    DATETIME = 6,
-    TIME = 7,
-    ENUM = 8,
+    VARCHAR = 1
+    TEXT = 2
+    INT = 3
+    TINY_INT = 4
+    SMALL_INT = 5
+    DATETIME = 6
+    TIME = 7
+    ENUM = 8
     VARCHAR_DECIMAL = 9 #Exact decimal values stored as a VARCHAR in SQL
 
 INT_SIZES = {
