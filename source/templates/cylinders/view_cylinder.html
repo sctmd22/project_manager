@@ -402,6 +402,7 @@
 	</table>
 
 
+
 	
 	<table class="table table-bordered" id="rootTable">
 		<tbody id="table-body">	
@@ -415,20 +416,20 @@
 			<td style="width: 280px">Strength (MPa)</td>
 			<td style="width: 280px">Days</td>
 		</tr>
-
+	
 		{% for row in data.strTable %}
-		
+
 			<tr class="cylStrRow" id="cylStrRow-{{loop.index}}">
 				<td>
-					<label class="col-sm-2 col-form-label cylStrLabel">Target {{ loop.index }}:</label>
+					<label class="col-sm-2 col-form-label cylStrLabel">{{ row.title }}:</label>
 				</td>
 				<td>
 					
 					{% if editData %}
-						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.strength }}"  value="{{ row.values.strength }}" aria-describedby="textDesc">
+						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.strength }}"  value="{{ row.valData.strength }}" aria-describedby="textDesc">
 					{% else %}
 						<div class="col-form-label">
-							{{ row.values.strength }}
+							{{ row.valData.strength }}
 						</div>
 					{% endif %}
 					
@@ -436,10 +437,10 @@
 				
 				<td>
 					{% if editData %}
-						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.days}}"  value="{{ row.values.days }}" aria-describedby="textDesc">
+						<input type="number" class="form-control cylStrData" id="{{ row.name }}" name="{{ row.labels.days}}"  value="{{ row.valData.days }}" aria-describedby="textDesc">
 					{% else %}
 						<div class="col-form-label">
-							{{ row.values.days }}
+							{{ row.valData.days }}
 						</div>	
 					{% endif %}			
 				
@@ -447,7 +448,7 @@
 
 			</tr>
 		
-			<input type="hidden" name="{{ row.labels.id }}" value="{{ row.values.id }}">
+			<input type="hidden" name="{{ row.labels.id }}" value="{{ row.valData.id }}">
 		
 		{% endfor %}
 
@@ -481,19 +482,19 @@
 				
 				{% if editData %}
 					
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.actual }}" name="{{ row.labels.actual }}"  value="{{ row.values.actual }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.min }}" name="{{ row.labels.min }}"  value="{{ row.values.min }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.max }}" name="{{ row.labels.max }}"  value="{{ row.values.max }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.labels.notes }}" name="{{ row.labels.notes }}"  value="{{ row.values.notes }}" aria-describedby="textDesc"></td>
-					<input type="hidden" name="{{ row.labels.id }}" value="{{ row.values.id }}">
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.actual }}" name="{{ row.labels.actual }}"  value="{{ row.valData.actual }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.min }}" name="{{ row.labels.min }}"  value="{{ row.valData.min }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.labels.max }}" name="{{ row.labels.max }}"  value="{{ row.valData.max }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1000" class="form-control cylMeasureNotesText" id="{{ row.labels.notes }}" name="{{ row.labels.notes }}"  value="{{ row.valData.notes }}" aria-describedby="textDesc"></td>
+					<input type="hidden" name="{{ row.labels.id }}" value="{{ row.valData.id }}">
 
 				{% else %}
 					
 	
-					<td>{{ row.values.actual | measurements_f }}</td>
-					<td>{{ row.values.min | measurements_f }}</td>
-					<td>{{ row.values.max | measurements_f }}</td>
-					<td class="cylMeasureNotes">{{ row.values.notes }}</td>
+					<td>{{ row.valData.actual | measurements_f }}</td>
+					<td>{{ row.valData.min | measurements_f }}</td>
+					<td>{{ row.valData.max | measurements_f }}</td>
+					<td class="cylMeasureNotes">{{ row.valData.notes }}</td>
 		
 					
 				{% endif %}
