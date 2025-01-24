@@ -1,5 +1,9 @@
 import copy
 from datetime import datetime
+from sys import exception
+
+from werkzeug.exceptions import BadRequestKeyError
+
 from GLOBALS import *
 from flask import request
 import decimal
@@ -8,9 +12,6 @@ import db as db
 from db import sql_data as SQL
 
 def get_form_values(formData):
-    """
-
-    """
     FUNC_NAME = "get_form_values(formData)"
 
     if(not formData):
@@ -29,12 +30,10 @@ def get_form_values(formData):
         #If the labels key exists and has data, iterate through the elements requesting the form data
         if('labels' in row):
             for key, val in row['labels'].items():
-                row['valData'][key] = request.form[row['labels'][key]]
-
-        else:
-            #Directly read the 'name' key to get form elements
-            row['valData'] = request.form[row['name']]
-
+                try:
+                    row['valData'][key] = request.form[row['labels'][key]]
+                except BadRequestKeyError as e:
+                    print(f"Error: {FUNC_NAME}: Could not request HTML element where name = {row['labels'][key]}")
 
     data = {}
 
@@ -46,9 +45,6 @@ def get_form_values(formData):
         data[key] = row
 
     return data
-
-
-
 
 def strToIntID(val):
     FUNC_NAME = "strToIntID()"
@@ -331,6 +327,9 @@ def compare_int_size(integer, min, max):
 def toInt(val):
     funcName = "toInt(val)"
 
+    if(not val):
+        return None
+
     try:
         val = int(val)
         return val
@@ -403,4 +402,14 @@ def replaceNoneDict(data, returnType):
 
     return data
 
+
+
+def capitalizeFirst(val):
+    if(not val):
+        return ''
+
+    if(not isinstance(val, str)):
+        return val
+
+    return val[:1].upper() + val[1:]
 
