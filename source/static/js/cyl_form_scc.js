@@ -2,8 +2,6 @@
 const CONDITIONS_TABLE = conditions_table_json;
 const CYL_EDITING = cyl_editing_json;
 const IS_SCC = cyl_isSCC_json
-
-console.log(CONDITIONS_TABLE)
  
 // Get references to the radio buttons and the target element
 const sccRadioButtons = document.querySelectorAll('input[name="cylIsScc"]');

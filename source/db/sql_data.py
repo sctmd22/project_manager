@@ -21,7 +21,8 @@ class DATATYPES(Enum):
 INT_SIZES = {
     'TINY_INT':     {'MIN':0, 'MAX':255},
     'SMALL_INT':    {'MIN':-32768, 'MAX':32767},
-    'INT':          {'MIN':-2147483648, 'MAX':2147483647}
+    'INT':          {'MIN':-2147483648, 'MAX':2147483647},
+    'UINT':         {'MIN':0, 'MAX':2147483647},
 }
 
 TEXT_SIZES = {

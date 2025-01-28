@@ -11,6 +11,7 @@ import db as db
 
 from db import sql_data as SQL
 
+
 def get_form_values(formData):
     FUNC_NAME = "get_form_values(formData)"
 
@@ -75,11 +76,131 @@ def get_edit():
         return False
 
 
+def sql_delete(sql_table, delID):
+    """
+
+    :param sql_table: The name of the SQL table to delete data from
+    :param delID: Either a single ID or a list of ID's which correspond to the SQL auto_id field
+    :return:
+    """
+    FUNC_NAME = "sql_delete(sql_table, idList)"
+
+    if(not sql_table):
+        print(f"Error: {FUNC_NAME}: TABLE not specified")
+        return False
+
+    if(isinstance(delID, int)):
+        __sql_delete_item(sql_table, delID)
+        return True
+
+    elif(isinstance(delID, tuple) or isinstance(delID, list)):
+        for id in delID:
+            __sql_delete_item(sql_table, id)
+
+        return True
+
+    else:
+        return False
+
+
+def __sql_delete_item(sql_table, id):
+    dbCon = db.db_connect()
+    cursor = dbCon.cursor()
+
+    SQL_PROJECT_GET = (f"DELETE FROM {sql_table} WHERE auto_id = %s")
+
+    # Sending query as a tuple to reduce the risk of SQL injection
+    values = (id,)
+    cursor.execute(SQL_PROJECT_GET, values)
+
+    dbCon.commit()
+
+    cursor.close()
+    dbCon.close()  # return connection to pool
+
+
+
+def sql_update(sql_table, dataListIn):
+    """
+       Iterate through the 'dataListIn',  updating each row of SQL formatted data of the 'sql_table' database
+
+       :param sql_table: The name of the SQL table to update
+       :param dataList:  A list of dictionaries with data, properties and column names of a SQL table
+       :return: True if successful, otherwise False
+       """
+
+    FUNC_NAME = "sql_update(sql_table, dataListIn)"
+
+    if (not sql_table):
+        print(f"Error: {FUNC_NAME}: TABLE not specified")
+        return None
+
+    if (not dataListIn):
+        print(f"Error: {FUNC_NAME}: dataListIn empty")
+        return None
+
+    if (not isinstance(dataListIn, list)):
+        print(f"Error: {FUNC_NAME}: dataListIn is not a dictionary")
+        return None
+
+    #Make a copy of dataList
+    dataList = copy.deepcopy(dataListIn)
+
+    autoIDData = None
+
+    returnVal = True
+
+    for row in dataList:
+        colList = []
+        valList = []
+
+        try:
+            autoIDData = row.pop('auto_id')  # Remove and get autoID value
+            autoIDVal = autoIDData['data']
+
+        except KeyError as e:
+            print(f"Error: {FUNC_NAME}: key does not exist in dataList where key={e}")
+            returnVal = False
+            break
+
+
+        # Grab dictionary values to create a list of SQL column names and a list of corresponding values
+        for key, value in row.items():
+            keyString = key + " = %s"
+            colList.append(keyString)
+            valList.append(value['data'])
+
+
+        valList.append(autoIDVal)
+
+        # Separate list items with placeholder
+        colNames = ', '.join(colList)
+
+        try:
+            dbCon = db.db_connect()
+            cursor = dbCon.cursor()
+
+            query = (f"UPDATE {sql_table} SET {colNames} WHERE auto_id = %s")
+
+            cursor.execute(query, valList)
+            dbCon.commit()
+
+            cursor.close()
+            dbCon.close()  # return connection to pool
+
+
+        except db.Error as err:
+            print(f"Error: {FUNC_NAME}: Error message: {err}")
+            returnVal = False
+
+    return returnVal
+
+
 def sql_insert(sql_table, dataList):
     """
     Iterate through the 'dataList', inserting each row of SQL formatted data into the 'sql_table' database
 
-    :param sql_table:
+    :param sql_table: The name of the SQL table to insert into
     :param dataList:  A list of dictionaries with data, properties and column names of a SQL table
     :return: A list of the last auto_increment ID of each row inserted. 'None' if the auto_increment ID cannot
     be obtained from the database
@@ -98,7 +219,6 @@ def sql_insert(sql_table, dataList):
     if(not isinstance(dataList, list)):
         print(f"Error: {FUNC_NAME}: dataList is not a dictionary")
         return None
-
 
     IDList = [] #Store the lastrowid for each insertion
     id = None
@@ -132,6 +252,7 @@ def sql_insert(sql_table, dataList):
         try:
             dbCon = db.db_connect()
             cursor = dbCon.cursor()
+
 
             query = (f"INSERT INTO {sql_table} ({colNames}) VALUES ({placeholders})")
 
@@ -182,6 +303,8 @@ def sql_sanitize(valueList):
     for row in valueList:
         newRow = copy.deepcopy(row) #Copy the row as to not alter original
 
+        #print(f"SANITIZE ROW: {newRow}")
+
         for key,val in newRow.items():
 
             dataType = val['dataType']
@@ -197,38 +320,38 @@ def sql_sanitize(valueList):
             sizeMax = 0
 
             #print(f"data={data}, sizeLimit={sizeLimit}, type={type}")
-    
+
             if(isinstance(sizeLimit, dict)):
                 sizeMin = sizeLimit['MIN']
                 sizeMax = sizeLimit['MAX']
-    
-    
+
+
             if(dataType == SQL.DATATYPES.VARCHAR):
                 data = str(data)
                 dataLen = len(data)
-    
+
                 if(dataLen > sizeLimit):
                     data = data[0:sizeLimit]
                     print(f'WARNING: {FUNC_NAME}: VARCHAR data of length={dataLen} truncated to {sizeLimit} characters')
-    
+
             elif(dataType == SQL.DATATYPES.TEXT):
                 data = str(data)
                 dataLen = len(data)
-    
+
                 if(dataLen > sizeLimit):
                     data = data[0:sizeLimit]
                     print(f'WARNING: {FUNC_NAME}: TEXT data of length={dataLen} truncated to {sizeLimit} characters')
-    
-    
+
+
             elif(dataType == SQL.DATATYPES.TINY_INT):
                 data = toInt(data)
                 data = compare_int_size(data, sizeMin, sizeMax)
-    
-    
+
+
             elif(dataType == SQL.DATATYPES.SMALL_INT):
                 data = toInt(data)
                 data = compare_int_size(data, sizeMin, sizeMax)
-    
+
             elif(dataType == SQL.DATATYPES.INT):
                 data = toInt(data)
                 data = compare_int_size(data, sizeMin, sizeMax)
@@ -279,7 +402,7 @@ def sql_sanitize(valueList):
 
             elif(dataType == SQL.DATATYPES.ENUM):
                 #Checking to ensure passed enum exists in passed dict
-    
+
                 if (data not in enums):
                     print(f"Error: {FUNC_NAME}: Could not find item={data} in enumeration list={enums}")
                     data = None
