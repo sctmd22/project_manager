@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from filters import strip_date_f
 from helpers import helpers as HLP
 import db as db
 import copy
@@ -180,9 +182,10 @@ class CylinderReport(Reports):
     '''-------------------------------------SQL DATA-------------------------------------'''
 
     SQL_STR_REQ_PROPERTIES = {
-        'cyl_report_id':      {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT'],      'data':None},
-        'target_strength':    {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT'],      'data':None},
-        'target_days':        {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['INT'],      'data':None}
+        'cyl_report_id':      {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'target_strength':    {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'target_days':        {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'auto_id':            {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None}
     }
 
 
@@ -193,7 +196,8 @@ class CylinderReport(Reports):
         'val_actual':              {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15,                         'data':None},
         'val_min':                 {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15,                         'data':None},
         'val_max':                 {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,  'size': 15,                         'data':None},
-        'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,          'size': 1000,                       'data':None}
+        'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,          'size': 1000,                       'data':None},
+        'auto_id':                 {'dataType': SQL.DATATYPES.INT,              'size': SQL.INT_SIZES['INT'],       'data':None}
     }
 
 
@@ -224,23 +228,24 @@ class CylinderReport(Reports):
         'time_sample':                 {'dataType': SQL.DATATYPES.TIME,        'size': None,                                    'data':None},
         'time_cast':                   {'dataType': SQL.DATATYPES.TIME,        'size': None,                                    'data':None},
         'date_transported':            {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
-        'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None}
+        'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
+        'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
 
 
 
     #Constructor
-    def __init__(self, data):
+    def __init__(self, data, id):
+        self.id = id
         self.field_table = data['fieldTable']
         self.strength_table = data['strTable']
         self.conditions_table = data['conditionsTable']
 
-        self.submitted_id = -1
-
     #Create a new cylinder report with default values
     @classmethod
     def create_default(cls):
-        id = None
+        parent_id = None
+        cylinder_id = None
         createdby = 'admin'
 
         #Create data tables from templates
@@ -249,12 +254,9 @@ class CylinderReport(Reports):
         conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
 
-        #Only 1 item, remove from list
-        #fieldTable = fieldTable[0]
-
         #Populate some defaults
-        fieldTable[0]['valData']['projectID'] = id
-        fieldTable[0]['valData']['cylinderID'] = id
+        fieldTable[0]['valData']['projectID'] = parent_id
+        fieldTable[0]['valData']['cylinderID'] = cylinder_id
         fieldTable[0]['valData']['dateCreated'] = datetime.today()
         fieldTable[0]['valData']['createdBy'] = createdby
         fieldTable[0]['valData']['reportTitle'] = 'Report Title'
@@ -271,10 +273,10 @@ class CylinderReport(Reports):
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
-        return cls(defaultData)
+        return cls(defaultData, id)
 
     @classmethod
-    def create_from_db(cls, id, editing):
+    def create_from_db(cls, id, editing=False):
         fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
         conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
@@ -288,13 +290,15 @@ class CylinderReport(Reports):
         str_result = cls.__sql_to_html_strength(str_sql, strTable, editing)
         con_result = cls.__sql_to_html_con(con_sql, conTable)
 
+        id = field_result[0]['valData']['cylinderID']
+
         data = {
             "fieldTable":field_result,
             "strTable": str_result,
             "conditionsTable": con_result,
         }
 
-        return cls(data)
+        return cls(data, id)
 
     @classmethod
     def __create_data_n_table(cls, templateRow, formLabels, n):
@@ -391,6 +395,8 @@ class CylinderReport(Reports):
     def __sql_to_html_field(self, sqlResult, formTable):
         formData = copy.deepcopy(formTable)
 
+        sqlResult = replaceNone(sqlResult)
+
         #formTable only has 1 list element
         for row in formData:
             row['valData']['projectID'] = sqlResult['project_id']
@@ -402,6 +408,8 @@ class CylinderReport(Reports):
             row['valData']['projectName'] = sqlResult['project_name']
             row['valData']['ticketNum'] = sqlResult['ticket_num']
             row['valData']['supplier'] = sqlResult['supplier']
+            row['valData']['truckNum'] = sqlResult['truck_num']
+            row['valData']['loadNum'] = sqlResult['load_num']
             row['valData']['contractor'] = sqlResult['contractor']
             row['valData']['sampledFrom'] = sqlResult['sampled_from']
             row['valData']['mixID'] = sqlResult['mix_id']
@@ -435,17 +443,18 @@ class CylinderReport(Reports):
         strList = []
 
         strTable = copy.deepcopy(formTable)
-
-        #Ensure all None values are removed
-        sqlResult = replaceNone(sqlResult)
+        sqlResult = copy.deepcopy(sqlResult)
 
         if (not editing):
             # Looping backwards, drop any entries that are 0 up until the first entry with nonzero data
             for i in range(len(sqlResult) - 1, 0, -1):
-                if (not sqlResult[i]['target_strength'] and not sqlResult[i]['target_days']):
+                if (sqlResult[i]['target_strength'] == None and sqlResult[i]['target_days'] == None):
                     sqlResult.pop(i)
                 else:
                     break
+
+        #Ensure all None values are removed
+        sqlResult = replaceNone(sqlResult)
 
 
         #Populate the strTable with the SQL results
@@ -460,8 +469,6 @@ class CylinderReport(Reports):
 
     @classmethod
     def __sql_to_html_con(self, sqlResult, formTable):
-        retList = []
-
         newFormTable = copy.deepcopy(formTable)
 
         #Ensure all None values are removed
@@ -482,25 +489,45 @@ class CylinderReport(Reports):
         return newFormTable
 
     #Read form data and create SQL entry
-    def form_submit(self):
+    def submit_form(self):
         fieldData = HLP.get_form_values(self.field_table)
-
         fieldDataClean = self.__field_form_to_sql(fieldData)
         cylID = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
 
-        self.submitted_id = cylID #Populate submitted_id so the newly inserted cylinder can be loaded back from the DB
+        self.id = cylID #Populate submitted_id so the newly inserted cylinder can be loaded back from the DB
 
-        conData = HLP.get_form_values(self.conditions_table)
         strengthData = HLP.get_form_values(self.strength_table)
-
-        conDataClean = self.__con_form_to_sql(conData, cylID)
         strDataClean = self.__strength_form_to_sql(strengthData, cylID)
-
-        HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
         HLP.sql_insert(self.TB_STR_REQ, strDataClean)
 
+        conData = HLP.get_form_values(self.conditions_table)
+
+        print(f"conData = {conData}")
+
+        conDataClean = self.__con_form_to_sql(conData, cylID)
+        HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
+
+    def submit_edit(self):
+        print(f"self.field_table: {self.field_table}")
+        fieldData = HLP.get_form_values(self.field_table)
+
+
+        fieldDataClean = self.__field_form_to_sql(fieldData)
+        HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
+
+        strengthData = HLP.get_form_values(self.strength_table)
+        strDataClean = self.__strength_form_to_sql(strengthData, self.id)
+        HLP.sql_update(self.TB_STR_REQ, strDataClean)
+
+        conData = HLP.get_form_values(self.conditions_table)
+        conDataClean = self.__con_form_to_sql(conData, self.id)
+        HLP.sql_update(self.TB_CONDITIONS, conDataClean)
+
+    def delete(self):
+        pass
+
     def __field_form_to_sql(self, fieldData):
-        sqlData = self.SQL_REPORT_PROPERTIES.copy()
+        sqlData = copy.deepcopy(self.SQL_REPORT_PROPERTIES)
 
         #Grab the only key
         key = next(iter(fieldData))
@@ -533,6 +560,8 @@ class CylinderReport(Reports):
         sqlData['date_transported']['data'] = fieldData[key]['valData']['dateTransported']
         sqlData['notes']['data'] = fieldData[key]['valData']['notes']
 
+        sqlData['auto_id']['data'] = fieldData[key]['valData']['cylinderID']
+
         dataList = []
         dataList.append(sqlData)
 
@@ -563,9 +592,7 @@ class CylinderReport(Reports):
             sqlData['val_min']['data'] = conData[key]['valData']['min']
             sqlData['val_max']['data'] = conData[key]['valData']['max']
             sqlData['notes']['data'] = conData[key]['valData']['notes']
-            #sqlData['val_actual_precision']['data'] = 0
-            #sqlData['val_min_precision']['data'] = 0
-            #sqlData['val_max_precision']['data'] = 0
+            sqlData['auto_id']['data'] = conData[key]['valData']['autoID']
 
             dataList.append(sqlData)
 
@@ -593,6 +620,7 @@ class CylinderReport(Reports):
             sqlData['cyl_report_id']['data'] = cylID
             sqlData['target_strength']['data'] = strData[key]['valData']['strength']
             sqlData['target_days']['data'] = strData[key]['valData']['days']
+            sqlData['auto_id']['data'] = strData[key]['valData']['autoID']
             dataList.append(sqlData)
 
         dataList = HLP.sql_sanitize(dataList)
@@ -604,7 +632,8 @@ class CylinderReport(Reports):
     def to_dict(self):
 
         objectData = {
-            "fieldTable":self.field_table[0],
+            "id":self.id,   #id is also in 'fieldTable', but this allows quick acccess
+            "fieldTable":self.field_table[0], #Return 0th item because even though it is a list it only has 1 entry
             "strTable": self.strength_table,
             "conditionsTable": self.conditions_table
         }

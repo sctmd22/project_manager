@@ -517,10 +517,10 @@
 				<td>
 				{% if editData %}
 					<div class="form-group">
-                        <textarea name="cylNotes" id="cylNotes" class="form-control" rows="3" placeholder="">{{ data.notes|e }}</textarea>
+                        <textarea name="cylNotes" id="cylNotes" class="form-control" rows="3" placeholder="">{{ data.fieldTable.valData.notes|e }}</textarea>
                       </div>
 				{% else %}
-					{{ data.notes|e }}
+					{{ data.fieldTable.valData.notes|e }}
 				{% endif %}
 				</td>
 				
@@ -545,22 +545,22 @@
 				{% if editData %}
 						<select class="form-select cylFormData" name="cylStatus" id="cylStatus">
 						{% for key,value in tables.statusData.items() %}	
-							<option value="{{ key }}" {% if key == data.status %}selected{% endif %}>{{ value }}</option>
+							<option value="{{ key }}" {% if key == data.fieldTable.valData.status %}selected{% endif %}>{{ value }}</option>
 						{% endfor %}
 						</select>
 				{% else %}
-					{{ data.status | project_status_f }}
+					{{ data.fieldTable.valData.status | project_status_f }}
 				{% endif %}
 				</td>
 			
 			</tr>
 			<tr class="align-middle">
 				<td>Created by:</td>
-				<td>{{ data.createdBy|e }}</td>
+				<td>{{ data.fieldTable.valData.createdBy | e }}</td>
 			</tr>
 			<tr class="align-middle">
 				<td>Date Created:</td>
-				<td> {{data.dateCreated | date_created_f }} </td>
+				<td> {{ data.fieldTable.valData.dateCreated | date_created_f }} </td>
 			</tr>
 
 
