@@ -531,6 +531,86 @@
 
 		</table>		
 	</div>
+	
+	
+	<div class="table-container-measurements">
+		<table class="table table-bordered table-container-measurements">
+			<tbody>	
+			
+			<tr>
+				<td colspan="14"><b>Cylinder Data:</b></td>
+			</tr>
+
+			<tr class="cylItemsRowHeaders">
+				<td>Specimen ID</td>
+				<td>Date Received</td>
+				<td>Date Tested</td>
+				<td>Age (Days)</td>
+				<td>Diameter (mm)</td>
+				<td>Length (mm)</td>
+				<td>Area (mm<sup>2</sup>)</td>
+				<td>Weight (g)</td>
+				<td>Strength (Mpa)</td>
+				<td>Break Type</td>
+				<td>Required Strength</td>
+				<td>% of Required</td>
+				<td>Tech Initial</td>
+				
+			</tr>
+			
+			
+			{% for row in data.cylItemsTable %}
+
+
+			<tr class="cylItemsRow" id="{{ row.name }}Row">
+
+				{% if editData %}
+					
+					<td><input type="text" maxlength="16" class="form-control cylItemsID" id="{{ row.labels.itemID }}" name="{{ row.labels.itemID }}" value="{{ row.valData.itemID }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylItemsDate" id="{{ row.labels.dateReceived }}" name="{{ row.labels.dateReceived }}" value="{{ row.valData.dateReceived }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="8" class="form-control cylItemsDate" id="{{ row.labels.dateTested }}" name="{{ row.labels.dateTested }}" value="{{ row.valData.dateTested }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="3" class="form-control cylItemsSmall" id="{{ row.labels.age }}" name="{{ row.labels.age }}" value="{{ row.valData.age }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="3" class="form-control cylItemsSmall" id="{{ row.labels.diameter }}" name="{{ row.labels.diameter }}" value="{{ row.valData.diameter }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="3" class="form-control cylItemsSmall" id="{{ row.labels.length }}" name="{{ row.labels.length }}" value="{{ row.valData.length }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="5" class="form-control cylItemsSmall2" id="{{ row.labels.area }}" name="{{ row.labels.area }}" value="{{ row.valData.area }}" aria-describedby="textDesc" disabled></td>
+					<td><input type="text" maxlength="6" class="form-control cylItemsSmall3" id="{{ row.labels.weight }}" name="{{ row.labels.weight }}" value="{{ row.valData.weight }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="6" class="form-control cylItemsSmall2" id="{{ row.labels.strength }}" name="{{ row.labels.strength }}" value="{{ row.valData.strength }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="1" class="form-control cylItemsSmall" id="{{ row.labels.breakType }}" name="{{ row.labels.breakType }}" value="{{ row.valData.breakType }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="4" class="form-control cylItemsSmall" id="{{ row.labels.requiredStrength }}" name="{{ row.labels.requiredStrength }}" value="{{ row.valData.requiredStrength }}" aria-describedby="textDesc" disabled></td>
+					<td><input type="text" maxlength="4" class="form-control cylItemsSmall" id="{{ row.labels.percentStrength }}" name="{{ row.labels.percentStrength }}" value="{{ row.valData.percentStrength }}" aria-describedby="textDesc" disabled></td>
+					<td><input type="text" maxlength="3" class="form-control cylItemsSmall" id="{{ row.labels.initials }}" name="{{ row.labels.initials }}" value="{{ row.valData.initials }}" aria-describedby="textDesc"></td>
+					
+					
+					
+					<input type="hidden" name="{{ row.labels.autoID }}" value="{{ row.valData.autoID }}">
+
+				{% else %}
+					
+	
+					<td style="width:110px">{{ row.valData.itemID }}</td>
+					<td style="width:110px">{{ row.valData.dateReceived | strip_time_f }}</td>
+					<td style="width:110px">{{ row.valData.dateTested | strip_time_f }}</td>
+					<td>{{ row.valData.age }}</td>
+					<td>{{ row.valData.diameter }}</td>
+					<td>{{ row.valData.length }}</td>
+					<td>{{ row.valData.area }}</td>
+					<td>{{ row.valData.weight }}</td>
+					<td>{{ row.valData.strength }}</td>
+					<td>{{ row.valData.breakType }}</td>
+					<td>{{ row.valData.requiredStrength }}</td>
+					<td>{{ row.valData.percentStrength }}%</td>
+					<td>{{ row.valData.initials }}</td>
+					
+				{% endif %}
+				
+
+			</tr>
+
+			{% endfor %}
+
+		</table>		
+	</div>
+	
 		
 	<table class="table table-bordered">
 		<tbody>	
