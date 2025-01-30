@@ -305,6 +305,8 @@
 
 	</tbody>
 	</table>
+	
+	<br />
 
 	<table class="table table-bordered">
 		<tbody>
@@ -404,15 +406,27 @@
 	</tbody>
 	</table>
 
-
+	<br />
 
 	
 	<table class="table table-bordered" id="rootTable">
-		<tbody id="table-body">	
+		<tbody id="table-body-9">	
 		<tr>
 			<td colspan="3"><b>Strength Target:</b></td>
 			<!--<input type="hidden" id="cyl_str_total_rows" value="{{ data.fieldTable.valData.numStrTargets }}">-->
 		</tr>
+	
+		{% if editData %}
+		<tr class="">
+			<td colspan=3>
+				<button type="button" class="btn btn-primary" onclick="STR_FUNCTIONS.addStrTarget()">Add Target</button>
+				<button type="button" class="btn btn-primary" onclick="STR_FUNCTIONS.removeStrTarget()">Remove Target</button>
+			</td>
+			
+		</tr>
+			
+		
+		{% endif %}
 	
 		<tr class="cylStrRow">
 			<td></td>
@@ -422,7 +436,7 @@
 	
 		{% for row in data.strTable %}
 
-			<tr class="cylStrRow" id="cylStrRow-{{loop.index}}">
+			<tr class="cylStrRow" id="{{ row.name }}">
 				<td>
 					<label class="col-sm-2 col-form-label cylStrLabel">{{ row.title }}:</label>
 				</td>
@@ -454,10 +468,16 @@
 			<input type="hidden" name="{{ row.labels.autoID }}" value="{{ row.valData.autoID }}">
 		
 		{% endfor %}
+		
+		
+			
+		
 
 		</tbody>
 	
-	</table>	
+	</table>
+	
+	<br />
 	
 	<div class="table-container-measurements">
 		<table class="table table-bordered table-container-measurements">
@@ -596,12 +616,13 @@
 {% endif %}
 
 	<script>
-		//Jsonify the data passed through Flask for the cyl_from_scc.js script
+		//Jsonify the data passed through Flask for the cyl_from.js script
         const conditions_table_json = {{ data.conditionsTable | tojson }};
 		const cyl_editing_json = {{ editData | tojson }};
 		const cyl_isSCC_json = {{ data.fieldTable.valData.isScc | tojson }};
+		const strength_table_json = {{ data.strTable | tojson }}
     </script>
 
-	 <script src="{{ url_for('static', filename='js/cyl_form_scc.js') }}"></script> 
+	 <script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
 
 {% endblock %}

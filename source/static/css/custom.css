@@ -62,7 +62,6 @@
 
 .cylStrRow {
 	text-align: center;
-	
 }
 
 .cylStrLabel {
@@ -107,7 +106,7 @@
 }
 
 
-.cylConditionsHidden {
+.cylHidden {
 	display: none;
 	
 }
