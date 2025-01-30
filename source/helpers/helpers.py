@@ -78,46 +78,60 @@ def get_edit():
 
 def sql_delete(sql_table, delID):
     """
+    Take an ID or list of ID's corresponding to the SQL auto_id field in the SQL table sql_table and remove each entry
 
     :param sql_table: The name of the SQL table to delete data from
     :param delID: Either a single ID or a list of ID's which correspond to the SQL auto_id field
-    :return:
+    :return: Number of items deleted. 0 if none or error
     """
     FUNC_NAME = "sql_delete(sql_table, idList)"
 
+    numRows = 0
+
     if(not sql_table):
         print(f"Error: {FUNC_NAME}: TABLE not specified")
-        return False
+        return 0
 
     if(isinstance(delID, int)):
-        __sql_delete_item(sql_table, delID)
-        return True
+        return __sql_delete_item(sql_table, delID)
 
     elif(isinstance(delID, tuple) or isinstance(delID, list)):
         for id in delID:
-            __sql_delete_item(sql_table, id)
+            numRows += __sql_delete_item(sql_table, id)
 
-        return True
-
+        return numRows
     else:
-        return False
+        return 0
 
 
 def __sql_delete_item(sql_table, id):
-    dbCon = db.db_connect()
-    cursor = dbCon.cursor()
+    FUNC_NAME = "__sql_delete_item(sql_table, id):"
 
-    SQL_PROJECT_GET = (f"DELETE FROM {sql_table} WHERE auto_id = %s")
+    try:
+        dbCon = db.db_connect()
+        cursor = dbCon.cursor()
 
-    # Sending query as a tuple to reduce the risk of SQL injection
-    values = (id,)
-    cursor.execute(SQL_PROJECT_GET, values)
+        SQL_PROJECT_GET = (f"DELETE FROM {sql_table} WHERE auto_id = %s")
 
-    dbCon.commit()
+        # Sending query as a tuple to reduce the risk of SQL injection
+        values = (id,)
+        cursor.execute(SQL_PROJECT_GET, values)
 
-    cursor.close()
-    dbCon.close()  # return connection to pool
+        numRows = cursor.rowcount
 
+        if(numRows):
+            print(f"Info: {FUNC_NAME}: Deleted {numRows} row from table='{sql_table}' where auto_id={id}")
+
+        dbCon.commit()
+
+        cursor.close()
+        dbCon.close()  # return connection to pool
+
+        return numRows
+
+    except db.Error as e:
+        print(f"Error: {FUNC_NAME}: {e}")
+        return 0
 
 
 def sql_update(sql_table, dataListIn):
@@ -493,14 +507,14 @@ def replaceNone(noneData):
     elif(isinstance(noneData, dict)):
         newDict = copy.deepcopy(noneData)
 
-        return replaceNoneDict(newDict, returnType)
+        return __replaceNoneDict(newDict, returnType)
 
     elif(isinstance(noneData, list)):
         newList = []
 
         for row in noneData:
             newRow = copy.deepcopy(row)
-            replaced = replaceNoneDict(newRow, returnType)
+            replaced = __replaceNoneDict(newRow, returnType)
             newList.append(replaced)
 
         return newList
@@ -509,7 +523,7 @@ def replaceNone(noneData):
         return noneData
 
 
-def replaceNoneDict(data, returnType):
+def __replaceNoneDict(data, returnType):
     """
     :param dataDict:     Recursively iterate through a dictionary, setting all values of None to ''
         Dictionary (or list of dicts) with key:values containing None data
@@ -521,13 +535,14 @@ def replaceNoneDict(data, returnType):
 
     elif(isinstance(data, dict)):
         for key, val in data.items():
-            data[key] = replaceNoneDict(data[key], returnType)
+            data[key] = __replaceNoneDict(data[key], returnType)
 
     return data
 
 
 
 def capitalizeFirst(val):
+     #Capitalize the first letter of the passed string
     if(not val):
         return ''
 

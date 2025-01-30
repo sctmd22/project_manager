@@ -78,7 +78,6 @@ class Reports:
 
 
 class CylinderReport(Reports):
-    #Number of cylinder strength targets
     NUM_STR_TARGETS = 5
 
     TB_REPORT_DATA = "cyl_report_data"
@@ -141,6 +140,7 @@ class CylinderReport(Reports):
     STR_LABELS = (
         'strength',
         'days',
+        'visible',
         'autoID'
     )
 
@@ -182,10 +182,11 @@ class CylinderReport(Reports):
     '''-------------------------------------SQL DATA-------------------------------------'''
 
     SQL_STR_REQ_PROPERTIES = {
-        'cyl_report_id':      {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
-        'target_strength':    {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
-        'target_days':        {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None},
-        'auto_id':            {'dataType': SQL.DATATYPES.INT,     'size':SQL.INT_SIZES['UINT'],      'data':None}
+        'cyl_report_id':      {'dataType': SQL.DATATYPES.INT,       'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'target_strength':    {'dataType': SQL.DATATYPES.INT,       'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'target_days':        {'dataType': SQL.DATATYPES.INT,       'size':SQL.INT_SIZES['UINT'],      'data':None},
+        'target_visible':     {'dataType': SQL.DATATYPES.TINY_INT,  'size':SQL.INT_SIZES['TINY_INT'],  'data':None},
+        'auto_id':            {'dataType': SQL.DATATYPES.INT,       'size':SQL.INT_SIZES['UINT'],      'data':None}
     }
 
 
@@ -277,14 +278,16 @@ class CylinderReport(Reports):
 
     @classmethod
     def create_from_db(cls, id, editing=False):
-        fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
-        strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
-        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
-
         #Get database values
         report_sql = super().sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
         str_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
         con_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
+
+        #numStrRows = len(str_sql)
+
+        fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
+        strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
+        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
         field_result = cls.__sql_to_html_field(report_sql, fieldTable)
         str_result = cls.__sql_to_html_strength(str_sql, strTable, editing)
@@ -312,7 +315,7 @@ class CylinderReport(Reports):
             data['title'] = data['title'].replace('{n}', index)   #Replace any instances of {n} in 'title' with index
 
             name = data['name']
-            data['name'] = name + index
+            data['name'] = name + index #Concatenate the index value to the name
 
             #Iterate through labels and assign/concatenate names to the 'labels' and 'valData' subdicts
                 # Using the keys from 'keyNames' as keys for the 'labels' sub dictionary and assigning
@@ -445,6 +448,7 @@ class CylinderReport(Reports):
         strTable = copy.deepcopy(formTable)
         sqlResult = copy.deepcopy(sqlResult)
 
+        '''
         if (not editing):
             # Looping backwards, drop any entries that are 0 up until the first entry with nonzero data
             for i in range(len(sqlResult) - 1, 0, -1):
@@ -452,6 +456,8 @@ class CylinderReport(Reports):
                     sqlResult.pop(i)
                 else:
                     break
+
+        '''
 
         #Ensure all None values are removed
         sqlResult = replaceNone(sqlResult)
@@ -461,6 +467,7 @@ class CylinderReport(Reports):
         for i in range(len(sqlResult)):
             strTable[i]['valData']['strength'] = sqlResult[i]['target_strength']
             strTable[i]['valData']['days'] = sqlResult[i]['target_days']
+            strTable[i]['valData']['visible'] = sqlResult[i]['target_visible']
             strTable[i]['valData']['autoID'] = sqlResult[i]['auto_id']
             strList.append(strTable[i])
 
@@ -524,7 +531,8 @@ class CylinderReport(Reports):
         HLP.sql_update(self.TB_CONDITIONS, conDataClean)
 
     def delete(self):
-        pass
+        HLP.sql_delete(self.TB_REPORT_DATA, self.id)
+
 
     def __field_form_to_sql(self, fieldData):
         sqlData = copy.deepcopy(self.SQL_REPORT_PROPERTIES)
@@ -620,6 +628,7 @@ class CylinderReport(Reports):
             sqlData['cyl_report_id']['data'] = cylID
             sqlData['target_strength']['data'] = strData[key]['valData']['strength']
             sqlData['target_days']['data'] = strData[key]['valData']['days']
+            sqlData['target_visible']['data'] = strData[key]['valData']['visible']
             sqlData['auto_id']['data'] = strData[key]['valData']['autoID']
             dataList.append(sqlData)
 
