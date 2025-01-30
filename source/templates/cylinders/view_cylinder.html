@@ -464,8 +464,10 @@
 				</td>
 
 			</tr>
-		
-			<input type="hidden" name="{{ row.labels.autoID }}" value="{{ row.valData.autoID }}">
+
+			<input type="hidden" id="{{ row.labels.autoID }}" name="{{ row.labels.autoID }}" value="{{ row.valData.autoID }}">
+			<input type="hidden" id="{{ row.labels.visible }}" name="{{ row.labels.visible }}" value="{{ row.valData.visible }}">
+
 		
 		{% endfor %}
 		

@@ -255,6 +255,9 @@ class CylinderReport(Reports):
         conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
 
+        #Ensure first item is always visible
+        strTable[0]['valData']['visible'] = 1
+
         #Populate some defaults
         fieldTable[0]['valData']['projectID'] = parent_id
         fieldTable[0]['valData']['cylinderID'] = cylinder_id
@@ -459,6 +462,7 @@ class CylinderReport(Reports):
 
         '''
 
+
         #Ensure all None values are removed
         sqlResult = replaceNone(sqlResult)
 
@@ -471,6 +475,8 @@ class CylinderReport(Reports):
             strTable[i]['valData']['autoID'] = sqlResult[i]['auto_id']
             strList.append(strTable[i])
 
+        #Ensure the first entry is visible
+        strList[0]['valData']['visible'] = 1
 
         return strList
 
@@ -633,6 +639,9 @@ class CylinderReport(Reports):
             dataList.append(sqlData)
 
         dataList = HLP.sql_sanitize(dataList)
+
+        #Ensure the first item of the strength table is always visible
+        dataList[0]['target_visible']['data'] = 1
 
         return dataList
 
