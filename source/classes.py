@@ -101,6 +101,19 @@ class CylinderReport(Reports):
     }
 
 
+    #This looks stupid. As with other 'options', the left is what is stored in SQL and the right is what is displayed
+        #on the webpage
+    BREAK_TYPE_OPTIONS = {
+        '1':'1',
+        '2':'2',
+        '3':'3',
+        '4':'4',
+        '5':'5',
+        '6':'6'
+    }
+
+
+
     FORM_LABELS = (
         'projectID',    #Parent (project) ID
         'cylinderID',   #autoID
@@ -161,7 +174,6 @@ class CylinderReport(Reports):
     )
 
 
-
     #Template for field/measurement data and properties
     #When the table is built, one entry will look like:
         #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'data':{'actual':'', 'min':'', 'max':'', 'notes':'', 'id':''}}
@@ -178,6 +190,30 @@ class CylinderReport(Reports):
         {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'valData':{}},
         {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'labels':{}, 'valData':{}},
     ]
+
+
+    CYL_ITEMS_LABELS = (
+        'itemID',
+        'dateReceived',
+        'dateTested',
+        'age',
+        'diameter',
+        'length',
+        'area',
+        'weight',
+        'strength',
+        'breakType',
+        'requiredStrength',
+        'percentStrength',
+        'initials',
+        'autoID'
+    )
+
+
+
+    FORM_ITEMS_TEMPLATE = [{
+        'name':'cylItem',   'title':'',   'labels': {},    'valData':{}
+    }]
 
     '''-------------------------------------SQL DATA-------------------------------------'''
 
@@ -201,6 +237,24 @@ class CylinderReport(Reports):
         'auto_id':                 {'dataType': SQL.DATATYPES.INT,              'size': SQL.INT_SIZES['INT'],       'data':None}
     }
 
+
+    SQL_CYLINDERS_PROPERTIES = {
+        'cyl_report_id':               {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None},
+        'item_id':                     {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50,                                      'data':None},
+        'date_received':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
+        'date_tested':                 {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
+        'age':                         {'dataType': SQL.DATATYPES.VARCHAR,     'size': 10,                                      'data':None},
+        'diameter':                    {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL, 'size': 10,                                  'data':None},
+        'length':                      {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL, 'size': 10,                                  'data':None},
+        'area':                        {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL, 'size': 10,                                  'data':None},
+        'weight':                      {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL, 'size': 10,                                  'data':None},
+        'strength':                    {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL, 'size': 10,                                  'data':None},
+        'break_type':                  {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': BREAK_TYPE_OPTIONS,       'data':None},
+        'percent_strength':            {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None},
+        'initials':                    {'dataType': SQL.DATATYPES.VARCHAR,     'size': 10,                                      'data':None},
+        'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
+        'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
+    }
 
 
     SQL_REPORT_PROPERTIES = {
@@ -241,6 +295,7 @@ class CylinderReport(Reports):
         self.field_table = data['fieldTable']
         self.strength_table = data['strTable']
         self.conditions_table = data['conditionsTable']
+        self.cyl_items_table = data['cylItemsTable']
 
     #Create a new cylinder report with default values
     @classmethod
@@ -285,16 +340,17 @@ class CylinderReport(Reports):
         report_sql = super().sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
         str_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
         con_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
-
-        #numStrRows = len(str_sql)
+        cyl_items_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_CYLINDERS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
 
         fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
         conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
+        cylTable = cls.__create_data_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
 
         field_result = cls.__sql_to_html_field(report_sql, fieldTable)
         str_result = cls.__sql_to_html_strength(str_sql, strTable, editing)
         con_result = cls.__sql_to_html_con(con_sql, conTable)
+        cyl_items_result = cls.__sql_to_html_cyl_items(cyl_items_sql, cylTable)
 
         id = field_result[0]['valData']['cylinderID']
 
@@ -302,6 +358,7 @@ class CylinderReport(Reports):
             "fieldTable":field_result,
             "strTable": str_result,
             "conditionsTable": con_result,
+            "cylItemsTable": cyl_items_result
         }
 
         return cls(data, id)
@@ -501,6 +558,36 @@ class CylinderReport(Reports):
 
         return newFormTable
 
+    @classmethod
+    def __sql_to_html_cyl_items(self, sqlResult, formTable):
+        sqlResult = HLP.replaceNone(sqlResult)
+
+        newFormTable = []
+
+        for i, row in enumerate(sqlResult):
+            newFormTable.append(copy.deepcopy(formTable[0])) #copy the form table (which is only 1 row) as many times as there is SQL data
+
+            newFormTable[i]['valData']['itemID'] = row['item_id']
+            newFormTable[i]['valData']['dateReceived'] = row['date_received']
+            newFormTable[i]['valData']['dateTested'] = row['date_tested']
+            newFormTable[i]['valData']['age'] = row['age']
+            newFormTable[i]['valData']['diameter'] = row['diameter']
+            newFormTable[i]['valData']['length'] = row['length']
+            newFormTable[i]['valData']['area'] = row['area']
+            newFormTable[i]['valData']['weight'] = row['weight']
+            newFormTable[i]['valData']['strength'] = row['strength']
+            newFormTable[i]['valData']['breakType'] = row['break_type']
+            newFormTable[i]['valData']['percentStrength'] = row['percent_strength']
+            newFormTable[i]['valData']['initials'] = row['initials']
+
+
+
+            newFormTable[i]['valData']['autoID'] = row['auto_id']
+
+
+        return newFormTable
+
+
     #Read form data and create SQL entry
     def submit_form(self):
         fieldData = HLP.get_form_values(self.field_table)
@@ -653,7 +740,8 @@ class CylinderReport(Reports):
             "id":self.id,   #id is also in 'fieldTable', but this allows quick acccess
             "fieldTable":self.field_table[0], #Return 0th item because even though it is a list it only has 1 entry
             "strTable": self.strength_table,
-            "conditionsTable": self.conditions_table
+            "conditionsTable": self.conditions_table,
+            "cylItemsTable": self.cyl_items_table
         }
 
         return objectData

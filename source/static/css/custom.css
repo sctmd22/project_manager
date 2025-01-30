@@ -6,7 +6,7 @@
 }
 
 .view_cylinder {
-	max-width: 800px
+	max-width: 1180px;
 }
 
 
@@ -64,6 +64,7 @@
 	text-align: center;
 }
 
+
 .cylStrLabel {
 	width: 60px
 }
@@ -74,7 +75,48 @@
 	text-align: center
 }
 
+/* Cylinder Items */
 
+.cylItemsSmall {
+	width: 55px;
+	display: inline;
+	text-align: center;
+}
+
+.cylItemsSmall2 {
+	width: 65px;
+	display: inline;
+	text-align: center;
+}
+
+.cylItemsSmall3 {
+	width: 75px;
+	display: inline;
+	text-align: center;
+}
+
+.cylItemsID {
+	width: 110px;
+	display: inline;
+	text-align: center;
+}
+
+.cylItemsDate {
+	width: 100px;
+	display: inline;
+	text-align: center;
+}
+
+.cylItemsRow {
+	text-align: center;
+	vertical-align: middle
+}
+
+.cylItemsRowHeaders {
+	text-align: center;
+	vertical-align: middle;
+	 font-weight: bold;
+}
 
 /* Cylinder Form: Measurements START */
 
