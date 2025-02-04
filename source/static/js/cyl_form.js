@@ -50,7 +50,7 @@ const STR_FUNCTIONS = (function(){
 	function removeStrTarget(){
 		
 		if(strIndex > 1){
-			strIndex--; //Decrement last
+			strIndex--; //Decrement first
 			
 			const targetRow = STRENGTH_TABLE[strIndex];
 			

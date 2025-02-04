@@ -1,5 +1,17 @@
 /* */
 
+.align-center {
+	text-align: center;
+}
+
+.align-left {
+	text-align: left;
+}
+
+.cylHidden {
+	display: none;
+}
+
 
 .cylinder_width {
 	max-width: 1600px
@@ -9,158 +21,91 @@
 	max-width: 1180px;
 }
 
-
-.testRow {
-	display: flex;
-	align-items: center;
+.cylFormData {
+	width: 230px
 }
 
-.cylFormRow {
-	margin-top: 5px;
-	margin-bottom: 5px;
-	
-}
-
-
-.cylFormText {
+.cylFormLabels {
 	width: 160px;
-	display: flex;
-	align-items: center;
+}
 
+.cylFormLabels label {
+	font-weight: bold;
 }
 
 .cylFormTime {
-	width: 120px
-}
-
-.cylFormData {
-	width: 200px
-}
-
-.cylFormVolume {
-	width: 70px;
-
-}	
-
-.cylFormVolumeCol {
-	flex: 1 0 0%;
-}
-
-.cylFormVolumeRow {
-	width: 226px;
-	display: flex;
-	align-items: center;
+	width: 150px
 }
 
 
-.cylFormSCCRow {
-	width: 248px;
-	display: flex;
-	align-items: center;
-
-}
-
-.cylStrRow {
-	text-align: center;
-}
-
-
-.cylStrLabel {
-	width: 60px
-}
-
-.cylStrData {
-	width: 75px;
+.cylStrInput {
+	width: 80px;
 	display: inline;
-	text-align: center
 }
 
-/* Cylinder Items */
 
-.cylItemsSmall {
-	width: 55px;
-	display: inline;
-	text-align: center;
-}
-
-.cylItemsSmall2 {
-	width: 65px;
-	display: inline;
-	text-align: center;
-}
-
-.cylItemsSmall3 {
-	width: 75px;
-	display: inline;
-	text-align: center;
-}
-
-.cylItemsID {
-	width: 110px;
-	display: inline;
-	text-align: center;
-}
-
-.cylItemsDate {
-	width: 100px;
-	display: inline;
-	text-align: center;
-}
-
-.cylItemsRow {
-	text-align: center;
-	vertical-align: middle
-}
-
-.cylItemsRowHeaders {
-	text-align: center;
-	vertical-align: middle;
-	 font-weight: bold;
-}
-
-/* Cylinder Form: Measurements START */
-
-.cylMeasureLabel {
+.cylConditionsLabel {
 	width: 160px;
-	text-align: center
 	
 }
 
-.cylMeasureNotes {
-	text-align: left
-
-}
-
-.cylMeasureNotesText {
+.cylConditionsNotesText {
 	min-width: 200px
 
-}
-
-.cylMeasureRow {
-	text-align: center;
-	vertical-align: middle
 }
 
 .cylConditionsData {
 	width: 80px;
 	display: inline;
-	text-align: center;
+
 }
 
 
-.cylHidden {
-	display: none;
-	
+
+/* Cylinder Items */
+
+.cylItemsSmall, .cylItemsSmall2, .cylItemsSmall3, .cylItemsID, .cylItemsDate {
+	display: inline;
+
 }
 
 
-.table-container-measurements {
-  overflow-x: auto; /* Enables horizontal scrolling */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile devices */
-  max-width: 100%; /* Ensures the container doesn't exceed the screen width */
-
-  vertical-align: middle
+.itemsSmall {
+	min-width: 68px;
 }
 
+.itemsSmall-2 {
+	width: 65px;
+}
 
-/* Cylinder Form: Measurements END*/
+.itemsSmall-3 {
+	width: 75px;
+}
+
+.cylItemsID {
+	width: 110px;
+}
+
+.cylItemsDate {
+	width: 100px;
+}
+
+.itemIDCol {
+	min-width: 118px;
+}
+
+.itemsDateCol {
+	min-width: 118px;
+}
+
+.itemsSmallCol {
+	min-width: 68px;
+}
+
+.itemsSmallCol-2 {
+	min-width: 76px;
+}
+
+.itemsSmallCol-3 {
+	min-width: 86px;
+}
