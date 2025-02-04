@@ -1,5 +1,5 @@
 import GLOBALS as GB
-
+import classes as CLS
 
 def strip_date_f(date):
     if(date == None):
@@ -63,7 +63,8 @@ def short_description_f(description):
 def project_status_f(status):
     '''Convert status into to text'''
     try:
-        statusText = GB.PROJECT_STATUS[status]
+        statusText = CLS.Reports.STATUS_TABLE[status]
+
 
     except:
         return status
@@ -88,10 +89,10 @@ def mould_f(mould):
         return ""
 
     try:
-        fMould = GB.CYL_MOULD_TYPES[mould]
+        fMould = CLS.CylinderReport.MOULD_OPTIONS[mould]
 
     except:
-        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {GB.CYL_MOULD_TYPES}")
+        print(f"Error: {funcName}: No key matching '{mould}' from GB.MOULD_TYPES = {CLS.CylinderReport.MOULD_OPTIONS}")
         return mould
 
 
@@ -103,10 +104,10 @@ def  volume_units_f(units):
         return ""
 
     try:
-        fUnits = GB.CYL_LOAD_VOLUME_UNITS[units]
+        fUnits = CLS.CylinderReport.UNITS_OPTIONS[units]
 
     except:
-        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {GB.CYL_LOAD_VOLUME_UNITS}")
+        print(f"Error: {funcName}: No key matching '{units}' in GB.LOAD_VOLUME_UNITS = {CLS.CylinderReport.UNITS_OPTIONS}")
         return units
 
     return fUnits
@@ -120,7 +121,7 @@ def volume_precision_f(volume):
 def scc_f(str):
 
     try:
-        fStr = GB.CYL_SCC_RADIO[str]
+        fStr = CLS.CylinderReport.SCC_OPTIONS[str]
 
     except:
         return str
