@@ -5,7 +5,7 @@
 
 <div class="card cylinder_width">
 	<div class="card-header">
-	<a href="{{ url_for('cylinders_bp.new_cylinder') }}"><button type="button" class="btn btn-block btn-primary">New Cylinder Report</button></a>
+	<a href="{{ url_for('cylinders_bp.new_cylinder') }}"><button type="button" class="btn btn-block btn-primary">New Report</button></a>
 	</div>
 </div>
 
@@ -24,7 +24,6 @@
 					<th>Name</th>
 					<th>Cast Date</th>
 					<th>Contractor</th>
-					<th>Site</th>
 					<th>Supplier</th>
 					<th>Status</th>
 					<th>Date Created</th>
@@ -38,9 +37,8 @@
 			
 				<tr>
 					<td><a href="{{ url_for('cylinders_bp.view_cylinder', cylinder_id=row.auto_id ) }}" class="text-secondary">{{ row.report_title|e }}</a></td>
-					<td>{{ row.cast_date }}<td>
+					<td>{{ row.date_cast }}</td>
 					<td>{{ row.contractor|e }}</td>
-					<td>{{ row.site|e }}</td>
 					<td>{{ row.supplier|e }}</td>
 					<td>{{ row.status|e }}</td>
 					<td>{{ row.date_created|e }}</td>

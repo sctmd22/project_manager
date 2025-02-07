@@ -19,11 +19,10 @@ const STRENGTH_TABLE = strength_table_json;
 	Assign the IIFE to a constant named STR_FUNCTIONS so any returned functions can be accessed 
 */
 const STR_FUNCTIONS = (function(){
-		
-	const numStrTargets = STRENGTH_TABLE.length;
-
-	let strIndex = 0;
 	
+	const hiddenClass = "cylHidden";
+	const numStrTargets = STRENGTH_TABLE.length;
+	let strIndex = 0;
 	
 	function addStrTarget(){
 		
@@ -37,15 +36,11 @@ const STR_FUNCTIONS = (function(){
 			
 			//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
 			let strTr = document.getElementById(targetRow['name']);
-			strTr.classList.remove("cylHidden");
-			
+			strTr.classList.remove(hiddenClass);
 			
 			strIndex++; //Increment last
-
 		}
-		
 	}
-	
 	
 	function removeStrTarget(){
 		
@@ -58,10 +53,10 @@ const STR_FUNCTIONS = (function(){
 			visibleInput.value = 0;
 			
 			const strTr = document.getElementById(targetRow['name']);
-			strTr.classList.add("cylHidden");
+			strTr.classList.add(hiddenClass);
 			
 			//Reset inputs to ''
-			const inputs = strTr.querySelectorAll('input[type="number"]'); //Select all inputs of number type from the table row
+			const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
 			
 			inputs.forEach(input => {
 				input.value = '';
@@ -71,10 +66,7 @@ const STR_FUNCTIONS = (function(){
 		
 	}
 	
-	
 	//Hide/show the necessary elements. Also count the number of visible elements to get start index
-	
-
 	for (let row of STRENGTH_TABLE){
 		
 		//Get the hidden input that stores the visibility data
@@ -97,8 +89,7 @@ const STR_FUNCTIONS = (function(){
 		//Assign any non-zero values to zero
 		if(!visibleInputVal){
 			visibleInputVal.value = 0;
-			strTr.classList.add("cylHidden"); //Assign the cylHidden class to the table row to hide it, also reset inputs if set
-			
+			strTr.classList.add(hiddenClass); //Assign the cylHidden class to the table row to hide it, also reset inputs if set
 			
 			inputs.forEach(input => {
 				input.value = '';
@@ -111,7 +102,6 @@ const STR_FUNCTIONS = (function(){
 	}
 
 	
-		
 
 	return {addStrTarget, removeStrTarget};
  
@@ -179,19 +169,7 @@ const STR_FUNCTIONS = (function(){
 				
 		
 			}
-			
-			/*
-			//Get each table row element
-			let targetElement = document.getElementById(row['name']+row['suffix']['id']+'Row');
-			
-			//Hide all elements
-			targetElement.classList.add('cylConditionsHidden');
-
-			//Show only elements where key is true
-			if(row[key] === true){
-				targetElement.classList.remove('cylConditionsHidden');		
-			}
-			*/
+		
 		
 		}
 		

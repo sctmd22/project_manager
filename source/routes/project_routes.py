@@ -1,10 +1,8 @@
 from datetime import datetime
-
 from flask import render_template, request, redirect, url_for, Blueprint
-
 from db.database import db_connect
-
 import GLOBALS as GB
+from helpers.helpers import generateBreadcrumbs
 
 #Define blueprint for projects.py
 bp = Blueprint('projects_bp', __name__, url_prefix='/projects')
@@ -13,6 +11,8 @@ TB_PROJECTS = "project_master"
 
 @bp.route("/")
 def projects():
+    breadCrumbs = generateBreadcrumbs()
+
     dbCon = db_connect()
     cursor = dbCon.cursor(dictionary=True)
 
@@ -24,14 +24,12 @@ def projects():
     cursor.close()
     dbCon.close() #return connection to pool
 
-    bcData = {}
-    bcData['breadCrumbTitle'] = "Projects"
-
-    return render_template("projects/projects.html", data=result, breadcrumb=bcData)
+    return render_template("projects/projects.html", data=result, breadCrumbs=breadCrumbs)
 
 
 @bp.route("/new")
 def new_project():
+    breadCrumbs = generateBreadcrumbs()
 
     editing = True
     newProject = True
@@ -49,15 +47,9 @@ def new_project():
         "created_by":"admin"
     }
 
-
-
-
-    bcData = {}
-    bcData['breadCrumbTitle'] = "Create New Project"
-
     #return render_template("projects/view_project.html", data=data, breadcrumb=bcData)
 
-    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GB.PROJECT_STATUS, newProject = newProject)
+    return render_template("projects/view_project.html", data=data, breadCrumbs=breadCrumbs, editData=editing, statusData = GB.PROJECT_STATUS, newProject = newProject)
 
 
 
@@ -138,6 +130,7 @@ def update_project():
 
 @bp.route("/<int:project_id>")
 def view_project(project_id):
+    breadCrumbs = generateBreadcrumbs()
     #Get url parameters
     get_edit = request.args.get('edit', default=False)
 
@@ -174,10 +167,7 @@ def view_project(project_id):
         "location": result['location']
     }
 
-    bcData = {}
-    bcData['breadCrumbTitle'] = "View Project"
-
-    return render_template("projects/view_project.html", data=data, breadcrumb=bcData, editData=editing, statusData = GB.PROJECT_STATUS)
+    return render_template("projects/view_project.html", data=data, breadCrumbs=breadCrumbs, editData=editing, statusData = GB.PROJECT_STATUS)
 
 
 

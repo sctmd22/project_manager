@@ -1,3 +1,4 @@
+
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark"> 
 	<!--begin::Sidebar Brand-->
 	<div class="sidebar-brand"> 
@@ -22,31 +23,46 @@
 	<div class="sidebar-wrapper" data-overlayscrollbars="host"><div class="os-size-observer os-size-observer-appear"><div class="os-size-observer-listener ltr"></div></div><div data-overlayscrollbars-viewport="scrollbarHidden" style="margin-right: -16px; margin-bottom: -16px; margin-left: 0px; top: -8px; right: auto; left: -8px; width: calc(100% + 16px); padding: 8px; overflow-y: scroll;">
 		<nav class="mt-2"> <!--begin::Sidebar Menu-->
 			<ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-				<li class="nav-item"> <a href="{{ url_for('home') }}" class="nav-link"> <i class="nav-icon bi bi-speedometer"></i>
+				<li class="nav-item"> 
+					<a href="{{ url_for('home') }}" class="nav-link"> <i class="nav-icon bi bi-speedometer"></i>
 						<p>Dashboard</p>
-					</a> </li>
+					</a> 
+				</li>
 					
-				  <li class="nav-item"> <a href="{{ url_for('projects_bp.projects') }}" class="nav-link"> <i class="nav-icon bi bi-clipboard-fill"></i>
+				<li class="nav-item"> 
+					<a href="{{ url_for('projects_bp.projects') }}" class="nav-link"> <i class="nav-icon bi bi-box-seam-fill"></i>
 						<p>Projects</p>
-					</a> </li>	
+					</a>
+				</li>	
 		
 					
-				 <li class="nav-item"> <a href="#" class="nav-link"> <i class="nav-icon bi bi-box-seam-fill"></i>
+				 <li class="nav-item" id="reports_menu">
+					<a href="#" class="nav-link"> 
+					<i class="nav-icon bi bi-clipboard-fill"></i>
+					
 						<p>
-							Reports
-							<i class="nav-arrow bi bi-chevron-right"></i>
+						Reports<i class="nav-arrow bi bi-chevron-right"></i>
 						</p>
 					</a>
+					
 					<ul class="nav nav-treeview">
-						<li class="nav-item"> <a href="{{ url_for('cylinders_bp.cylinders')}}" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
+						<li class="nav-item"> 
+							<a href="{{ url_for('cylinders_bp.cylinders')}}" id="cylinders_bp" class="nav-link"> 
+								<i class="nav-icon bi bi-circle"></i>
 								<p>Cylinder</p>
+							</a> 
+						</li>
+						<li class="nav-item"> 
+							<a href="{{ url_for('cubes_bp.cubes')}}" id="cubes_bp" class="nav-link"> 
+								<i class="nav-icon bi bi-circle"></i>
+								<p>Grout and Epoxy Cubes</p>
 							</a> </li>
-						<li class="nav-item"> <a href="#" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
-								<p>Cubes</p>
-							</a> </li>
-						<li class="nav-item"> <a href="#" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
-								<p>Prisms</p>
-							</a> </li>
+						<li class="nav-item">
+							<a href="#" id="prism_bp" class="nav-link">
+								<i class="nav-icon bi bi-circle"></i>
+								<p>Shrinkage Prisms</p>
+							</a> 
+						</li>
 					</ul>
 				</li>
 
