@@ -551,3 +551,65 @@ def capitalizeFirst(val):
 
     return val[:1].upper() + val[1:]
 
+
+
+def generateBreadcrumbs():
+    '''
+    Generate a breadcrumb trail to be displayed in the upper right portion of the web-app
+    :return: A list of dictionaries containing HTML elements and properties to build the breadcrumb links
+    '''
+    root = request.url_root
+    url = request.path  #Returns '/' for root
+
+    # Remove leading and trailing '/', then split into a list using '/' as a separator
+        #Returns a list with one empty string for root
+    segments = url.strip('/').split('/')
+
+    homePath = 'home' #Arbitrary name
+
+    if(segments[0] == ''):     #Either re-assign or insert the homePath into the list of url items
+        segments[0] = homePath
+    else:
+        segments.insert(0, homePath)
+
+
+    template = {'activeClass':'', 'url':'', 'href':'', 'title':'', 'aria':'', 'nav-item':'', 'nav-link':''}
+
+    breadCrumbsList = []
+
+
+    for i, item in enumerate(segments):
+        data = template.copy()
+
+        #Leave root as is for home, otherwise concatenate root with item, where item is part of the url path
+        if(not (item == "home")):
+            root = root + item + '/'
+
+        data['url'] = root.strip('/')   #Remove the last '/' character, otherwise invalid url
+
+        if(i == 1):
+            parseUrlItem(item, data)
+
+        data['title'] = capitalizeFirst(item)
+
+        data['href'] = f'<a href="{data['url']}">{data['title'] }</a>'
+
+        #Remove the link/<a href></a> and apply necessary properties to last element
+        if(i == len(segments)-1):
+            data['activeClass'] = ' active'
+            data['aria'] = 'aria-current=page'
+            data['href'] = data['title']
+
+        breadCrumbsList.append(data)
+
+    for item in breadCrumbsList:
+        print(item)
+
+    print(breadCrumbsList)
+
+    return breadCrumbsList
+
+
+def parseUrlItem(item, data):
+    if(item == 'cylinders'):
+        pass

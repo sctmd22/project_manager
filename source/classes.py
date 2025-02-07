@@ -328,7 +328,8 @@ class CylinderReport(Reports):
         defaultData = {
             "fieldTable": fieldTable,
             "strTable": strTable,
-            "conditionsTable": conTable
+            "conditionsTable": conTable,
+            "cylItemsTable": ""
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
@@ -579,8 +580,6 @@ class CylinderReport(Reports):
             newFormTable[i]['valData']['breakType'] = row['break_type']
             newFormTable[i]['valData']['percentStrength'] = row['percent_strength']
             newFormTable[i]['valData']['initials'] = row['initials']
-
-
 
             newFormTable[i]['valData']['autoID'] = row['auto_id']
 

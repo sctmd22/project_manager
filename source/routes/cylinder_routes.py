@@ -2,20 +2,20 @@ from flask import render_template, request, redirect, url_for, Blueprint
 from helpers import helpers as HLP
 from classes import CylinderReport
 import db as db
+from helpers.helpers import generateBreadcrumbs
 
 TB_REPORT_DATA = "cyl_report_data"
 
 #Define blueprint for cylinder_routes.py
 bp = Blueprint('cylinders_bp', __name__, url_prefix='/cylinders')
 
+parentMenuId = "reports_menu"
 
 @bp.route("/")
 def cylinders():
-    bcData = {}
-    bcData['breadCrumbTitle'] = "Cylinders"
+    breadCrumbs = generateBreadcrumbs()
 
     dbCon = db.db_connect()
-
     cursor = dbCon.cursor(dictionary=True)
 
     SQL_PROJECT_GET_ALL = f"SELECT * FROM {TB_REPORT_DATA} ORDER BY date_created DESC"
@@ -27,27 +27,23 @@ def cylinders():
     cursor.close()
     dbCon.close()  # return connection to pool
 
-    return render_template("cylinders/cylinders.html", breadcrumb=bcData, data=result)
-
+    return render_template("cylinders/cylinders.html", breadCrumbs=breadCrumbs, data=result)
 
 
 @bp.route("/new")
 def new_cylinder():
+    breadCrumbs = generateBreadcrumbs()
     editing = True
     newCylinder = True
 
     #Create the CylinderReport object with defaults
     cylReport = CylinderReport.create_default()
 
-    bcData = {}
-    bcData['breadCrumbTitle'] = "Cylinders"
-
-    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadcrumb=bcData, editData=editing, newCylinder=newCylinder)
-
+    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, editData=editing, newCylinder=newCylinder)
 
 @bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
-    FUNC_NAME = "view_cylinder()"
+    breadCrumbs = generateBreadcrumbs()
 
     #Check the GET request to see if 'edit' is set
     editing = HLP.get_edit()
@@ -58,7 +54,7 @@ def view_cylinder(cylinder_id):
     bcData = {}
     bcData['breadCrumbTitle'] = "Cylinder Report"
 
-    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables = cylReport.tables_to_dict(), breadcrumb=bcData, editData = editing)
+    return render_template("cylinders/view_cylinder.html", data=cylReport.to_dict(), tables = cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, editData = editing)
 
 
 @bp.route("/submit", methods=['POST'])
@@ -84,13 +80,11 @@ def update_cylinder():
 
     cylReport.submit_edit()
 
-    bcData = {}
-    bcData['breadCrumbTitle'] = "Cylinder Report"
-
     return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=cylinder_id))
 
-@bp.route("/delete/<int:cylinder_id>")
+@bp.route("/<int:cylinder_id>/delete")
 def confirm_delete(cylinder_id):
+    breadCrumbs = generateBreadcrumbs()
 
     data = {}
     data['id'] = cylinder_id #Need to pass the id to a hidden input so the actual delete function can read it back
@@ -98,7 +92,7 @@ def confirm_delete(cylinder_id):
     bcData = {}
     bcData['breadCrumbTitle'] = "Delete Cylinder"
 
-    return render_template("cylinders/delete_cylinder.html", data=data, breadcrumb=bcData)
+    return render_template("cylinders/delete_cylinder.html", data=data, breadCrumbs=breadCrumbs)
 
 
 @bp.route("/delete/submit", methods=["POST"])
@@ -111,7 +105,7 @@ def delete_cylinder():
     return redirect(url_for("cylinders_bp.cylinders"))
 
 
-@bp.route("/delete/cancel/<int:cylinder_id>")
+@bp.route("/delete/<int:cylinder_id>/cancel")
 def cancel_delete(cylinder_id):
 
     return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id = cylinder_id))
