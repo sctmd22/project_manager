@@ -16,6 +16,16 @@
 	font-weight: normal;
 }
 
+.underline {
+	text-decoration: underline;
+}
+
+.error-msg {
+	color: red;
+	min-width: 200px;
+	font-weight: normal;
+}
+
 
 .cylinder_width {
 	max-width: 1600px

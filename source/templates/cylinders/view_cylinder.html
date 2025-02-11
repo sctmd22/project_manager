@@ -555,7 +555,7 @@
 
 	
 	
-
+	{% if pageData.editing %}
 	<table class="table table-bordered align-middle">
 		<thead>
 			<tr>
@@ -565,67 +565,151 @@
 		</thead>
 		<tr>
 			<th>
+				<div class="container">
+				
+		
+			
+					<div class="row align-items-center mt-3 mb-3">
+		
+						<div class="cylFormLabels">
+							<label for="" class=""># of Cylinders:</label>
+						</div>
+						<div class="cylFormDate">
+								<input maxlength="2" type="text" class="form-control" name="numCylinders" id="numCylinders" value="87">
+						</div>
+						
+						<div class="col">
+							<div class="form-text error-msg" id="numCylindersError">
+								
+							</div>
+						</div>
+					</div>	
+					
+					<hr>
+					
+					<div class="row align-items-center mt-3 mb-3">
+						<div class="" style="">
+							<label for="" class="underline">Specimen ID</label>
+						</div>
+					</div>
+					
+						
+					<div class="row align-items-center mt-3 mb-3">
 
+						<div class="cylFormLabels">
+							<label for="" class="">Tech Initials:</label>
+						</div>
+							
+						<div class="cylFormDate">
+								<input maxlength="3" type="text" class="form-control" name="" id="" value="">
+						</div>
+
+					</div>
+					
+					<div class="row align-items-center mt-3 mb-3">
+
+						<div class="cylFormLabels">
+							<label for="" class="">ID Date:</label>
+						</div>
+					
+						<div class="cylFormDate">
+							<input class="form-control" type="date" name="{{ data.fieldTable.labels.dateSpecimen }}" value="{{ data.fieldTable.valData.dateSpecimen | strip_time_f }}" id="{{ data.fieldTable.labels.dateSpecimen }}">
+						</div>
+						
+						<div class="cylFormData"> 
+							<input class="form-check-input" type="checkbox" id="{{ data.fieldTable.labels.dateSpecimenEqual }}" name="{{ data.fieldTable.labels.dateSpecimenEqual }}"  {{ data.fieldTable.valData.dateSpecimenEqual }}> 
+							<label class="form-check-label normal-text" for="{{ data.fieldTable.labels.dateSpecimenEqual }}">Same as Cast Date</label>
+						</div>
+
+					</div>
+					
+					
+					<div class="row align-items-center mt-3 mb-3">
+
+						<div class="cylFormLabels">
+							<label for="" class="">Example Output:</label>
+						</div>
+							
+						<div class="cylFormDate">
+							
+						</div>
+
+					</div>
+					
+						
+					<div class="row align-items-center mt-3 mb-3">
+
+						<div class="cylFormLabels">
+							<label for="" class="">Custom ID:</label>
+						</div>
+							
+						<div class="cylFormDate">
+								<input maxlength="3" type="text" class="form-control" name="" id="" value="" disabled>
+						</div>
+
+					</div>
+					
+					
+					<hr>
+					
 					<div class="row align-items-center mt-3 mb-3">
 						<div class="cylFormLabels">
 							<label for="cylDateTransported" class="">Date Received:</label>
 						</div>
 						
 						<div class="cylFormDate">
-						{% if pageData.editing %}
 							<input class="form-control" type="date" name="{{ data.fieldTable.labels.dateReceived }}" value="{{ data.fieldTable.valData.dateReceived | strip_time_f }}" id="{{ data.fieldTable.labels.dateReceived }}">
-						{% else %}
-							{{ data.fieldTable.valData.dateReceived | strip_time_f }}
-						{% endif %}
 						</div>
-						
-						{% if pageData.editing %}
 						<div class="cylFormData"> 
 							<input class="form-check-input" type="checkbox" id="{{ data.fieldTable.labels.dateReceivedEqual }}" name="{{ data.fieldTable.labels.dateReceivedEqual }}"  {{ data.fieldTable.valData.dateReceivedEqual }}> 
-							<label class="form-check-label normal-text" for="{{ data.fieldTable.labels.dateReceivedEqual }}">Same as Date Transported</label>
+							<label class="form-check-label normal-text" for="{{ data.fieldTable.labels.dateReceivedEqual }}">Same as Transported Date</label>
 						</div>
-						{% endif %}
 					</div>
-			
-				
+					
 					<div class="row align-items-center mt-3 mb-3">
+
 						<div class="cylFormLabels">
-							<label for="" class=""># of Cylinders:</label>
+							<label for="" class="">Break Schedule:</label>
 						</div>
 							
 						<div class="cylFormDate">
-							{% if pageData.editing %}
-								<input maxlength="2" type="text" class="form-control" name="" id="" value="">
-							{% else %}
+							<select class="form-select" name="{{ data.fieldTable.labels.mouldType }}" id="{{ data.fieldTable.labels.mouldType }}">
 							
-								Placeholder
-							{% endif %}
+								<option value="{{ key }}" {% if key == data.fieldTable.valData.mouldType %}selected{% endif %}>{{ value }}</option>
+							</select>
 							
 						</div>
 
 					</div>
+	
+
+				</div>
+					
+					
 			
 
-				{% if pageData.editing %}
-					<button type="button" class="btn btn-primary" onclick="">Add Cylinders</button>
-				{% endif %}
+				
+					<button type="button" class="btn btn-primary" onclick="" disabled>Add Cylinders</button>
+		
 			</th>	
 		
 		
 		</tr>
 	</table>
+	{% endif %}
 
 	
 	
 	<div class="table-responsive">
-		<table class="table table-bordered align-middle">
+		<table class="table table-bordered align-middle" id="cylItemsTable">
 			<thead>
 				<tr>
 					<th colspan="14">Cylinder Data:</th>
 				</tr>
 			
 			</thead>
-			<tbody>	
+			
+			<tbody>
 			<tr class="align-center">
 				<th scope="col" class="itemIDCol">Specimen ID</th>
 				<th scope="col" class="itemsDateCol">Date Received</th>
@@ -647,10 +731,10 @@
 			{% for row in data.cylItemsTable %}
 
 
-			<tr class="align-center" id="{{ row.name }}Row">
+			<tr class="align-center" id="">
 
 				{% if pageData.editing %}
-					
+					<!--
 					<td><input type="text" maxlength="16" class="form-control" id="{{ row.labels.itemID }}" name="{{ row.labels.itemID }}" value="{{ row.valData.itemID }}" aria-describedby="textDesc"></td>
 					<td><input type="text" maxlength="8" class="form-control" id="{{ row.labels.dateReceived }}" name="{{ row.labels.dateReceived }}" value="{{ row.valData.dateReceived }}" aria-describedby="textDesc"></td>
 					<td><input type="text" maxlength="8" class="form-control" id="{{ row.labels.dateTested }}" name="{{ row.labels.dateTested }}" value="{{ row.valData.dateTested }}" aria-describedby="textDesc"></td>
@@ -664,7 +748,7 @@
 					<td><input type="text" maxlength="4" class="form-control" id="{{ row.labels.requiredStrength }}" name="{{ row.labels.requiredStrength }}" value="{{ row.valData.requiredStrength }}" aria-describedby="textDesc" disabled></td>
 					<td><input type="text" maxlength="4" class="form-control" id="{{ row.labels.percentStrength }}" name="{{ row.labels.percentStrength }}" value="{{ row.valData.percentStrength }}" aria-describedby="textDesc" disabled></td>
 					<td><input type="text" maxlength="3" class="form-control" id="{{ row.labels.initials }}" name="{{ row.labels.initials }}" value="{{ row.valData.initials }}" aria-describedby="textDesc"></td>
-					
+					-->
 					
 					
 					<input type="hidden" name="{{ row.labels.autoID }}" value="{{ row.valData.autoID }}">

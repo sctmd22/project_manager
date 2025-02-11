@@ -1,41 +1,165 @@
 //Class name of CSS class which will hide an HTML element
 const HIDDEN_CLASS = 'hidden';
 
+
+
 //Handle realtime form functionality of the cylinder items part of the cylinder form
 (function(){
 	
 	
-	//Enable/disable the dateReceived input depending on whether dateReceivedEqual is checked
+	//Enable/disable the dateReceived and dateSepcimen input depending the dateReceivedEqual and dateSpecimenEqual checkboxes 
 	(function(){
-		const CHECKBOX_ID = cyl_data_json.fieldTable.labels.dateReceivedEqual;
-		const DATE_RECEIVED_ID = cyl_data_json.fieldTable.labels.dateReceived;
-		const DATE_TRANSPORTED_ID = cyl_data_json.fieldTable.labels.dateTransported;
 		
-		const checkboxReceived = document.getElementById(CHECKBOX_ID);
-		const dateReceived = document.getElementById(DATE_RECEIVED_ID);
-		const dateTransported = document.getElementById(DATE_TRANSPORTED_ID);
 		
+		const checkboxReceived = document.getElementById(cyl_data_json.fieldTable.labels.dateReceivedEqual);
+		const dateReceived = document.getElementById(cyl_data_json.fieldTable.labels.dateReceived);
+		const dateTransported = document.getElementById(cyl_data_json.fieldTable.labels.dateTransported);
+		
+		const checkboxSpecimen = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimenEqual);
+		const dateSpecimen = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimen);
+		const dateCast = document.getElementById(cyl_data_json.fieldTable.labels.castDate);
+			
 		const dateTransportedVal = dateTransported.value;
+		const dateCastVal = dateCast.value;
+		
 		
 		//Need an event handler for the checbox AND for dateTransported incase the value in dateTransported changes
-		checkboxReceived.addEventListener('change', toggleCheck);	
-		dateTransported.addEventListener('change', toggleCheck);	
+			//Using an arrow functions " ()=> {}; " which executes toggleCheck() only when the event handler runs 
+		checkboxReceived.addEventListener('change', ()=> {
+			toggleCheck(checkboxReceived, dateTransported, dateReceived);	
+		});
+		
+		dateTransported.addEventListener('change', ()=>{
+			toggleCheck(checkboxReceived, dateTransported, dateReceived);		
+		
+		});	
+		
+		//Specimen ID
+		checkboxSpecimen.addEventListener('change', ()=> {
+			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);	
+		});
+		
+		dateCast.addEventListener('change', ()=>{
+			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);		
+		
+		});	
 		
 		//Run function to set the initial value
-		toggleCheck();	
+		toggleCheck(checkboxReceived, dateTransported, dateReceived);
+		toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);			
 	
-		function toggleCheck(){
+		function toggleCheck(cbox, source, destination){
 			
-			if(checkboxReceived.checked){
-				dateReceived.disabled = true;
-				dateReceived.value = dateTransported.value;
+			if(cbox.checked){
+				destination.disabled = true;
+				destination.value = source.value;
 			} else {
-				dateReceived.disabled = false;
+				destination.disabled = false;
 			}
 			
-			
-			
 		};
+		
+		
+	})();
+	
+	
+	(function(){
+		const NUM_ITEMS_MAX = 30;
+		const NUM_ITEMS_MIN = 1;
+		const NUM_ITEMS_INPUT_ID = 'numCylinders';	//Input
+		const NUM_ITEMS_ERROR_ID = 'numCylindersError';	//Error message output here
+		
+
+		
+		let isValid = false;
+
+		const numItemsErrorElem = document.getElementById(NUM_ITEMS_ERROR_ID);
+		
+		//Hide the error message box
+		numItemsErrorElem.classList.add(HIDDEN_CLASS);
+		
+		
+		const numItemsInput = document.querySelector(`#${NUM_ITEMS_INPUT_ID}`);
+		const numItems = numItemsInput.value;
+		
+		//Input event listener
+		numItemsInput.addEventListener("input", ()=>{
+			verifyInt(NUM_ITEMS_MIN, NUM_ITEMS_MAX, numItemsInput, numItemsErrorElem, enableButton);
+		});
+		
+		
+		function enableItem(elem){
+			elem.disabled = false;
+		}
+		
+		
+		enableButton = () => {
+			console.log("Callback babey");
+		}
+		
+		
+
+		function verifyInt(min, max, inputElement, errorElement, callback){
+			const num = parseInt(inputElement.value);
+			
+			const ERROR_NAN = "Not a valid number";
+			const ERROR_SIZE = `Number must be between ${min} and ${max}`;
+			
+			if(isNaN(num)){
+				errorElement.classList.remove(HIDDEN_CLASS);
+				errorElement.textContent = ERROR_NAN;
+				
+			} else if (num < min){
+				errorElement.classList.remove(HIDDEN_CLASS);
+				errorElement.textContent = ERROR_SIZE;
+				
+			} else if (num > max) {
+				errorElement.classList.remove(HIDDEN_CLASS);
+				errorElement.textContent = ERROR_SIZE;
+			
+			
+			//Valid: Hide the error and call the callback
+			} else {
+				errorElement.classList.add(HIDDEN_CLASS);
+				callback();
+				
+			}
+			
+
+		}
+		
+
+		
+
+		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
+		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);	
+		
+		
+		createCylItemsRow();
+		
+		function createCylItemsRow(){
+			
+			const tableRow = document.createElement('tr');
+			tableRow.innerHTML = `
+				<td><input type="text" maxlength="16" class="form-control" id="" name=" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="8" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="8" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="5" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
+				<td><input type="text" maxlength="6" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="6" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="1" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+				<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
+				<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
+				<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+			
+			`;
+			
+			itemsTableBody.appendChild(tableRow);	
+		
+		}
 		
 		
 	})();
