@@ -17,6 +17,7 @@ class DATATYPES(Enum):
     TIME = 7
     ENUM = 8
     VARCHAR_DECIMAL = 9 #Exact decimal values stored as a VARCHAR in SQL
+    BOOL = 10   #Uses TINYINT internally, but we will limit the values to 0 or 1
 
 INT_SIZES = {
     'TINY_INT':     {'MIN':0, 'MAX':255},

@@ -431,6 +431,12 @@ def sql_sanitize(valueList):
                     print(f"Error: {FUNC_NAME}: Could not convert {data} to Decimal")
                     data = None
 
+            elif(dataType == SQL.DATATYPES.BOOL):
+                data = toInt(data)
+
+                if(not (data == 0 or data == 1)):
+                    data = None
+
             else:
                 data = None
 
@@ -587,9 +593,6 @@ def generateBreadcrumbs():
 
         data['url'] = root.strip('/')   #Remove the last '/' character, otherwise invalid url
 
-        if(i == 1):
-            parseUrlItem(item, data)
-
         data['title'] = capitalizeFirst(item)
 
         data['href'] = f'<a href="{data['url']}">{data['title'] }</a>'
@@ -602,14 +605,5 @@ def generateBreadcrumbs():
 
         breadCrumbsList.append(data)
 
-    for item in breadCrumbsList:
-        print(item)
-
-    print(breadCrumbsList)
-
     return breadCrumbsList
 
-
-def parseUrlItem(item, data):
-    if(item == 'cylinders'):
-        pass

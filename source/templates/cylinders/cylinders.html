@@ -10,11 +10,10 @@
 </div>
 
 <br />
- 
 
 <div class="card mb-4 cylinder_width">
 	<div class="card-header">
-		<h3 class="card-title">Cylinder Reports</h3>
+		<h3 class="card-title">{{ pageData.pageTitle | e }}</h3>
 		
 	</div>
 	<div class="card-body table-responsive p-0">
@@ -28,6 +27,7 @@
 					<th>Status</th>
 					<th>Date Created</th>
 					<th>Created By</th>
+					<th>Last Modified</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -37,12 +37,13 @@
 			
 				<tr>
 					<td><a href="{{ url_for('cylinders_bp.view_cylinder', cylinder_id=row.auto_id ) }}" class="text-secondary">{{ row.report_title|e }}</a></td>
-					<td>{{ row.date_cast }}</td>
+					<td>{{ row.date_cast | strip_time_f }}</td>
 					<td>{{ row.contractor|e }}</td>
 					<td>{{ row.supplier|e }}</td>
 					<td>{{ row.status|e }}</td>
 					<td>{{ row.date_created|e }}</td>
 					<td>{{ row.created_by|e }}</td>
+					<td></td>
 				</tr>
 				
 				{% endfor %}
@@ -51,6 +52,8 @@
 		</table>
 	</div>
 </div>
+
+
 
 
 {% endblock %}

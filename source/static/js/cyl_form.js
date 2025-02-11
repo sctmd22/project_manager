@@ -1,13 +1,52 @@
-//Get data from the <script></script> tags passed from Python to Jinja
-const CONDITIONS_TABLE = conditions_table_json;
-const CYL_EDITING = cyl_editing_json;
-const IS_SCC = cyl_isSCC_json;
+//Class name of CSS class which will hide an HTML element
+const HIDDEN_CLASS = 'hidden';
 
-const STRENGTH_TABLE = strength_table_json;
- 
+//Handle realtime form functionality of the cylinder items part of the cylinder form
+(function(){
+	
+	
+	//Enable/disable the dateReceived input depending on whether dateReceivedEqual is checked
+	(function(){
+		const CHECKBOX_ID = cyl_data_json.fieldTable.labels.dateReceivedEqual;
+		const DATE_RECEIVED_ID = cyl_data_json.fieldTable.labels.dateReceived;
+		const DATE_TRANSPORTED_ID = cyl_data_json.fieldTable.labels.dateTransported;
+		
+		const checkboxReceived = document.getElementById(CHECKBOX_ID);
+		const dateReceived = document.getElementById(DATE_RECEIVED_ID);
+		const dateTransported = document.getElementById(DATE_TRANSPORTED_ID);
+		
+		const dateTransportedVal = dateTransported.value;
+		
+		//Need an event handler for the checbox AND for dateTransported incase the value in dateTransported changes
+		checkboxReceived.addEventListener('change', toggleCheck);	
+		dateTransported.addEventListener('change', toggleCheck);	
+		
+		//Run function to set the initial value
+		toggleCheck();	
+	
+		function toggleCheck(){
+			
+			if(checkboxReceived.checked){
+				dateReceived.disabled = true;
+				dateReceived.value = dateTransported.value;
+			} else {
+				dateReceived.disabled = false;
+			}
+			
+			
+			
+		};
+		
+		
+	})();
+	
+	
+})();
 
 
-/*
+
+const STR_FUNCTIONS = (function(){
+	/*
 	-Implement the functionality for "Add Target" and "Remove Target" for cylinder strength table
 	-How it works:
 		1. Initially loop through the STRENGTH_TABLE to get the HTML ID's in order to read the values of the "visible" inputs.
@@ -17,10 +56,9 @@ const STRENGTH_TABLE = strength_table_json;
 		3. Count the number of inputs that are visible (value = 1) to get the index for the addStrTarget() and removeStrTarget() functions
 	
 	Assign the IIFE to a constant named STR_FUNCTIONS so any returned functions can be accessed 
-*/
-const STR_FUNCTIONS = (function(){
+	*/
+	const STRENGTH_TABLE = cyl_data_json.strTable;
 	
-	const hiddenClass = "cylHidden";
 	const numStrTargets = STRENGTH_TABLE.length;
 	let strIndex = 0;
 	
@@ -36,7 +74,7 @@ const STR_FUNCTIONS = (function(){
 			
 			//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
 			let strTr = document.getElementById(targetRow['name']);
-			strTr.classList.remove(hiddenClass);
+			strTr.classList.remove(HIDDEN_CLASS);
 			
 			strIndex++; //Increment last
 		}
@@ -53,7 +91,7 @@ const STR_FUNCTIONS = (function(){
 			visibleInput.value = 0;
 			
 			const strTr = document.getElementById(targetRow['name']);
-			strTr.classList.add(hiddenClass);
+			strTr.classList.add(HIDDEN_CLASS);
 			
 			//Reset inputs to ''
 			const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
@@ -89,7 +127,7 @@ const STR_FUNCTIONS = (function(){
 		//Assign any non-zero values to zero
 		if(!visibleInputVal){
 			visibleInputVal.value = 0;
-			strTr.classList.add(hiddenClass); //Assign the cylHidden class to the table row to hide it, also reset inputs if set
+			strTr.classList.add(HIDDEN_CLASS); //Assign the cylHidden class to the table row to hide it, also reset inputs if set
 			
 			inputs.forEach(input => {
 				input.value = '';
@@ -100,18 +138,25 @@ const STR_FUNCTIONS = (function(){
 		}
 		
 	}
-
 	
-
+	//Export functions to be used externally
 	return {addStrTarget, removeStrTarget};
  
  })();
  
- 
- 
 
-//Create an IIFE (Immediately Invoked Function Expression) to create a local scope and execute automatically using the (function(){})(); syntax
+
 (function(){
+	/*
+	Create an IIFE (Immediately Invoked Function Expression) to create a local scope and execute automatically using 
+	the (function(){})(); syntax
+	*/
+
+	
+	//Get data from the <script></script> tags passed from Python to Jinja
+	const CONDITIONS_TABLE = cyl_data_json.conditionsTable;
+	const IS_SCC = cyl_data_json.fieldTable.valData.isScc;
+	const CYL_EDITING = cyl_editing_json;
 	
 	// Get references to the radio buttons and the target element
 	const sccRadioButtons = document.querySelectorAll('input[name="cylIsScc"]');
@@ -150,12 +195,12 @@ const STR_FUNCTIONS = (function(){
 			let targetElement = document.getElementById(row['name']+'Row');
 			
 			//Show all table rows initially
-			targetElement.classList.remove('cylHidden');
+			targetElement.classList.remove(HIDDEN_CLASS);
 			
 			//Hide only where the currentKey is false and different from other key
 			if(!row[currentKey] && (row[currentKey] !== row[prevKey])){
 				
-				targetElement.classList.add('cylHidden');
+				targetElement.classList.add(HIDDEN_CLASS);
 				
 				//Grab the inputs under the table row and clear the values
 					//All inputs are text EXCEPT auto_id which is hidden, which we do not want to reset

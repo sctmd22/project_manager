@@ -8,10 +8,16 @@ TB_REPORT_DATA = "cube_report_data"
 #Define blueprint for cylinder_routes.py
 bp = Blueprint('cubes_bp', __name__, url_prefix='/cubes')
 
+pageData = {}
+pageData['navItemID'] = "reports_menu"
+pageData["navLinkID"] = "cubes_bp"
 
 @bp.route("/")
 def cubes():
     breadCrumbs = generateBreadcrumbs()
+
+    pageData["pageTitle"] = "Grout and Epoxy Cube Reports"
+    pageData["bcTitle"] = pageData["pageTitle"]
 
     result = {}
 
@@ -30,5 +36,5 @@ def cubes():
     dbCon.close()  # return connection to pool
     '''
 
-    return render_template("cubes/cubes.html", breadCrumbs=breadCrumbs, data=result)
+    return render_template("cubes/cubes.html", breadCrumbs=breadCrumbs, data=result, pageData=pageData)
 

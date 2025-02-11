@@ -18,11 +18,18 @@ app.register_blueprint(cube_routes.bp)
 for name,func in filters.items():
     app.jinja_env.filters[name] = func
 
+pageData = {}
+pageData['navItemID'] = ""
+
+
 @app.route("/")
 def home():
     breadCrumbs = generateBreadcrumbs()
 
-    return render_template("index.html", breadCrumbs=breadCrumbs)
+    pageData["pageTitle"] = "Home"
+    pageData["bcTitle"] = pageData["pageTitle"]
+
+    return render_template("index.html", breadCrumbs=breadCrumbs, pageData=pageData)
 
 
 if __name__ == "__main__":
