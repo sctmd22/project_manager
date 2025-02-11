@@ -140,6 +140,8 @@ class CylinderReport(Reports):
         'batchTime',
         'sampleTime',
         'dateTransported',
+        'dateReceived',
+        'dateReceivedEqual',
         'notes',
         'isScc'
 
@@ -283,6 +285,8 @@ class CylinderReport(Reports):
         'time_sample':                 {'dataType': SQL.DATATYPES.TIME,        'size': None,                                    'data':None},
         'time_cast':                   {'dataType': SQL.DATATYPES.TIME,        'size': None,                                    'data':None},
         'date_transported':            {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
+        'date_received':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
+        'date_received_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
         'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
@@ -323,6 +327,7 @@ class CylinderReport(Reports):
         fieldTable[0]['valData']['mouldType'] = list(cls.MOULD_OPTIONS.keys())[0] #Get keys from dict, convert to list, get 0th item
         fieldTable[0]['valData']['volumeUnits'] = "meters"
         fieldTable[0]['valData']['isScc'] = "no"
+        fieldTable[0]['valData']['dateReceivedEqual'] = "checked"
 
 
         defaultData = {
@@ -333,7 +338,7 @@ class CylinderReport(Reports):
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
-        return cls(defaultData, id)
+        return cls(defaultData, cylinder_id)
 
     @classmethod
     def create_from_db(cls, id, editing=False):
@@ -353,7 +358,7 @@ class CylinderReport(Reports):
         con_result = cls.__sql_to_html_con(con_sql, conTable)
         cyl_items_result = cls.__sql_to_html_cyl_items(cyl_items_sql, cylTable)
 
-        id = field_result[0]['valData']['cylinderID']
+        id = field_result[0]['valData']['cylinderID'] #only 1 item in the list
 
         data = {
             "fieldTable":field_result,
@@ -488,8 +493,19 @@ class CylinderReport(Reports):
             row['valData']['batchTime'] = sqlResult['time_batch']
             row['valData']['sampleTime'] = sqlResult['time_sample']
             row['valData']['dateTransported'] = sqlResult['date_transported']
+            row['valData']['dateReceived'] = sqlResult['date_received']
+
             row['valData']['notes'] = sqlResult['notes']
             row['valData']['isScc'] = sqlResult['is_scc']
+
+            # Do some processing for the checkbox
+            if (sqlResult['date_received_equal'] == 1):
+                row['valData']['dateReceivedEqual'] = 'checked'
+            else:
+                row['valData']['dateReceivedEqual'] = ''
+
+
+
 
         return formData
 
@@ -601,15 +617,11 @@ class CylinderReport(Reports):
 
         conData = HLP.get_form_values(self.conditions_table)
 
-        print(f"conData = {conData}")
-
         conDataClean = self.__con_form_to_sql(conData, cylID)
         HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
 
     def submit_edit(self):
-        print(f"self.field_table: {self.field_table}")
         fieldData = HLP.get_form_values(self.field_table)
-
 
         fieldDataClean = self.__field_form_to_sql(fieldData)
         HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
@@ -662,6 +674,16 @@ class CylinderReport(Reports):
 
         sqlData['auto_id']['data'] = fieldData[key]['valData']['cylinderID']
 
+
+        #Processing date received checkbox. 'on' is what a checked checkbox returns if no value specified
+        if(fieldData[key]['valData']['dateReceivedEqual'] == 'on'):
+            sqlData['date_received_equal']['data'] = 1
+            sqlData['date_received']['data'] = fieldData[key]['valData']['dateTransported']
+        else:
+            sqlData['date_received_equal']['data'] = 0
+            sqlData['date_received']['data'] = fieldData[key]['valData']['dateReceived']
+
+        #Convert to list
         dataList = []
         dataList.append(sqlData)
 

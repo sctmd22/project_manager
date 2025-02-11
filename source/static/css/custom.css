@@ -8,8 +8,12 @@
 	text-align: left;
 }
 
-.cylHidden {
+.hidden {
 	display: none;
+}
+
+.normal-text {
+	font-weight: normal;
 }
 
 
@@ -35,6 +39,11 @@
 
 .cylFormTime {
 	width: 150px
+}
+
+.cylFormDate {
+	width: 170px;
+	font-weight: normal
 }
 
 

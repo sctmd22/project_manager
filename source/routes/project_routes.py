@@ -9,9 +9,17 @@ bp = Blueprint('projects_bp', __name__, url_prefix='/projects')
 
 TB_PROJECTS = "project_master"
 
+pageData = {}
+pageData['navItemID'] = "projects_menu"
+
 @bp.route("/")
 def projects():
     breadCrumbs = generateBreadcrumbs()
+
+    pageData["pageTitle"] = "Projects"
+    pageData["bcTitle"] = pageData["pageTitle"]
+    pageData["navLinkID"] = ""
+
 
     dbCon = db_connect()
     cursor = dbCon.cursor(dictionary=True)
@@ -24,7 +32,7 @@ def projects():
     cursor.close()
     dbCon.close() #return connection to pool
 
-    return render_template("projects/projects.html", data=result, breadCrumbs=breadCrumbs)
+    return render_template("projects/projects.html", data=result, breadCrumbs=breadCrumbs, pageData=pageData)
 
 
 @bp.route("/new")
