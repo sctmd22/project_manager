@@ -8,6 +8,7 @@ import copy
 from db import sql_data as SQL
 from helpers.helpers import replaceNone
 
+import flask
 
 class Reports:
     STATUS_TABLE = {
@@ -142,6 +143,8 @@ class CylinderReport(Reports):
         'dateTransported',
         'dateReceived',
         'dateReceivedEqual',
+        'dateSpecimen',
+        'dateSpecimenEqual',
         'notes',
         'isScc'
 
@@ -287,6 +290,8 @@ class CylinderReport(Reports):
         'date_transported':            {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
         'date_received':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
         'date_received_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
+        'date_specimen':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
+        'date_specimen_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
         'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
@@ -328,6 +333,7 @@ class CylinderReport(Reports):
         fieldTable[0]['valData']['volumeUnits'] = "meters"
         fieldTable[0]['valData']['isScc'] = "no"
         fieldTable[0]['valData']['dateReceivedEqual'] = "checked"
+        fieldTable[0]['valData']['dateSpecimenEqual'] = "checked"
 
 
         defaultData = {
@@ -494,16 +500,22 @@ class CylinderReport(Reports):
             row['valData']['sampleTime'] = sqlResult['time_sample']
             row['valData']['dateTransported'] = sqlResult['date_transported']
             row['valData']['dateReceived'] = sqlResult['date_received']
+            row['valData']['dateSpecimen'] = sqlResult['date_specimen']
 
             row['valData']['notes'] = sqlResult['notes']
             row['valData']['isScc'] = sqlResult['is_scc']
 
-            # Do some processing for the checkbox
+            # Do some processing for the dateReceivedEqual checkbox
             if (sqlResult['date_received_equal'] == 1):
                 row['valData']['dateReceivedEqual'] = 'checked'
             else:
                 row['valData']['dateReceivedEqual'] = ''
 
+            # Do some processing for the dateSpecimenEqual
+            if (sqlResult['date_specimen_equal'] == 1):
+                row['valData']['dateSpecimenEqual'] = 'checked'
+            else:
+                row['valData']['dateSpecimenEqual'] = ''
 
 
 
@@ -621,6 +633,11 @@ class CylinderReport(Reports):
         HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
 
     def submit_edit(self):
+
+        #TO DO: Remove
+        val = flask.request.form['mePeepInput']
+        print(f"VAL = {val}")
+
         fieldData = HLP.get_form_values(self.field_table)
 
         fieldDataClean = self.__field_form_to_sql(fieldData)
@@ -670,18 +687,29 @@ class CylinderReport(Reports):
         sqlData['time_sample']['data'] = fieldData[key]['valData']['sampleTime']
         sqlData['time_cast']['data'] = fieldData[key]['valData']['castTime']
         sqlData['date_transported']['data'] = fieldData[key]['valData']['dateTransported']
+        sqlData['date_specimen']['data'] = fieldData[key]['valData']['dateSpecimen']
         sqlData['notes']['data'] = fieldData[key]['valData']['notes']
 
         sqlData['auto_id']['data'] = fieldData[key]['valData']['cylinderID']
 
 
-        #Processing date received checkbox. 'on' is what a checked checkbox returns if no value specified
+        #Processing dateReceived checkbox. 'on' is what a checked checkbox returns if no value specified
         if(fieldData[key]['valData']['dateReceivedEqual'] == 'on'):
             sqlData['date_received_equal']['data'] = 1
             sqlData['date_received']['data'] = fieldData[key]['valData']['dateTransported']
         else:
             sqlData['date_received_equal']['data'] = 0
             sqlData['date_received']['data'] = fieldData[key]['valData']['dateReceived']
+
+        #Processing dateSpecimen checkbox. 'on' is what a checked checkbox returns if no value specified
+        if(fieldData[key]['valData']['dateSpecimenEqual'] == 'on'):
+            sqlData['date_specimen_equal']['data'] = 1
+            sqlData['date_specimen']['data'] = fieldData[key]['valData']['castDate']
+        else:
+            sqlData['date_specimen_equal']['data'] = 0
+            sqlData['date_specimen']['data'] = fieldData[key]['valData']['dateSpecimen']
+
+
 
         #Convert to list
         dataList = []

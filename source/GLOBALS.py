@@ -12,3 +12,4 @@ class DATE_FORMATS(Enum):
     SIMPLE_DATE_FORMAT = "%Y-%m-%d"                #Returned by HTML date input
     SIMPLE_DATE_FORMAT_T = "%Y-%m-%d %H:%M"
     HTML_DATE_FORMAT_T = "%Y-%m-%dT%H:%M"          #Returned by HTML date and time input
+
