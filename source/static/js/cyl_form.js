@@ -63,77 +63,108 @@ const HIDDEN_CLASS = 'hidden';
 	})();
 	
 	
+	//Realtime validation for the "Add Cylinders" form members
 	(function(){
 		const NUM_ITEMS_MAX = 30;
 		const NUM_ITEMS_MIN = 1;
-		const NUM_ITEMS_INPUT_ID = 'numCylinders';	//Input
-		const NUM_ITEMS_ERROR_ID = 'numCylindersError';	//Error message output here
-		
+		const NUM_ITEMS_INPUT_ID = 'numItemsIn';
+		const NUM_ITEMS_ERROR_ID = 'numItemsErrorMsg';
 
+		const INITIALS_INPUT_ID = 'itemsInitialsIn';
+		const INITIALS_ERROR_ID = 'itemsInitialsErrorMsg';
 		
-		let isValid = false;
-
+		const ID_DATE_ID = 'cylDateSpecimen';
+		const ID_DATE_ERROR_ID = 'cylDateSpecimenErrorMsg';
+		
+		const DATE_RECEIVED_ID = 'cylDateReceived';
+		const DATE_RECEIVED_ERROR_ID = 'cylDateReceivedErrorMsg';
+		
+		const EXAMPLE_OUTPUT_ID = 'itemsExampleID';
+		
+		const ADD_BUTTON_ID = 'btnAddItems';	//Add Cyl/Cube/Prism Button
+		
+		const addButtonElement = document.getElementById(ADD_BUTTON_ID);
+		
+		const numItemsInputElement = document.getElementById(NUM_ITEMS_INPUT_ID);
 		const numItemsErrorElem = document.getElementById(NUM_ITEMS_ERROR_ID);
 		
-		//Hide the error message box
-		numItemsErrorElem.classList.add(HIDDEN_CLASS);
+		const initialsInputElement = document.getElementById(INITIALS_INPUT_ID);
+		const initialsErrorElement = document.getElementById(INITIALS_ERROR_ID);
+		
+		const idDateElement = document.getElementById(ID_DATE_ID);
+		const idDateErrorElement = document.getElementById(ID_DATE_ERROR_ID);
+		
+		const dateReceivedElement = document.getElementById(DATE_RECEIVED_ID);
+		const dateReceivedErrorElement = document.getElementById(DATE_RECEIVED_ERROR_ID);
+		
+		const exampleOutputElement = document.getElementById(EXAMPLE_OUTPUT_ID);
 		
 		
-		const numItemsInput = document.querySelector(`#${NUM_ITEMS_INPUT_ID}`);
-		const numItems = numItemsInput.value;
+		let itemsNumValid = false;
+		let initialsValid = false;
+		let idDateValid = false;
+		let dateReceivedValid = false;
 		
-		//Input event listener
-		numItemsInput.addEventListener("input", ()=>{
-			verifyInt(NUM_ITEMS_MIN, NUM_ITEMS_MAX, numItemsInput, numItemsErrorElem, enableButton);
+		let initialsVal = '';
+		let idDateVal = '';
+		
+		//Hide the error message box by default
+		numItemsErrorElem.classList.add(HIDDEN_CLASS);		
+		initialsErrorElement.classList.add(HIDDEN_CLASS);
+		idDateErrorElement.classList.add(HIDDEN_CLASS);
+		dateReceivedErrorElement.classList.add(HIDDEN_CLASS);			
+		
+		//Input event listener for "numItemsIn" input box
+		numItemsInputElement.addEventListener("input", ()=>{
+			itemsNumValid = HELPERS.verifyInt(NUM_ITEMS_MIN, NUM_ITEMS_MAX, numItemsInputElement, numItemsErrorElem);
+			checkValidity();
+
+		});
+		
+		//Input event listener for Tech Initials input box
+		initialsInputElement.addEventListener("input", ()=>{
+			initialsValid = HELPERS.verifyInitials(initialsInputElement, initialsErrorElement);	
+			updateExample();
+			checkValidity();
+
 		});
 		
 		
-		function enableItem(elem){
-			elem.disabled = false;
-		}
-		
-		
-		enableButton = () => {
-			console.log("Callback babey");
-		}
-		
-		
+		//Input event listener for ID Date input box	THIS MIGHT BE VALID EVEN THOUGH IT DOESNT CHANGE - NEED TO CHECK IMMEDIATELY
+		idDateElement.addEventListener("input", ()=>{
+			idDateValid = HELPERS.verifyDate(idDateElement, idDateErrorElement);	
+			updateExample();
+			checkValidity();
 
-		function verifyInt(min, max, inputElement, errorElement, callback){
-			const num = parseInt(inputElement.value);
-			
-			const ERROR_NAN = "Not a valid number";
-			const ERROR_SIZE = `Number must be between ${min} and ${max}`;
-			
-			if(isNaN(num)){
-				errorElement.classList.remove(HIDDEN_CLASS);
-				errorElement.textContent = ERROR_NAN;
+		});
+		
+		
+		//Update the "Example Output" Box
+		function updateExample(){
+			if(initialsValid){
 				
-			} else if (num < min){
-				errorElement.classList.remove(HIDDEN_CLASS);
-				errorElement.textContent = ERROR_SIZE;
-				
-			} else if (num > max) {
-				errorElement.classList.remove(HIDDEN_CLASS);
-				errorElement.textContent = ERROR_SIZE;
-			
-			
-			//Valid: Hide the error and call the callback
+				initialsVal = initialsInputElement.value;
+				exampleOutputElement.textContent = `${idDateVal}${initialsVal}-1`
 			} else {
-				errorElement.classList.add(HIDDEN_CLASS);
-				callback();
-				
+				initialsVal = '';
+				exampleOutputElement.textContent = '';
 			}
-			
-
 		}
 		
-
+		//Enable the 'Add x' button if all form fields are valid
+		function checkValidity(){
+			if(itemsNumValid && initialsValid){
+				addButtonElement.disabled = false;
+			} else {
+				addButtonElement.disabled = true;
+			}
+		}
 		
-
+		
+		
+		
 		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
 		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);	
-		
 		
 		createCylItemsRow();
 		
@@ -170,106 +201,130 @@ const HIDDEN_CLASS = 'hidden';
 
 
 const STR_FUNCTIONS = (function(){
-	/*
-	-Implement the functionality for "Add Target" and "Remove Target" for cylinder strength table
-	-How it works:
-		1. Initially loop through the STRENGTH_TABLE to get the HTML ID's in order to read the values of the "visible" inputs.
-			1 = visible 
-			0 or empty = not visible
-		2. Hide strength table rows where visible = 0 (or none) by assigning the classId "cylHidden"
-		3. Count the number of inputs that are visible (value = 1) to get the index for the addStrTarget() and removeStrTarget() functions
-	
-	Assign the IIFE to a constant named STR_FUNCTIONS so any returned functions can be accessed 
-	*/
 	const STRENGTH_TABLE = cyl_data_json.strTable;
 	
-	const numStrTargets = STRENGTH_TABLE.length;
-	let strIndex = 0;
-	
-	function addStrTarget(){
+	(function(){
 		
-		if(strIndex <= (numStrTargets - 1)){
-			//Select the correct row based on the strIndex
-			let targetRow = STRENGTH_TABLE[strIndex];
-			
-			//Get the hidden input which holds the 'visible' value and set to 1
-			let visibleInput = document.getElementById(targetRow['labels']['visible']);
-			visibleInput.value = 1;
-			
-			//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
-			let strTr = document.getElementById(targetRow['name']);
-			strTr.classList.remove(HIDDEN_CLASS);
-			
-			strIndex++; //Increment last
-		}
-	}
-	
-	function removeStrTarget(){
-		
-		if(strIndex > 1){
-			strIndex--; //Decrement first
-			
-			const targetRow = STRENGTH_TABLE[strIndex];
-			
-			const visibleInput = document.getElementById(targetRow['labels']['visible']);
-			visibleInput.value = 0;
-			
-			const strTr = document.getElementById(targetRow['name']);
-			strTr.classList.add(HIDDEN_CLASS);
-			
-			//Reset inputs to ''
-			const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
-			
-			inputs.forEach(input => {
-				input.value = '';
-			});
+		for (let row of STRENGTH_TABLE){
+			console.log(row);
 			
 		}
 		
-	}
-	
-	//Hide/show the necessary elements. Also count the number of visible elements to get start index
-	for (let row of STRENGTH_TABLE){
-		
-		//Get the hidden input that stores the visibility data
-		let visibleInput = document.getElementById(row['labels']['visible']);
-		
-		let visibleInputVal;
+		//const errorBoxStrength = document.getElementById(STRENGTH_TABLE.dataFields.strength.errorLabel);
+		//const errorBoxDays = document.getElementByID(STRENGTH_TABLE.dataFields.strength.errorLabel);
 		
 		
-		if(isNaN(visibleInput.value)){
-			visibleInputVal = 0;
+	})();
 
-		} else {
-			visibleInputVal = Number(visibleInput.value);
-		}
 
-		let strTr = document.getElementById(row['name']);
-
-		const inputs = strTr.querySelectorAll('input[type="number"]'); //Select all inputs of number type from the table row
-
-		//Assign any non-zero values to zero
-		if(!visibleInputVal){
-			visibleInputVal.value = 0;
-			strTr.classList.add(HIDDEN_CLASS); //Assign the cylHidden class to the table row to hide it, also reset inputs if set
+	const SHOW_HIDE = (function(){
+		/*
+		-Implement the functionality for "Add Target" and "Remove Target" for cylinder strength table
+		-How it works:
+			1. Initially loop through the STRENGTH_TABLE to get the HTML ID's in order to read the values of the "visible" inputs.
+				1 = visible 
+				0 or empty = not visible
+			2. Hide strength table rows where visible = 0 (or none) by assigning the classId "hidden"
+			3. Count the number of inputs that are visible (value = 1) to get the index for the addStrTarget() and removeStrTarget() functions
+		
+		Assign the IIFE to a constant named STR_FUNCTIONS so any returned functions can be accessed 
+		*/
+		
+		const numStrTargets = STRENGTH_TABLE.length;
+		let strIndex = 0;
+		
+		function addStrTarget(){
 			
-			inputs.forEach(input => {
-				input.value = '';
-			});
-			
-		} else {
-			strIndex++;
+			if(strIndex <= (numStrTargets - 1)){
+				//Select the correct row based on the strIndex
+				let targetRow = STRENGTH_TABLE[strIndex];
+				
+				//Get the hidden input which holds the 'visible' value and set to 1
+				let visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
+				visibleInput.value = 1;
+				
+				//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
+				let strTr = document.getElementById(targetRow['name']);
+				strTr.classList.remove(HIDDEN_CLASS);
+				
+				strIndex++; //Increment last
+			}
 		}
 		
-	}
+		function removeStrTarget(){
+			
+			if(strIndex > 1){
+				strIndex--; //Decrement first
+				
+				const targetRow = STRENGTH_TABLE[strIndex];
+				
+				const visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
+				visibleInput.value = 0;
+				
+				const strTr = document.getElementById(targetRow['name']);
+				strTr.classList.add(HIDDEN_CLASS);
+				
+				//Reset inputs to ''
+				const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
+				
+				inputs.forEach(input => {
+					input.value = '';
+				});
+				
+			}
+			
+		}
+		
+		//Hide/show the necessary elements. Also count the number of visible elements to get start index
+		for (let row of STRENGTH_TABLE){
+			
+			//Get the hidden input that stores the visibility data
+			let visibleInput = document.getElementById(row['dataFields']['visible']['label']);
+			
+			let visibleInputVal;
+			
+			
+			if(isNaN(visibleInput.value)){
+				visibleInputVal = 0;
+
+			} else {
+				visibleInputVal = Number(visibleInput.value);
+			}
+
+			let strTr = document.getElementById(row['name']);
+
+			const inputs = strTr.querySelectorAll('input[type="number"]'); //Select all inputs of number type from the table row
+
+			//Change any non-zero values to zero
+			if(!visibleInputVal){
+				visibleInputVal.value = 0;
+				strTr.classList.add(HIDDEN_CLASS); //Assign the HIDDEN_CLASS class to the table row to hide it, also reset inputs if set
+				
+				inputs.forEach(input => {
+					input.value = '';
+				});
+				
+			} else {
+				strIndex++;
+			}
+			
+		}
+		
+		return {addStrTarget, removeStrTarget};
+		
+	})();
 	
-	//Export functions to be used externally
-	return {addStrTarget, removeStrTarget};
+	
+	//Return addStrTarget and removeStrTarget without requiring additonal notation (ex: STR_FUNCTIONS.addStrTarget() instead of STR_FUNCTIONS.SHOW_HIDE.addStrTarget)
+	return {
+        addStrTarget: SHOW_HIDE.addStrTarget,
+        removeStrTarget: SHOW_HIDE.removeStrTarget,
+    };
  
  })();
  
 
-
+//Show or hide Condition/Measurement Table rows corresponding to the state of the SCC radio buttons
 (function(){
 	/*
 	Create an IIFE (Immediately Invoked Function Expression) to create a local scope and execute automatically using 
@@ -279,7 +334,7 @@ const STR_FUNCTIONS = (function(){
 	
 	//Get data from the <script></script> tags passed from Python to Jinja
 	const CONDITIONS_TABLE = cyl_data_json.conditionsTable;
-	const IS_SCC = cyl_data_json.fieldTable.valData.isScc;
+	const IS_SCC = cyl_data_json.fieldTable.valueData.isScc;
 	const CYL_EDITING = cyl_editing_json;
 	
 	// Get references to the radio buttons and the target element

@@ -13,3 +13,19 @@ class DATE_FORMATS(Enum):
     SIMPLE_DATE_FORMAT_T = "%Y-%m-%d %H:%M"
     HTML_DATE_FORMAT_T = "%Y-%m-%dT%H:%M"          #Returned by HTML date and time input
 
+
+'''
+class VALIDATION_TYPES(Enum):
+    INT = 1
+    NUMBER = 2
+    TEXT = 3
+    EMAIL = 4
+'''
+
+#Tells JavaScript what type of validation to use for the associated data
+VALIDATION_TYPES = {
+    'INT':1,
+    'NUMBER':2,
+    'TEXT':3,
+    'EMAIL':4
+}

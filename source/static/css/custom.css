@@ -26,6 +26,10 @@
 	font-weight: normal;
 }
 
+.custom-col {
+	width: auto;
+}
+
 
 .cylinder_width {
 	max-width: 1600px
