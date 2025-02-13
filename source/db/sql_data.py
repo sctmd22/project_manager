@@ -1,12 +1,5 @@
 from enum import Enum
 
-"""
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-DATETIME_FORMAT_U = DATETIME_FORMAT + ".%f"
-SIMPLE_DATE_FORMAT = "%Y-%m-%d"
-TIME_FORMAT = "%H:%M:%S"
-"""
-
 class DATATYPES(Enum):
     VARCHAR = 1
     TEXT = 2

@@ -12,6 +12,64 @@ import db as db
 from db import sql_data as SQL
 
 
+def get_form_values_str(formData):
+    '''
+    Iterate through the 'label' keys of formData, using the labels as parameters to request data from the submitted
+    form. With the requested form data, update the 'val' key's in formData
+
+    formData layout:
+    [
+        {'<NAME>': {
+            'title':VALUE,
+            'dataFields': {
+                <FIELD1>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
+                <FIELD2>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
+                ....
+                },
+            }
+        }
+        etc...
+    ]
+
+    :param formData: A list of FORM data (formatted to the FORM template style)
+    :return: The same FORM data as a dictionary, where the NAME is the key to each sub-dictioanry
+    '''
+    FUNC_NAME = "get_form_values(formData)"
+
+    if(not formData):
+        print(f"Error: {FUNC_NAME}: formData is empty")
+        return None
+
+    if(not isinstance(formData, list)):
+        print(f"Error: {FUNC_NAME}: formData is not a list. formData = {formData}")
+        return None
+
+
+    dataList = copy.deepcopy(formData)
+
+    for row in dataList:
+        dataFields = row['dataFields']
+
+        for key, val in dataFields.items():
+            if('label' in val):
+                try:
+                    val['val'] = request.form[val['label']]
+                except BadRequestKeyError as e:
+                    print(f"Error: {FUNC_NAME}: Could not request HTML element where name = {val['label']}")
+
+
+    data = {}
+
+    #Convert list of dicts to dictionary for easier value assignment. Use the value in the 'name' key as the new
+        #key for each dict entry
+    for row in dataList:
+        key = row['name']
+        del row['name']
+        data[key] = row
+
+    return data
+
+
 def get_form_values(formData):
     FUNC_NAME = "get_form_values(formData)"
 
@@ -32,7 +90,7 @@ def get_form_values(formData):
         if('labels' in row):
             for key, val in row['labels'].items():
                 try:
-                    row['valData'][key] = request.form[row['labels'][key]]
+                    row['valueData'][key] = request.form[row['labels'][key]]
                 except BadRequestKeyError as e:
                     print(f"Error: {FUNC_NAME}: Could not request HTML element where name = {row['labels'][key]}")
 
