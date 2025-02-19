@@ -1,30 +1,5 @@
 
 const HELPERS = (function(){
-	
-	//Displays the correct sidebar nav-item and nav-link as being open and/or active
-	(function(){
-		//pageData is passed in index.html
-		const pageData = page_data_json;
-	
-		const CLASS_NAME_MENU_OPEN = 'menu-open';
-		const CLASS_MENU_LINK_ACTIVE = 'active';
-		
-		const navItemID = pageData['navItemID'];
-		const navItemLink = pageData['navLinkID'];
-
-		if(navItemID){
-			const menuItem = document.getElementById(navItemID);
-			menuItem.classList.add(CLASS_NAME_MENU_OPEN);
-		}
-		
-		if(navItemLink){
-			const menuLink = document.getElementById(navItemLink);
-			menuLink.classList.add(CLASS_MENU_LINK_ACTIVE);
-		}
-
-		
-	})();
-	
 
 		function verifyInt(min, max, inputElement, errorElement){
 			//Use regex to ensure only positive integers can be input
@@ -63,9 +38,33 @@ const HELPERS = (function(){
 		
 		
 		function verifyDate(elementIn, errorElement){
-			const date = elementIn.value;
+			let dateString = elementIn.value;
 			
-			console.log(date);
+			if(!dateString){
+				return false;
+			}
+			
+			//Ensures the dateString is only 10 characters (YYYY-MM-DD) 
+			if(dateString.length > 10){
+				dateString = dateString.slice(0,10);
+				
+			}
+	
+			//Parse the date as milliseconds and convert to a date object
+			let parsedDate = Date.parse(`${dateString}T00:00:00Z`);
+			
+			if(isNaN(parsedDate)){
+				return false;
+			}
+			
+			newDate = new Date(parsedDate);
+			
+			return newDate;
+	
+			
+
+			//console.log(newDate.toISOString());
+
 		}
 		
 			
@@ -121,7 +120,7 @@ const HELPERS = (function(){
 		validatePosIntegerInput, 
 		verifyInitials,
 		verifyDate
-		};
+	};
 			
 			
 			

@@ -3,8 +3,11 @@ const HIDDEN_CLASS = 'hidden';
 
 
 
+
 //Handle realtime form functionality of the cylinder items part of the cylinder form
 (function(){
+	
+
 	
 	
 	//Enable/disable the dateReceived and dateSepcimen input depending the dateReceivedEqual and dateSpecimenEqual checkboxes 
@@ -39,6 +42,7 @@ const HIDDEN_CLASS = 'hidden';
 			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);	
 		});
 		
+	
 		dateCast.addEventListener('change', ()=>{
 			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);		
 		
@@ -48,11 +52,23 @@ const HIDDEN_CLASS = 'hidden';
 		toggleCheck(checkboxReceived, dateTransported, dateReceived);
 		toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);			
 	
-		function toggleCheck(cbox, source, destination){
-			
+		
+		
+		//Determine if cbox is checked. Copy source value to destination if true and
+			//trigger an "input" event
+		function toggleCheck(cbox, source, destination){		
+			//cbox:			Checkbox element Ooject
+			//source:		Element object to obtain the value from
+			//destination: 	Element object to write the source value to
+		
 			if(cbox.checked){
 				destination.disabled = true;
 				destination.value = source.value;
+				
+				//Trigger and event so the data validation functions work correctly. 
+				const event = new Event("input", { bubbles: true, cancelable: true });
+				destination.dispatchEvent(event);
+			
 			} else {
 				destination.disabled = false;
 			}
@@ -65,95 +81,149 @@ const HIDDEN_CLASS = 'hidden';
 	
 	//Realtime validation for the "Add Cylinders" form members
 	(function(){
-		const NUM_ITEMS_MAX = 30;
-		const NUM_ITEMS_MIN = 1;
-		const NUM_ITEMS_INPUT_ID = 'numItemsIn';
-		const NUM_ITEMS_ERROR_ID = 'numItemsErrorMsg';
 
-		const INITIALS_INPUT_ID = 'itemsInitialsIn';
-		const INITIALS_ERROR_ID = 'itemsInitialsErrorMsg';
+		class InputElement {
+
+			constructor(inputID, errorID, value = '', maxSize = 0, minSize = 0) {
+				this.inputID = inputID;
+				this.errorID = errorID;
+				this.valid = false;
+				this.val = value;
+				this.maxSize = maxSize;
+				this.minSize = 0;
+				
+				this.inputElement = this.getElement(this.inputID);
+				this.errorElement = this.getElement(this.errorID);
+				
+				this.hideErr();
+					
+			}
+			
+			getElement(id){
+				const elem = document.getElementById(id);
+				
+				if(!elem){
+					return false;
+				}
+				
+				return elem;
+			}
+
+			hideErr(){
+				this.errorElement.classList.add(HIDDEN_CLASS);	
+			}				
+			
+			showErr(msg){
+				this.errorElement.classList.remove(HIDDEN_CLASS);	
+				this.errorElement.textContent = msg;
+			}
+			
+			
+			//Verifies a string can be parsed as a Date object.
+				//Get the month and day to be used as part of the cylinder ID
+				//Update the this.valid memeber
+			verifyDate(){
+				const errMsg = "Please enter a valid date.";
+				let dateString = this.inputElement.value;
+			
 		
-		const ID_DATE_ID = 'cylDateSpecimen';
-		const ID_DATE_ERROR_ID = 'cylDateSpecimenErrorMsg';
+				if(!dateString){
+					this.valid = false;
+					this.showErr(errMsg);
+					return;
+				}
+				
+				//Ensures the dateString is only 10 characters (YYYY-MM-DD)
+				/*
+				if(dateString.length > 10){
+					dateString = dateString.slice(0,10);
+					
+				}
+				*/
 		
-		const DATE_RECEIVED_ID = 'cylDateReceived';
-		const DATE_RECEIVED_ERROR_ID = 'cylDateReceivedErrorMsg';
+				//Parse the date as milliseconds and convert to a date object
+				let parsedDate = Date.parse(`${dateString}`);
+				
+				if(isNaN(parsedDate)){
+					this.valid = false;
+					this.showErr(errMsg);
+					return;
+				}
+				
+				this.valid = true;
+				this.hideErr();
+				
+				newDate = new Date(parsedDate);
+				
+				let day = newDate.getUTCDate();
+				let month = newDate.getUTCMonth();
+
+				console.log(day);
+				console.log(month);
+			
+			}
+			
+			
 		
-		const EXAMPLE_OUTPUT_ID = 'itemsExampleID';
+		}
+		
+		const EXAMPLE_OUTPUT_ID = 'itemsExampleID'; //"Example Output" element
 		
 		const ADD_BUTTON_ID = 'btnAddItems';	//Add Cyl/Cube/Prism Button
+
+		const numItems = new InputElement('numItemsIn', 'numItemsErrorMsg', '', 30, 1);
 		
+		const initials = new InputElement('itemsInitialsIn', 'itemsInitialsErrorMsg');
+		const idDate = new InputElement('cylDateSpecimen', 'cylDateSpecimenErrorMsg');
+		const dateReceived = new InputElement('cylDateReceived', 'cylDateReceivedErrorMsg');
+	
 		const addButtonElement = document.getElementById(ADD_BUTTON_ID);
-		
-		const numItemsInputElement = document.getElementById(NUM_ITEMS_INPUT_ID);
-		const numItemsErrorElem = document.getElementById(NUM_ITEMS_ERROR_ID);
-		
-		const initialsInputElement = document.getElementById(INITIALS_INPUT_ID);
-		const initialsErrorElement = document.getElementById(INITIALS_ERROR_ID);
-		
-		const idDateElement = document.getElementById(ID_DATE_ID);
-		const idDateErrorElement = document.getElementById(ID_DATE_ERROR_ID);
-		
-		const dateReceivedElement = document.getElementById(DATE_RECEIVED_ID);
-		const dateReceivedErrorElement = document.getElementById(DATE_RECEIVED_ERROR_ID);
 		
 		const exampleOutputElement = document.getElementById(EXAMPLE_OUTPUT_ID);
 		
 		
-		let itemsNumValid = false;
-		let initialsValid = false;
-		let idDateValid = false;
-		let dateReceivedValid = false;
-		
-		let initialsVal = '';
-		let idDateVal = '';
-		
-		//Hide the error message box by default
-		numItemsErrorElem.classList.add(HIDDEN_CLASS);		
-		initialsErrorElement.classList.add(HIDDEN_CLASS);
-		idDateErrorElement.classList.add(HIDDEN_CLASS);
-		dateReceivedErrorElement.classList.add(HIDDEN_CLASS);			
-		
 		//Input event listener for "numItemsIn" input box
-		numItemsInputElement.addEventListener("input", ()=>{
-			itemsNumValid = HELPERS.verifyInt(NUM_ITEMS_MIN, NUM_ITEMS_MAX, numItemsInputElement, numItemsErrorElem);
+		numItems.inputElement.addEventListener("input", ()=>{
+			numItems.valid = HELPERS.verifyInt(numItems.minSize, numItems.maxSize, numItems.inputElement, numItems.errorElement);
 			checkValidity();
 
 		});
 		
 		//Input event listener for Tech Initials input box
-		initialsInputElement.addEventListener("input", ()=>{
-			initialsValid = HELPERS.verifyInitials(initialsInputElement, initialsErrorElement);	
+		initials.inputElement.addEventListener("input", ()=>{
+			initials.valid = HELPERS.verifyInitials(initials.inputElement, initials.errorElement);	
+			updateExample();
+			checkValidity();
+
+		});
+
+		//Immediately call the varifyDate function as there may be a valid date initially
+		HELPERS.verifyDate(idDate.inputElement, idDate.errorElement);
+
+		//Input event listener for ID Date input box
+		idDate.inputElement.addEventListener("input", ()=>{
+			idDate.verifyDate();
 			updateExample();
 			checkValidity();
 
 		});
 		
 		
-		//Input event listener for ID Date input box	THIS MIGHT BE VALID EVEN THOUGH IT DOESNT CHANGE - NEED TO CHECK IMMEDIATELY
-		idDateElement.addEventListener("input", ()=>{
-			idDateValid = HELPERS.verifyDate(idDateElement, idDateErrorElement);	
-			updateExample();
-			checkValidity();
-
-		});
-		
-		
-		//Update the "Example Output" Box
+		//Update the "Example Output" element text
 		function updateExample(){
-			if(initialsValid){
+			if(initials.valid && idDate.valid){
 				
-				initialsVal = initialsInputElement.value;
-				exampleOutputElement.textContent = `${idDateVal}${initialsVal}-1`
+				initials.val = initials.inputElement.value;
+				exampleOutputElement.textContent = `${idDate.val}${initials.val}-1`
 			} else {
-				initialsVal = '';
+				initials.val = '';
 				exampleOutputElement.textContent = '';
 			}
 		}
 		
 		//Enable the 'Add x' button if all form fields are valid
 		function checkValidity(){
-			if(itemsNumValid && initialsValid){
+			if(numItems.valid && initials.valid){
 				addButtonElement.disabled = false;
 			} else {
 				addButtonElement.disabled = true;
@@ -393,10 +463,7 @@ const STR_FUNCTIONS = (function(){
 				
 		
 			}
-		
-		
 		}
-		
 	}
 	
 })();
