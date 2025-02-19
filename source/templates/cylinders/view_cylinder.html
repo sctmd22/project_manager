@@ -877,6 +877,9 @@
 		const cyl_data_json = {{ data | tojson}};
     </script>
 
-	 <script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
+
+	{% if pageData.editing %}
+		<script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
+	{% endif %}
 
 {% endblock %}
