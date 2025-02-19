@@ -473,7 +473,7 @@
 					<td>
 						{% if pageData.editing %}
 							<input type="number" class="form-control cylStrInput" id="{{ row.dataFields.strength.label }}" name="{{ row.dataFields.strength.label }}"  value="{{ row.dataFields.strength.val }}" aria-describedby="textDesc">
-							<div class="form-text error-msg" id="{{ row.dataFields.strength.label.errorLabel }}"> 
+							<div class="form-text error-msg" id="{{ row.dataFields.strength.errorLabel }}"> 
 							
 							</div>
 						{% else %}
@@ -599,7 +599,7 @@
 						</div>
 							
 						<div class="cylFormDate">
-								<input maxlength="3" type="text" class="form-control" name="itemsInitialsIn" id="itemsInitialsIn" value="">
+								<input maxlength="20" type="text" class="form-control" name="itemsInitialsIn" id="itemsInitialsIn" value="">
 								<div class="form-text error-msg" id="itemsInitialsErrorMsg"></div>
 						</div>
 
@@ -614,7 +614,7 @@
 					
 						<div class="cylFormDate">
 							<input class="form-control" type="date" name="{{ data.fieldTable.labels.dateSpecimen }}" value="{{ data.fieldTable.valueData.dateSpecimen | strip_time_f }}" id="{{ data.fieldTable.labels.dateSpecimen }}">
-							<div class="form-text error-msg" id="cylDateSpecimenErrorMsg"></div>
+							<div class="form-text error-msg" id="itemsDateSpecimenErr"></div>
 
 						</div>
 					
@@ -624,37 +624,53 @@
 						</div>
 					
 					</div>
-					
-					
 					<div class="row align-items-center mt-3 mb-3">
-
 						<div class="cylFormLabels">
-							<label for="" class="">Example Output:</label>
+							<label for="" class="">Separator:</label>
 						</div>
-							
-						<div class="cylFormDate" id="itemsExampleID">
-							
+						<div class="cylFormDate">
+							<select class="form-select" name="" id="itemsSeparatorSelect">
+								{% for key,val in tables.separatorData.items() %}
+									<option value="{{key}}">{{val}}</option>
+								{% endfor %}
+							</select>
 						</div>
-
 					</div>
 					
-						
 					<div class="row align-items-center mt-3 mb-3">
-
+						<div class="cylFormLabels">
+							<label for="" class="">Set:</label>
+						</div>
+						<div class="cylFormDate">
+							<select class="form-select" name="" id="itemsSetSelect">
+								{% for key,val in tables.setData.items() %}
+									<option value="{{key}}">{{val}}</option>
+								{% endfor %}
+							</select>
+						</div>
+					</div>
+					
+					<div class="row align-items-center mt-3 mb-3">
 						<div class="cylFormLabels">
 							<label for="" class="">Custom ID:</label>
 						</div>
-							
 						<div class="cylFormDate">
-								<input maxlength="3" type="text" class="form-control" name="" id="" value="" disabled>
+								<input maxlength="20" type="text" class="form-control" name="itemsCustomID" id="itemsCustomID" value="">
+								<div class="form-text error-msg" id="itemsCustomIDErr"></div>
 						</div>
 						<div class="cylFormData"> 
-							<input class="form-check-input" type="checkbox" id="" name=""> 
+							<input class="form-check-input" type="checkbox" id="customIDCheck" name=""> 
 							<label class="form-check-label normal-text" for="">Use Custom ID</label>
 						</div>
 
 					</div>
-					
+				
+					<div class="row align-items-center mt-3 mb-3">
+						<div class="cylFormLabels">
+							<label for="" class="">Example Output:</label>
+						</div>
+						<div class="cylFormDate" id="itemsExampleID"></div>
+					</div>
 					
 					<hr>
 					
@@ -665,7 +681,7 @@
 						
 						<div class="cylFormDate">
 							<input class="form-control" type="date" name="{{ data.fieldTable.labels.dateReceived }}" value="{{ data.fieldTable.valueData.dateReceived | strip_time_f }}" id="{{ data.fieldTable.labels.dateReceived }}">
-							<div class="form-text error-msg" id="cylDateReceivedErrorMsg"></div>
+							<div class="form-text error-msg" id="itemsDateReceivedErr"></div>
 						</div>
 						
 						<div class="cylFormData"> 
@@ -682,10 +698,8 @@
 							
 						<div class="cylFormDate">
 							<select class="form-select" name="{{ data.fieldTable.labels.mouldType }}" id="{{ data.fieldTable.labels.mouldType }}">
-							
 								<option value="{{ key }}" {% if key == data.fieldTable.valueData.mouldType %}selected{% endif %}>{{ value }}</option>
 							</select>
-							
 						</div>
 
 					</div>

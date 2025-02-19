@@ -2,58 +2,447 @@
 const HIDDEN_CLASS = 'hidden';
 
 
-
-
 //Handle realtime form functionality of the cylinder items part of the cylinder form
 (function(){
+	class InputElement {
+
+		constructor(inputID, errorID) {
+			this.inputID = inputID;
+			this.errorID = errorID;
+			this.valid = false;
+
+			this.inputElement = this.getElement(this.inputID);
+			this.errorElement = this.getElement(this.errorID);
+			
+			this.setVal();
+			this.hideErr();
+				
+		}
+		
+		getElement(id){
+			const elem = document.getElementById(id);
+			
+			if(!elem){
+				return false;
+			}
+			
+			return elem;
+		}
+		
+		setVal(){
+			if(this.inputElement){
+				this.val = this.inputElement.value;
+			} else {
+				this.val = null;
+			}
+		}
+
+		hideErr(){
+			if(this.errorElement){
+				this.errorElement.classList.add(HIDDEN_CLASS);	
+			}
+		}				
+		
+		showErr(msg){
+			if(this.errorElement){
+				this.errorElement.classList.remove(HIDDEN_CLASS);	
+				this.errorElement.textContent = msg;
+			}
+		}
+		
+		
+		disable(){
+			if(this.inputElement){
+				this.inputElement.disabled = true;
+				this.hideErr();
+			}
+		}
+		
+		enable(){
+			if(this.inputElement){
+				this.inputElement.disabled = false;
+				
+				//Trigger an "input" event on enable
+				this.triggerInput();
+			}
+		}
+
+		triggerInput(){
+			if(this.inputElement){
+				//Trigger an input event 
+				const event = new Event("input", { bubbles: true, cancelable: true });
+				this.inputElement.dispatchEvent(event);
+			}
+		}
+		
+		triggerChange(){
+			if(this.inputElement){
+				//Trigger a change event
+				const event = new Event("change", { bubbles: true, cancelable: true });
+				this.inputElement.dispatchEvent(event);
+			}
+		}
+	}
 	
+	class TextInput extends InputElement {
+		constructor(inputID, errorID, maxSize = 255){
+			super(inputID, errorID);
+			this.maxSize = maxSize;
+			
+		}
+		
+		
+		verifyNoSlashesNoQuotes(){
+			this.inputElement.value = this.inputElement.value.replace(/[/\\'"]/g, ""); 
+			this.verifySize();
+		}
+		
+		verifyAlphaNumeric(){
+			this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z0-9]/g, ""); 
+			this.verifySize();
+		}
+		
+		verifyUpperLower(){
+			this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z]/g, "");
+			this.verifySize();
+		
+		}
+		
+
+		verifySize(){
+			const ERROR_SIZE = `Please enter at least one character`;
+			
+			const val = this.inputElement.value;
+			this.inputElement.value = val.slice(0, this.maxSize);
+			
+			
+			if(val.length == 0){
+				this.showErr(ERROR_SIZE)
+				this.valid = false;
+				this.val = null;
+			} else {
+				this.hideErr();
+				this.valid = true;
+				this.val = this.inputElement.value;
+			}
+			
+		}
+	}
+
+	class DropInput extends InputElement {
+		constructor(inputID){
+			super(inputID);
+		}
+		
+		
+		decodeSetOptions(){
+			//Get the latest value from the input element
+			this.setVal();
+			
+			if(this.val === 'none'){
+				this.val = '';
+			} else {
+				this.val = this.val.toUpperCase();
+			}
+			
+		}
+		
+		
+		decodeSeparatorOptions(){
+			this.setVal();
+			
+			if(this.val === 'space'){
+				this.val = ' ';
+			}
+		}
+		
+	}
+	
+	class IntInput extends InputElement {
+		
+		constructor(inputID, errorID, maxSize = 0, minSize = 0){
+			super(inputID, errorID);
+			this.maxSize = maxSize;
+			this.minSize = minSize;
+
+		}
+		
+		verifyInt(){
+			//Use regex to ensure only positive integers can be input
+			this.validatePosIntegerInput();
+			
+			const num = parseInt(this.inputElement.value);
+			
+			const ERROR_NAN = "Not a valid number";
+			const ERROR_SIZE = `Value must be between ${this.minSize} and ${this.maxSize}`;
+			
+			if(isNaN(num)){
+				this.showErr(ERROR_NAN);
+				this.valid = false;
+				
+			} else if (num < this.minSize){
+				this.showErr(ERROR_SIZE);
+				this.valid = false;
+				
+			} else if (num > this.maxSize) {
+				this.showErr(ERROR_SIZE);
+				this.valid = false;
+			
+			
+			//Valid: Hide the error message
+			} else {
+				this.hideErr();
+				this.valid = true;
+			}
+			
+		}
+		
+		validatePosIntegerInput() {
+			// Regex to allow only integers (positive or negative)
+			const regex = /^\d*$/;
+
+			// If the input doesn't match the regex, remove invalid characters
+			if (!regex.test(this.inputElement.value)) {
+				this.inputElement.value = this.inputElement.value.replace(/[^\d]/g, ''); // Remove non-integer characters
+			}
+		}
+	}
+	
+	class DateInput extends InputElement {
+		constructor(inputID, errorID){
+			super(inputID, errorID); //Call parent constructor
+			this.date = null;
+		}
+		
+					
+		//Verifies a string can be parsed as a Date object.
+			//Get the month and day to be used as part of the cylinder ID
+			//Update the this.valid member
+		verifyDate(){
+			const errMsg = "Please enter a valid date.";
+			let dateString = this.inputElement.value;
+		
+	
+			if(!dateString){
+				this.valid = false;
+				this.showErr(errMsg);
+				return;
+			}
 
 	
+			//Parse the date as milliseconds and convert to a date object
+			let parsedDate = Date.parse(`${dateString}`);
+			
+			if(isNaN(parsedDate)){
+				this.valid = false;
+				this.showErr(errMsg);
+				return;
+			}
+			
+			this.valid = true;
+			this.hideErr();
+			
+			this.date = new Date(parsedDate);
+			
+		}
+		
+		//Convert the date object to a string 'MMDD' with padding
+		toDayMonthStr(){
+			if(!this.date){
+				return '';
+			}
+
+			let day = this.date.getUTCDate();
+			let month = this.date.getUTCMonth() + 1;
+			
+			let dayStr = day.toString().padStart(2, '0');
+			let monthStr = month.toString().padStart(2, '0');
+
+			let result = `${monthStr}${dayStr}`;
+
+			return result;	
+			
+		}
+	}
+
+		
+	const checkboxReceivedEqual = document.getElementById(cyl_data_json.fieldTable.labels.dateReceivedEqual);
+	const checkboxSpecimenEqual = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimenEqual);
+	const checkboxCustomID = document.getElementById('customIDCheck');
+	
+	const addButtonElement = document.getElementById('btnAddItems');	
+	const exampleOutputElement = document.getElementById('itemsExampleID');
+
+	const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 30, 1);
+	
+	const initials = new TextInput('itemsInitialsIn', 'itemsInitialsErrorMsg', 3);
+	const customID = new TextInput('itemsCustomID', 'itemsCustomIDErr', 10);
+	
+	const dateCast = new DateInput(cyl_data_json.fieldTable.labels.castDate);
+	const dateTransported = new DateInput(cyl_data_json.fieldTable.labels.dateTransported);
+	
+	const dateReceived = new DateInput(cyl_data_json.fieldTable.labels.dateReceived, 'itemsDateReceivedErr');
+	const dateSpecimenID = new DateInput(cyl_data_json.fieldTable.labels.dateSpecimen, 'itemsDateSpecimenErr');
+
+	const setDropdown = new DropInput('itemsSetSelect');
+	const separatorDropdown = new DropInput('itemsSeparatorSelect');
+
 	
 	//Enable/disable the dateReceived and dateSepcimen input depending the dateReceivedEqual and dateSpecimenEqual checkboxes 
 	(function(){
+
+		//Run toggleCheck to set the initial value
+		toggleCheck(checkboxReceivedEqual, dateTransported.inputElement, dateReceived.inputElement);
+		toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);			
 		
 		
-		const checkboxReceived = document.getElementById(cyl_data_json.fieldTable.labels.dateReceivedEqual);
-		const dateReceived = document.getElementById(cyl_data_json.fieldTable.labels.dateReceived);
-		const dateTransported = document.getElementById(cyl_data_json.fieldTable.labels.dateTransported);
+		//Disable the "Custom ID" input by default
+		customID.disable();
 		
-		const checkboxSpecimen = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimenEqual);
-		const dateSpecimen = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimen);
-		const dateCast = document.getElementById(cyl_data_json.fieldTable.labels.castDate);
-			
-		const dateTransportedVal = dateTransported.value;
-		const dateCastVal = dateCast.value;
+		//Immediately call the varifyDate function as there may be a valid date initially
+		dateSpecimenID.verifyDate();
 		
+		//Make sure the drop down values are set and decoded
+		separatorDropdown.decodeSeparatorOptions();
+		setDropdown.decodeSetOptions();
 		
-		//Need an event handler for the checbox AND for dateTransported incase the value in dateTransported changes
-			//Using an arrow functions " ()=> {}; " which executes toggleCheck() only when the event handler runs 
-		checkboxReceived.addEventListener('change', ()=> {
-			toggleCheck(checkboxReceived, dateTransported, dateReceived);	
+		//Event listener for the "Custom ID" checkbox
+		customIDCheck.addEventListener("change", ()=>{
+			customIDToggle();
 		});
 		
-		dateTransported.addEventListener('change', ()=>{
-			toggleCheck(checkboxReceived, dateTransported, dateReceived);		
+		//Event listener for Custom ID text input
+		customID.inputElement.addEventListener("input", ()=>{
+			customID.verifyNoSlashesNoQuotes();
+			updateExample();
+			checkValidity();
+		
+		});
+		
+		
+		//Input event listener for "numItemsIn" input box
+		numItems.inputElement.addEventListener("input", ()=>{
+			numItems.verifyInt();
+			checkValidity();
+
+		});
+		
+		//Input event listener for Tech Initials input box
+		initials.inputElement.addEventListener("input", ()=>{
+			initials.verifyUpperLower();	
+			updateExample();
+			checkValidity();
+
+		});
+
+		//Input event listener for ID Date input box
+		dateSpecimenID.inputElement.addEventListener("input", ()=>{
+			dateSpecimenID.verifyDate();
+			updateExample();
+			checkValidity();
+
+		});
+		
+		//Event listener for separator selection
+		setDropdown.inputElement.addEventListener("change", ()=>{
+			setDropdown.decodeSetOptions();
+			updateExample();
+			
+			
+		});
+		
+		//Event listener for separator selection
+		separatorDropdown.inputElement.addEventListener("change", ()=>{
+			separatorDropdown.decodeSeparatorOptions();
+			updateExample();
+			
+			
+		});
+		
+		//Need an event handler for the checkbox AND for dateTransported incase the value in dateTransported changes
+			//Using an arrow functions " ()=> {}; " which executes toggleCheck() only when the event handler runs 
+		checkboxReceivedEqual.addEventListener('change', ()=> {
+			toggleCheck(checkboxReceivedEqual, dateTransported.inputElement, dateReceived.inputElement);	
+		});
+		
+		dateTransported.inputElement.addEventListener('change', ()=>{
+			toggleCheck(checkboxReceivedEqual, dateTransported.inputElement, dateReceived.inputElement);		
 		
 		});	
 		
 		//Specimen ID
-		checkboxSpecimen.addEventListener('change', ()=> {
-			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);	
+		checkboxSpecimenEqual.addEventListener('change', ()=> {
+			toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);	
 		});
 		
-	
-		dateCast.addEventListener('change', ()=>{
-			toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);		
+		
+		dateCast.inputElement.addEventListener('change', ()=>{
+			toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);		
 		
 		});	
 		
-		//Run function to set the initial value
-		toggleCheck(checkboxReceived, dateTransported, dateReceived);
-		toggleCheck(checkboxSpecimen, dateCast, dateSpecimen);			
-	
 		
 		
+		//Update the "Example Output" element text
+		function updateExample(){
+			if(initials.valid && dateSpecimenID.valid && !customIDCheck.checked){
+				
+				exampleOutputElement.textContent = `${initials.val}${dateSpecimenID.toDayMonthStr()}${setDropdown.val}${separatorDropdown.val}1`;
+				
+			} else if(customID.valid && customIDCheck.checked) {
+				exampleOutputElement.textContent = `${customID.inputElement.value}1`;
+		
+			} else {
+				//initials.inputElement.value = '';
+				exampleOutputElement.textContent = '';
+			}
+		}
+		
+		//Enable the 'Add x' button if various form fields are valid 
+		function checkValidity(){
+				
+			if(numItems.valid && initials.valid && dateSpecimenID.valid && !customIDCheck.checked){
+				addButtonElement.disabled = false;
+				
+			} else if(numItems.valid && customIDCheck.checked && customID.valid) {
+				
+				addButtonElement.disabled = false;
+				
+			} else {
+				addButtonElement.disabled = true;
+			}
+			
+		}
+		
+		//Enable or disable the 'customID' input and related inputs
+		function customIDToggle(){
+			if(checkboxCustomID.checked){
+				initials.disable();
+				dateSpecimenID.disable();
+				separatorDropdown.disable();
+				setDropdown.disable();
+				
+				checkboxSpecimenEqual.disabled = true;
+				customID.enable();
+				
+			} else {
+				initials.enable();
+				dateSpecimenID.enable();
+				
+				checkboxSpecimenEqual.disabled = false;
+				separatorDropdown.enable();
+				setDropdown.enable();
+				
+				customID.disable();
+				
+				//Call toggleCheck to ensure the state of the inputs being controlled by the checkboxes
+					//return to their previous value (might be disabled still)
+				toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);	
+
+			}
+		}
+		
+				
 		//Determine if cbox is checked. Copy source value to destination if true and
 			//trigger an "input" event
 		function toggleCheck(cbox, source, destination){		
@@ -74,162 +463,6 @@ const HIDDEN_CLASS = 'hidden';
 			}
 			
 		};
-		
-		
-	})();
-	
-	
-	//Realtime validation for the "Add Cylinders" form members
-	(function(){
-
-		class InputElement {
-
-			constructor(inputID, errorID, value = '', maxSize = 0, minSize = 0) {
-				this.inputID = inputID;
-				this.errorID = errorID;
-				this.valid = false;
-				this.val = value;
-				this.maxSize = maxSize;
-				this.minSize = 0;
-				
-				this.inputElement = this.getElement(this.inputID);
-				this.errorElement = this.getElement(this.errorID);
-				
-				this.hideErr();
-					
-			}
-			
-			getElement(id){
-				const elem = document.getElementById(id);
-				
-				if(!elem){
-					return false;
-				}
-				
-				return elem;
-			}
-
-			hideErr(){
-				this.errorElement.classList.add(HIDDEN_CLASS);	
-			}				
-			
-			showErr(msg){
-				this.errorElement.classList.remove(HIDDEN_CLASS);	
-				this.errorElement.textContent = msg;
-			}
-			
-			
-			//Verifies a string can be parsed as a Date object.
-				//Get the month and day to be used as part of the cylinder ID
-				//Update the this.valid memeber
-			verifyDate(){
-				const errMsg = "Please enter a valid date.";
-				let dateString = this.inputElement.value;
-			
-		
-				if(!dateString){
-					this.valid = false;
-					this.showErr(errMsg);
-					return;
-				}
-				
-				//Ensures the dateString is only 10 characters (YYYY-MM-DD)
-				/*
-				if(dateString.length > 10){
-					dateString = dateString.slice(0,10);
-					
-				}
-				*/
-		
-				//Parse the date as milliseconds and convert to a date object
-				let parsedDate = Date.parse(`${dateString}`);
-				
-				if(isNaN(parsedDate)){
-					this.valid = false;
-					this.showErr(errMsg);
-					return;
-				}
-				
-				this.valid = true;
-				this.hideErr();
-				
-				newDate = new Date(parsedDate);
-				
-				let day = newDate.getUTCDate();
-				let month = newDate.getUTCMonth();
-
-				console.log(day);
-				console.log(month);
-			
-			}
-			
-			
-		
-		}
-		
-		const EXAMPLE_OUTPUT_ID = 'itemsExampleID'; //"Example Output" element
-		
-		const ADD_BUTTON_ID = 'btnAddItems';	//Add Cyl/Cube/Prism Button
-
-		const numItems = new InputElement('numItemsIn', 'numItemsErrorMsg', '', 30, 1);
-		
-		const initials = new InputElement('itemsInitialsIn', 'itemsInitialsErrorMsg');
-		const idDate = new InputElement('cylDateSpecimen', 'cylDateSpecimenErrorMsg');
-		const dateReceived = new InputElement('cylDateReceived', 'cylDateReceivedErrorMsg');
-	
-		const addButtonElement = document.getElementById(ADD_BUTTON_ID);
-		
-		const exampleOutputElement = document.getElementById(EXAMPLE_OUTPUT_ID);
-		
-		
-		//Input event listener for "numItemsIn" input box
-		numItems.inputElement.addEventListener("input", ()=>{
-			numItems.valid = HELPERS.verifyInt(numItems.minSize, numItems.maxSize, numItems.inputElement, numItems.errorElement);
-			checkValidity();
-
-		});
-		
-		//Input event listener for Tech Initials input box
-		initials.inputElement.addEventListener("input", ()=>{
-			initials.valid = HELPERS.verifyInitials(initials.inputElement, initials.errorElement);	
-			updateExample();
-			checkValidity();
-
-		});
-
-		//Immediately call the varifyDate function as there may be a valid date initially
-		HELPERS.verifyDate(idDate.inputElement, idDate.errorElement);
-
-		//Input event listener for ID Date input box
-		idDate.inputElement.addEventListener("input", ()=>{
-			idDate.verifyDate();
-			updateExample();
-			checkValidity();
-
-		});
-		
-		
-		//Update the "Example Output" element text
-		function updateExample(){
-			if(initials.valid && idDate.valid){
-				
-				initials.val = initials.inputElement.value;
-				exampleOutputElement.textContent = `${idDate.val}${initials.val}-1`
-			} else {
-				initials.val = '';
-				exampleOutputElement.textContent = '';
-			}
-		}
-		
-		//Enable the 'Add x' button if all form fields are valid
-		function checkValidity(){
-			if(numItems.valid && initials.valid){
-				addButtonElement.disabled = false;
-			} else {
-				addButtonElement.disabled = true;
-			}
-		}
-		
 		
 		
 		

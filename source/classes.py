@@ -79,7 +79,6 @@ class Reports:
 
         return val
 
-
 class CylinderReport(Reports):
     NUM_STR_TARGETS = 5
 
@@ -87,6 +86,22 @@ class CylinderReport(Reports):
     TB_STR_REQ = "cyl_str_req"
     TB_CYLINDERS = "cyl_items"
     TB_CONDITIONS = "cyl_conditions_table"
+
+    SEPARATOR_OPTIONS = {
+        '-':'-',
+        '.':'.',
+        'space':'Space',
+    }
+
+    SET_OPTIONS = {
+        'a':'A',
+        'b':'B',
+        'c':'C',
+        'd':'D',
+        'e':'E',
+        'f':'F',
+        'none':'None'
+    }
 
     SCC_OPTIONS = {
         'yes': 'Yes',
@@ -822,7 +837,9 @@ class CylinderReport(Reports):
             "loadVolumeData": self.UNITS_OPTIONS,
             "mouldData": self.MOULD_OPTIONS,
             "sccData": self.SCC_OPTIONS,
-            "statusData": self.STATUS_TABLE
+            "statusData": self.STATUS_TABLE,
+            "separatorData": self.SEPARATOR_OPTIONS,
+            "setData": self.SET_OPTIONS
         }
 
         return dataTables
