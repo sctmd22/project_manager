@@ -2,9 +2,7 @@
 const HIDDEN_CLASS = 'hidden';
 
 
-//Handle realtime form functionality of the cylinder items part of the cylinder form
-(function(){
-	class InputElement {
+class InputElement {
 
 		constructor(inputID, errorID) {
 			this.inputID = inputID;
@@ -84,213 +82,218 @@ const HIDDEN_CLASS = 'hidden';
 		}
 	}
 	
-	class TextInput extends InputElement {
-		constructor(inputID, errorID, maxSize = 255){
-			super(inputID, errorID);
-			this.maxSize = maxSize;
-			
-		}
-		
-		
-		verifyNoSlashesNoQuotes(){
-			this.inputElement.value = this.inputElement.value.replace(/[/\\'"]/g, ""); 
-			this.verifySize();
-		}
-		
-		verifyAlphaNumeric(){
-			this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z0-9]/g, ""); 
-			this.verifySize();
-		}
-		
-		verifyUpperLower(){
-			this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z]/g, "");
-			this.verifySize();
-		
-		}
-		
-
-		verifySize(){
-			const ERROR_SIZE = `Please enter at least one character`;
-			
-			const val = this.inputElement.value;
-			this.inputElement.value = val.slice(0, this.maxSize);
-			
-			
-			if(val.length == 0){
-				this.showErr(ERROR_SIZE)
-				this.valid = false;
-				this.val = null;
-			} else {
-				this.hideErr();
-				this.valid = true;
-				this.val = this.inputElement.value;
-			}
-			
-		}
-	}
-
-	class DropInput extends InputElement {
-		constructor(inputID){
-			super(inputID);
-		}
-		
-		
-		decodeSetOptions(){
-			//Get the latest value from the input element
-			this.setVal();
-			
-			if(this.val === 'none'){
-				this.val = '';
-			} else {
-				this.val = this.val.toUpperCase();
-			}
-			
-		}
-		
-		
-		decodeSeparatorOptions(){
-			this.setVal();
-			
-			if(this.val === 'space'){
-				this.val = ' ';
-			}
-		}
+class TextInput extends InputElement {
+	constructor(inputID, errorID, maxSize = 255){
+		super(inputID, errorID);
+		this.maxSize = maxSize;
 		
 	}
 	
-	class IntInput extends InputElement {
-		
-		constructor(inputID, errorID, maxSize = 0, minSize = 0){
-			super(inputID, errorID);
-			this.maxSize = maxSize;
-			this.minSize = minSize;
-
-		}
-		
-		verifyInt(){
-			//Use regex to ensure only positive integers can be input
-			this.validatePosIntegerInput();
-			
-			const num = parseInt(this.inputElement.value);
-			
-			const ERROR_NAN = "Not a valid number";
-			const ERROR_SIZE = `Value must be between ${this.minSize} and ${this.maxSize}`;
-			
-			if(isNaN(num)){
-				this.showErr(ERROR_NAN);
-				this.valid = false;
-				
-			} else if (num < this.minSize){
-				this.showErr(ERROR_SIZE);
-				this.valid = false;
-				
-			} else if (num > this.maxSize) {
-				this.showErr(ERROR_SIZE);
-				this.valid = false;
-			
-			
-			//Valid: Hide the error message
-			} else {
-				this.hideErr();
-				this.valid = true;
-			}
-			
-		}
-		
-		validatePosIntegerInput() {
-			// Regex to allow only integers (positive or negative)
-			const regex = /^\d*$/;
-
-			// If the input doesn't match the regex, remove invalid characters
-			if (!regex.test(this.inputElement.value)) {
-				this.inputElement.value = this.inputElement.value.replace(/[^\d]/g, ''); // Remove non-integer characters
-			}
-		}
+	
+	verifyNoSlashesNoQuotes(){
+		this.inputElement.value = this.inputElement.value.replace(/[/\\'"]/g, ""); 
+		this.verifySize();
 	}
 	
-	class DateInput extends InputElement {
-		constructor(inputID, errorID){
-			super(inputID, errorID); //Call parent constructor
-			this.date = null;
-		}
-		
-					
-		//Verifies a string can be parsed as a Date object.
-			//Get the month and day to be used as part of the cylinder ID
-			//Update the this.valid member
-		verifyDate(){
-			const errMsg = "Please enter a valid date.";
-			let dateString = this.inputElement.value;
-		
+	verifyAlphaNumeric(){
+		this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z0-9]/g, ""); 
+		this.verifySize();
+	}
 	
-			if(!dateString){
-				this.valid = false;
-				this.showErr(errMsg);
-				return;
-			}
+	verifyUpperLower(){
+		this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z]/g, "");
+		this.verifySize();
+	
+	}
+	
 
-	
-			//Parse the date as milliseconds and convert to a date object
-			let parsedDate = Date.parse(`${dateString}`);
-			
-			if(isNaN(parsedDate)){
-				this.valid = false;
-				this.showErr(errMsg);
-				return;
-			}
-			
-			this.valid = true;
+	verifySize(){
+		const ERROR_SIZE = `Please enter at least one character`;
+		
+		const val = this.inputElement.value;
+		this.inputElement.value = val.slice(0, this.maxSize);
+		
+		
+		if(val.length == 0){
+			this.showErr(ERROR_SIZE)
+			this.valid = false;
+			this.val = null;
+		} else {
 			this.hideErr();
-			
-			this.date = new Date(parsedDate);
-			
+			this.valid = true;
+			this.val = this.inputElement.value;
 		}
 		
-		//Convert the date object to a string 'MMDD' with padding
-		toDayMonthStr(){
-			if(!this.date){
-				return '';
-			}
+	}
+}
 
-			let day = this.date.getUTCDate();
-			let month = this.date.getUTCMonth() + 1;
-			
-			let dayStr = day.toString().padStart(2, '0');
-			let monthStr = month.toString().padStart(2, '0');
-
-			let result = `${monthStr}${dayStr}`;
-
-			return result;	
-			
+class DropInput extends InputElement {
+	constructor(inputID){
+		super(inputID);
+	}
+	
+	decodeSetOptions(){
+		//Get the latest value from the input element
+		this.setVal();
+		
+		if(this.val === 'none'){
+			this.val = '';
+		} else {
+			this.val = this.val.toUpperCase();
 		}
 	}
+	
+	decodeSeparatorOptions(){
+		this.setVal();
+		
+		if(this.val === 'space'){
+			this.val = ' ';
+		}
+	}
+}
+
+class IntInput extends InputElement {
+	
+	constructor(inputID, errorID, minSize = 0, maxSize = 0){
+		super(inputID, errorID);
+	
+		this.maxSize = maxSize;
+		this.minSize = minSize;
+
+	}
+	
+	verifySize(){
+		const num = parseInt(this.inputElement.value);
+				
+		const ERROR_NAN = "Not a valid number";
+		const ERROR_SIZE = `Value must be between ${this.minSize} and ${this.maxSize}`;
+	
+		if(isNaN(num)){
+			this.val = null;
+			this.showErr(ERROR_NAN);
+			this.valid = false;
+			
+		} else if (num < this.minSize){
+			//this.inputElement.value = this.minSize;
+			this.val = null;
+			this.showErr(ERROR_SIZE);
+			this.valid = false;
+			
+		} else if (num > this.maxSize) {
+			//this.inputElement.value = this.maxSize;
+			this.val = this.maxSize;
+			this.showErr(ERROR_SIZE);
+			this.valid = false;
+		
+		
+		//Valid: Hide the error message
+		} else {
+			this.val = num;
+			this.hideErr();
+			this.valid = true;
+		}
+		
+	}
+	
+	verifyPosInt() {
+		// Regex to allow only integers (positive or negative)
+		const regex = /^\d*$/;
+
+		// If the input doesn't match the regex, remove invalid characters
+		if (!regex.test(this.inputElement.value)) {
+			this.inputElement.value = this.inputElement.value.replace(/[^\d]/g, ''); // Remove non-integer characters
+		}
 
 		
-	const checkboxReceivedEqual = document.getElementById(cyl_data_json.fieldTable.labels.dateReceivedEqual);
-	const checkboxSpecimenEqual = document.getElementById(cyl_data_json.fieldTable.labels.dateSpecimenEqual);
+		this.verifySize();
+				
+	}
+}
+
+class DateInput extends InputElement {
+
+	constructor(inputID, errorID){
+		super(inputID, errorID); //Call parent constructor
+		this.val = null;
+	}
+	
+				
+	//Verifies a string can be parsed as a Date object.
+		//Get the month and day to be used as part of the cylinder ID
+		//Update the this.valid member
+	verifyDate(){
+		const errMsg = "Please enter a valid date.";
+		
+		let dateString = this.inputElement.value;
+	
+		if(!dateString){
+			this.val = null;
+			this.valid = false;
+			this.showErr(errMsg);
+			return;
+		}
+
+
+		//Parse the date as milliseconds and convert to a date object
+		let parsedDate = Date.parse(`${dateString}`);
+		
+		if(isNaN(parsedDate)){
+			this.val = null;
+			this.valid = false;
+			this.showErr(errMsg);
+			return;
+		}
+		
+		this.valid = true;
+		this.val = new Date(parsedDate);
+		this.hideErr();
+		
+	}
+	
+	//Convert the date object to a string 'MMDD' with padding
+	toDayMonthStr(){
+		if(!this.val){
+			return '';
+		}
+
+		let day = this.val.getUTCDate();
+		let month = this.val.getUTCMonth() + 1;
+		
+		let dayStr = day.toString().padStart(2, '0');
+		let monthStr = month.toString().padStart(2, '0');
+
+		let result = `${monthStr}${dayStr}`;
+
+		return result;	
+		
+	}
+}
+
+const ITEMS_FUNCTIONS = (function(){
+	
+	const checkboxReceivedEqual = document.getElementById(cyl_data_json.fieldTable.dataFields.dateReceivedEqual.label);
+	const checkboxSpecimenEqual = document.getElementById(cyl_data_json.fieldTable.dataFields.dateSpecimenEqual.label);
 	const checkboxCustomID = document.getElementById('customIDCheck');
 	
 	const addButtonElement = document.getElementById('btnAddItems');	
 	const exampleOutputElement = document.getElementById('itemsExampleID');
 
-	const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 30, 1);
+	const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 1, 30);
 	
 	const initials = new TextInput('itemsInitialsIn', 'itemsInitialsErrorMsg', 3);
 	const customID = new TextInput('itemsCustomID', 'itemsCustomIDErr', 10);
 	
-	const dateCast = new DateInput(cyl_data_json.fieldTable.labels.castDate);
-	const dateTransported = new DateInput(cyl_data_json.fieldTable.labels.dateTransported);
+	const dateCast = new DateInput(cyl_data_json.fieldTable.dataFields.castDate.label);
+	const dateTransported = new DateInput(cyl_data_json.fieldTable.dataFields.dateTransported.label);
 	
-	const dateReceived = new DateInput(cyl_data_json.fieldTable.labels.dateReceived, 'itemsDateReceivedErr');
-	const dateSpecimenID = new DateInput(cyl_data_json.fieldTable.labels.dateSpecimen, 'itemsDateSpecimenErr');
+	const dateReceived = new DateInput(cyl_data_json.fieldTable.dataFields.dateReceived.label, 'itemsDateReceivedErr');
+	const dateSpecimenID = new DateInput(cyl_data_json.fieldTable.dataFields.dateSpecimen.label, 'itemsDateSpecimenErr');
 
 	const setDropdown = new DropInput('itemsSetSelect');
 	const separatorDropdown = new DropInput('itemsSeparatorSelect');
 
-	
-	//Enable/disable the dateReceived and dateSepcimen input depending the dateReceivedEqual and dateSpecimenEqual checkboxes 
+	//Handle realtime functionality of the "Add Cylinders/Cubes/X" forms
 	(function(){
-
 		//Run toggleCheck to set the initial value
 		toggleCheck(checkboxReceivedEqual, dateTransported.inputElement, dateReceived.inputElement);
 		toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);			
@@ -322,7 +325,7 @@ const HIDDEN_CLASS = 'hidden';
 		
 		//Input event listener for "numItemsIn" input box
 		numItems.inputElement.addEventListener("input", ()=>{
-			numItems.verifyInt();
+			numItems.verifyPosInt();
 			checkValidity();
 
 		});
@@ -348,14 +351,12 @@ const HIDDEN_CLASS = 'hidden';
 			setDropdown.decodeSetOptions();
 			updateExample();
 			
-			
 		});
 		
 		//Event listener for separator selection
 		separatorDropdown.inputElement.addEventListener("change", ()=>{
 			separatorDropdown.decodeSeparatorOptions();
 			updateExample();
-			
 			
 		});
 		
@@ -393,7 +394,7 @@ const HIDDEN_CLASS = 'hidden';
 				exampleOutputElement.textContent = `${customID.inputElement.value}1`;
 		
 			} else {
-				//initials.inputElement.value = '';
+
 				exampleOutputElement.textContent = '';
 			}
 		}
@@ -464,16 +465,24 @@ const HIDDEN_CLASS = 'hidden';
 			
 		};
 		
+	})();
+	
+	console.log(cyl_data_json.cylItemsTable);
 		
-		
+	
+	function createItemsRow(){
 		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
-		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);	
+		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);
 		
-		createCylItemsRow();
+		const numRows = numItems.val;
 		
-		function createCylItemsRow(){
+		
+		
+		for(let i = 0; i < numRows; i++){
 			
 			const tableRow = document.createElement('tr');
+			
+			
 			tableRow.innerHTML = `
 				<td><input type="text" maxlength="16" class="form-control" id="" name=" value="" aria-describedby="textDesc"></td>
 				<td><input type="text" maxlength="8" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
@@ -488,33 +497,47 @@ const HIDDEN_CLASS = 'hidden';
 				<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
 				<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
 				<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-			
+		
 			`;
-			
-			itemsTableBody.appendChild(tableRow);	
+		
+		
+		itemsTableBody.appendChild(tableRow);	
+		
 		
 		}
-		
-		
-	})();
+	
+	}
+	
+	
+	return { 
+		createItemsRow
+	};
 	
 	
 })();
 
-
-
 const STR_FUNCTIONS = (function(){
+	
+	
 	const STRENGTH_TABLE = cyl_data_json.strTable;
+
 	
 	(function(){
+
 		
+		//Add event listeners for each day and strength input
 		for (let row of STRENGTH_TABLE){
-			console.log(row);
+			const strengthInput = new IntInput(row.dataFields.strength.label, row.dataFields.strength.errorLabel, 0, 999);
+			const daysInput = new IntInput(row.dataFields.days.label, row.dataFields.days.errorLabel, 0, 999);
 			
+			strengthInput.inputElement.addEventListener('input', ()=>{
+				strengthInput.verifyPosInt();
+			});
+			
+			daysInput.inputElement.addEventListener('input', ()=>{
+				daysInput.verifyPosInt();
+			});
 		}
-		
-		//const errorBoxStrength = document.getElementById(STRENGTH_TABLE.dataFields.strength.errorLabel);
-		//const errorBoxDays = document.getElementByID(STRENGTH_TABLE.dataFields.strength.errorLabel);
 		
 		
 	})();
@@ -626,22 +649,32 @@ const STR_FUNCTIONS = (function(){
  
  })();
  
-
-//Show or hide Condition/Measurement Table rows corresponding to the state of the SCC radio buttons
-(function(){
-	/*
-	Create an IIFE (Immediately Invoked Function Expression) to create a local scope and execute automatically using 
-	the (function(){})(); syntax
-	*/
-
-	
+const CONDITIONS_FUNCTIONS = (function(){
 	//Get data from the <script></script> tags passed from Python to Jinja
 	const CONDITIONS_TABLE = cyl_data_json.conditionsTable;
-	const IS_SCC = cyl_data_json.fieldTable.valueData.isScc;
+	
+	//Add event listeners to ensure only decimal numbers can be entered into the text boxes
+	
+	(function(){
+		
+		
+		for(let row in CONDITIONS_TABLE){
+			//let actual = new TextInput(row.dataFields);
+		
+		}
+		
+		
+	})();
+	
+	
+	//Hide/show conditions table elements depending on value of SCC Radio Button
+	(function(){
+	const IS_SCC = cyl_data_json.fieldTable.dataFields.isScc.val;
+	const SCC_ID = cyl_data_json.fieldTable.dataFields.isScc.label;
 	const CYL_EDITING = cyl_editing_json;
 	
 	// Get references to the radio buttons and the target element
-	const sccRadioButtons = document.querySelectorAll('input[name="cylIsScc"]');
+	const sccRadioButtons = document.querySelectorAll(`input[name="${SCC_ID}"]`);
 
 	// Add event listeners to the radio buttons
 	sccRadioButtons.forEach(button => {
@@ -662,7 +695,7 @@ const STR_FUNCTIONS = (function(){
 		//Get SCC value either directly from checkboxes or from the IS_SCC variable passed from flask/python
 		if(CYL_EDITING === true){
 			//input[name="cylSCC"] is CSS selector syntax
-			sccVal = document.querySelector('input[name="cylIsScc"]:checked').value;
+			sccVal = document.querySelector(`input[name="${SCC_ID}"]:checked`).value;
 
 		}
 		
@@ -693,11 +726,12 @@ const STR_FUNCTIONS = (function(){
 			   inputs.forEach(input => {
 					input.value = '';
 				});
-				
-		
 			}
 		}
 	}
+		
+	})();
+	
 	
 })();
 
