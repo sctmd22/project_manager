@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 
 from filters import strip_date_f
 from helpers import helpers as HLP
@@ -6,11 +7,9 @@ import db as db
 import copy
 
 from db import sql_data as SQL
-from helpers.helpers import replaceNone
+from helpers.helpers import processSql
 
 import GLOBALS as GLB
-
-import flask
 
 class Reports:
     STATUS_TABLE = {
@@ -19,32 +18,6 @@ class Reports:
         'deleted': "Deleted",
         'canceled': "Canceled"
     }
-
-
-
-    @classmethod
-    def sql_fetchone(cls, query, values=None):
-        FUNC_NAME = "__sql_fetchone()"
-        try:
-            dbCon = db.db_connect()
-            cursor = dbCon.cursor(dictionary=True)
-
-            if (values):
-                cursor.execute(query, values)
-            else:
-                cursor.execute(query)
-
-            result = cursor.fetchone()
-
-            cursor.close()
-            dbCon.close()  # return connection to pool
-
-            return result
-
-        except:
-            print(f"Error: {FUNC_NAME}: Could not process provided query and or values")
-            return None
-
 
     @classmethod
     def sql_fetchall(cls, query, values=None):
@@ -131,91 +104,89 @@ class CylinderReport(Reports):
     }
 
 
-    DATAFIELD_ATTRIBUTES = (
-        'label',
-        'val',
-        'dataType',
-        'size',
-        'errorLabel'
-    )
-
-
-    FORM_LABELS = (
-        'projectID',    #Parent (project) ID
-        'cylinderID',   #autoID
-        'dateCreated',
-        'createdBy',
-        'reportTitle',
-        'status',
-        'projectName',
-        'ticketNum',
-        'supplier',
-        'loadNum',
-        'truckNum',
-        'contractor',
-        'sampledFrom',
-        'mixID',
-        'mouldType',
-        'poNum',
-        'placementType',
-        'cementType',
-        'volume',
-        'volumeUnits',
-        'castDate',
-        'castTime',
-        'batchTime',
-        'sampleTime',
-        'dateTransported',
-        'dateReceived',
-        'dateReceivedEqual',
-        'dateSpecimen',
-        'dateSpecimenEqual',
-        'notes',
-        'isScc'
-    )
-
-    FORM_FIELD_TEMPLATE = [
-        {'name': 'cyl', 'title': '',   'labels': {},    'valueData':{}}
+    FORM_LABELS = [
+        {'label': 'projectID',          'dataType': None, 'size': None, 'sqlID':'project_id'},
+        {'label': 'cylinderID',         'dataType': None, 'size': None, 'sqlID':'auto_id'},
+        {'label': 'dateCreated',        'dataType': None, 'size': None, 'sqlID':'date_created'},
+        {'label': 'createdBy',          'dataType': None, 'size': None, 'sqlID':'created_by'},
+        {'label': 'reportTitle',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 50, 'sqlID':'report_title'},
+        {'label': 'status',             'dataType': None, 'size': None, 'sqlID':'status'},
+        {'label': 'projectName',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 50, 'sqlID':'project_name'},
+        {'label': 'ticketNum',          'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'ticket_num'},
+        {'label': 'supplier',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'supplier'},
+        {'label': 'loadNum',            'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'load_num'},
+        {'label': 'truckNum',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'truck_num'},
+        {'label': 'contractor',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'contractor'},
+        {'label': 'sampledFrom',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'sampled_from'},
+        {'label': 'mixID',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'mix_id'},
+        {'label': 'mouldType',          'dataType': None, 'size': None, 'sqlID':'mould_type'},
+        {'label': 'poNum',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'po_num'},
+        {'label': 'placementType',      'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'placement_type'},
+        {'label': 'cementType',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'cement_type'},
+        {'label': 'volume',             'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 5, 'sqlID':'load_volume'},
+        {'label': 'volumeUnits',        'dataType': None, 'size': None, 'sqlID':'volume_units'},
+        {'label': 'castDate',           'dataType': None, 'size': None, 'sqlID':'date_cast'},
+        {'label': 'castTime',           'dataType': None, 'size': None, 'sqlID':'time_cast'},
+        {'label': 'batchTime',          'dataType': None, 'size': None, 'sqlID':'time_batch'},
+        {'label': 'sampleTime',         'dataType': None, 'size': None, 'sqlID':'time_sample'},
+        {'label': 'dateTransported',    'dataType': None, 'size': None, 'sqlID':'date_transported'},
+        {'label': 'dateReceived',       'dataType': None, 'size': None, 'sqlID':'date_received'},
+        {'label': 'dateReceivedEqual',  'dataType': None, 'size': None, 'sqlID':'date_received_equal'},
+        {'label': 'dateSpecimen',       'dataType': None, 'size': None, 'sqlID':'date_specimen'},
+        {'label': 'dateSpecimenEqual',  'dataType': None, 'size': None, 'sqlID':'date_specimen_equal'},
+        {'label': 'notes',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': None, 'sqlID':'notes'},
+        {'label': 'isScc',              'dataType': None, 'size': None, 'sqlID':'is_scc'},
     ]
 
+    FORM_FIELD_TEMPLATE = [{
+        'name': 'cyl', 'title': '',  'dataFields':{}
+    }]
 
+
+    """
+    This structure is used in conjunction with a  FORM TEMPLATE to build a table which is used to create HTML
+        elements with unique ID's and contain validation data for JavaScript to read, such as 'dataType' and 'size'
+    The finished table is in the form:
+        name:..., 
+        title:..., 
+        dataFields:
+           strength: {label:..., val:..., dataType:..., size:..., errorLabel:...},
+           days: {...},
+    """
     STR_LABELS = [
-        {'label':'strength',     'dataType':GLB.VALIDATION_TYPES['INT'],        'size':{'min': 0, 'max': 1000}},
-        {'label':'days',         'dataType':GLB.VALIDATION_TYPES['INT'],        'size':{'min': 0, 'max': 1000}},
-        {'label':'visible',      'dataType':None,                               'size': None},
-        {'label':'autoID',       'dataType':None,                               'size': None},
+        {'label':'strength',     'dataType':GLB.VALIDATION_TYPES['POS_INT'],        'size':{'min': 0, 'max': 999},      'sqlID':'target_strength'},
+        {'label':'days',         'dataType':GLB.VALIDATION_TYPES['POS_INT'],        'size':{'min': 0, 'max': 999},      'sqlID':'target_days'},
+        {'label':'visible',      'dataType':None,                                   'size': None,                       'sqlID':'target_visible'},
+        {'label':'autoID',       'dataType':None,                                   'size': None,                       'sqlID':'auto_id'},
+    ]
+
+    FORM_STR_TEMPLATE = [
+        {'name':'strTable',   'title':'Target {n}',   'dataFields':{}}
     ]
 
 
-    FORM_STR_TEMPLATE = {
-        'name':'strTable',   'title':'Target {n}',   'dataFields':{}
-    }
-
-
-    CONDITIONS_LABELS = (
-        'actual',
-        'min',
-        'max',
-        'notes',
-        'autoID'
-    )
-
+    CONDITIONS_LABELS = [
+        {'label': 'actual',     'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
+        {'label': 'min',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
+        {'label': 'max',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
+        {'label': 'notes',      'dataType': GLB.VALIDATION_TYPES['TEXT'],   'size': 2000},
+        {'label': 'cylReportID','dataType': None,                           'size': None},
+        {'label': 'autoID',     'dataType': None,                           'size': None},
+    ]
 
     #Template for field/measurement data and properties
-    #When the table is built, one entry will look like:
-        #{'name':'cylConFlow', 'property':'flow', 'SCC':True, 'CYL':False, 'labels':{'actual':'cylConFlowActual', 'min':'cylConFlowMin', ...etc}, 'valueData':{'actual':'', 'min':'', 'max':'', 'notes':'', 'id':''}}
         #'title': Used to output a text title in HTML
         #'property': These are stored as VARCHARs in SQL to keep track of each property. Also used to match the data when going from the HTML form to SQL and reverse
     FORM_CONDITIONS_TEMPLATE = [
-        {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'labels': {},    'valueData':{}},
-        {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'labels': {},    'valueData':{}},
-        {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'labels': {},    'valueData':{}},
-        {'name':'cylConSlump',              'title':'Slump (mm)',                          'property':'slump',          'SCC':False, 'CYL':True,    'labels': {},    'valueData':{}},
-        {'name':'cylConAir',                'title':'Air (%)',                             'property':'air',            'SCC':True, 'CYL':True,     'labels': {},    'valueData':{}},
-        {'name':'cylConDensity',            'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',        'SCC':True, 'CYL': True,    'labels': {},    'valueData':{}},
-        {'name':'cylConSampleTemp',         'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',     'SCC':True, 'CYL': True,    'labels': {},    'valueData':{}},
-        {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'labels': {},    'valueData':{}},
-        {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'labels': {},    'valueData':{}},
+        {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'dataFields':{}},
+        {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'dataFields':{}},
+        {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'dataFields':{}},
+        {'name':'cylConSlump',              'title':'Slump (mm)',                          'property':'slump',          'SCC':False, 'CYL':True,    'dataFields':{}},
+        {'name':'cylConAir',                'title':'Air (%)',                             'property':'air',            'SCC':True, 'CYL':True,     'dataFields':{}},
+        {'name':'cylConDensity',            'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',        'SCC':True, 'CYL': True,    'dataFields':{}},
+        {'name':'cylConSampleTemp',         'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',     'SCC':True, 'CYL': True,    'dataFields':{}},
+        {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'dataFields':{}},
+        {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'dataFields':{}},
     ]
 
 
@@ -318,8 +289,6 @@ class CylinderReport(Reports):
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
 
-
-
     #Constructor
     def __init__(self, data, id):
         self.id = id
@@ -336,26 +305,27 @@ class CylinderReport(Reports):
         createdby = 'admin'
 
         #Create data tables from templates
-        fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
+        fieldTable = cls.__create_data_n_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
-        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
-
+        conTable = cls.__create_data_n_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
 
         #Ensure first item is always visible
         strTable[0]['dataFields']['visible']['val'] = 1
 
-        #Populate some defaults
-        fieldTable[0]['valueData']['projectID'] = parent_id
-        fieldTable[0]['valueData']['cylinderID'] = cylinder_id
-        fieldTable[0]['valueData']['dateCreated'] = datetime.today()
-        fieldTable[0]['valueData']['createdBy'] = createdby
-        fieldTable[0]['valueData']['reportTitle'] = 'Report Title'
-        fieldTable[0]['valueData']['status'] = 'active'
-        fieldTable[0]['valueData']['mouldType'] = list(cls.MOULD_OPTIONS.keys())[0] #Get keys from dict, convert to list, get 0th item
-        fieldTable[0]['valueData']['volumeUnits'] = "meters"
-        fieldTable[0]['valueData']['isScc'] = "no"
-        fieldTable[0]['valueData']['dateReceivedEqual'] = "checked"
-        fieldTable[0]['valueData']['dateSpecimenEqual'] = "checked"
+        fieldTable = fieldTable[0]
+
+        #Insert some default values
+        fieldTable['dataFields']['projectID']['val'] = parent_id
+        fieldTable['dataFields']['cylinderID']['val'] = cylinder_id
+        fieldTable['dataFields']['dateCreated']['val'] = datetime.today()
+        fieldTable['dataFields']['createdBy']['val'] = createdby
+        fieldTable['dataFields']['reportTitle']['val'] = 'Report Title'
+        fieldTable['dataFields']['status']['val'] = 'active'
+        fieldTable['dataFields']['mouldType']['val'] = list(cls.MOULD_OPTIONS.keys())[0] #Get keys from dict, convert to list, get 0th item
+        fieldTable['dataFields']['volumeUnits']['val'] = "meters"
+        fieldTable['dataFields']['isScc']['val'] = "no"
+        fieldTable['dataFields']['dateReceivedEqual']['val'] = "checked"
+        fieldTable['dataFields']['dateSpecimenEqual']['val'] = "checked"
 
 
         defaultData = {
@@ -371,14 +341,14 @@ class CylinderReport(Reports):
     @classmethod
     def create_from_db(cls, id, editing=False):
         #Get database values
-        report_sql = super().sql_fetchone(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
+        report_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
         str_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
         con_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_CONDITIONS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
         cyl_items_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_CYLINDERS} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
 
-        fieldTable = cls.__create_data_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
+        fieldTable = cls.__create_data_n_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
-        conTable = cls.__create_data_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
+        conTable = cls.__create_data_n_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
         cylTable = cls.__create_data_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
 
         field_result = cls.__sql_to_html_field(report_sql, fieldTable)
@@ -386,7 +356,7 @@ class CylinderReport(Reports):
         con_result = cls.__sql_to_html_con(con_sql, conTable)
         cyl_items_result = cls.__sql_to_html_cyl_items(cyl_items_sql, cylTable)
 
-        id = field_result[0]['valueData']['cylinderID'] #only 1 item in the list
+        id = field_result['dataFields']['cylinderID']['val']
 
         data = {
             "fieldTable":field_result,
@@ -398,19 +368,22 @@ class CylinderReport(Reports):
         return cls(data, id)
 
     @classmethod
-    def __create_data_n_table(cls, templateRow, formLabels, n):
+    def __create_data_n_table(cls, formTemplate, formLabels, n = 1):
         '''
-        Combine templateRow with data from formLabels 'n' number of times, creating a list of dictionaries where each
-        row is formatted to 'templateRow'.
+        Combine formTemplate with data from formLabels 'n' number of times, creating a list of dictionaries where each
+        row is formatted to 'formTemplate'.
 
-        -The 'name' key from templateRow is combined with the 'label' keys from formLabels and assigned to the
-        'dataFields' sub-dictionary of 'templateRow'. They are combined in order to create unique identifiers for
+        -The 'name' key from formTemplate is combined with the 'label' keys from formLabels and assigned to the
+        'dataFields' sub-dictionary of 'formTemplate'. They are combined in order to create unique identifiers for
             outputting to HTML. As the rows are outputted 'n' number of times, all values are appended with an index
             value starting at 0 or 1.
 
-        :param templateRow: A dictionary template in the format below.
+        :param formTemplate: A list of dictionary templates in the format below. Contains info about each row, with various
+            properties such as name, title, and various custom fields.
 
-         ex:    templateRow = {'name': 'strTable', 'title': 'Title {n}', 'dataFields': {}}
+         ex:    formTemplate = [
+                    {'name': 'strTable', 'title': 'Title {n}', 'dataFields': {}}
+                ]
 
         -'dataFields' has a key for each 'label' value of  formLabels
         -Each 'dataFields' key has the following sub-keys:
@@ -420,27 +393,38 @@ class CylinderReport(Reports):
             size        Size of the dataType
             errorLabel  The HTML name/ID of the element which outputs the error message
 
-        :param formLabels: A list of dictionaries with several keys corresponding to properties about the HTML input
-            element. Example:
+        :param formLabels: A list of dictionaries with several keys corresponding to HTML inputs. Each "row" of formTemplate
+            will be populated and named with the info from formLabels
 
         [
           {'label':'strength',     'dataType':GLB.VALIDATION_TYPES['INT'],        'size':{'min': 0, 'max': 1000}},
+          {'label':'days',         'dataType':GLB.VALIDATION_TYPES['INT'],        'size':{'min': 0, 'max': 1000}},
           {...},
         ]
 
         :param n: An integer specifying the number of rows to create
-        :return: A unique (no references) list of dictionaries similar to the format of templateRow. Example:
+        :return: A unique (no references) list of dictionaries similar to the format of formTemplate. Each dictionary
+            corresponds to a row to be output on the HTML page.
             [
-            {
-                'name': 'strTable1',
-                'title': 'Target 1',
-                'dataFields': {
-	                'strength': {'label': 'strTableStrength1', 'val': None, 'dataType': 1, 'size': {'min': 0, 'max': 1000}, 'errorLabel': 'errorStrTableStrength1'},
-            }
+                {
+                    'name': 'strTable1',
+                    'title': 'Target 1',
+                    'dataFields': {
+                        'strength':     {'label': 'strTableStrength1', 'val': None, 'dataType': 1, 'size': {'min': 0, 'max': 1000}, 'errorLabel': 'errorStrTableStrength1'},
+                        'reportTitle':  {'label': 'strTableDays1', 'val': None, 'dataType': 1, 'size': {'min': 0, 'max': 1000}, 'errorLabel': 'errorStrTableDays1'},
+                }
+                {
+                    'name': 'strTable2',
+                    'title': '',
+                    'dataFields': { ... }
+                }
+                {
+                    'strTable3'
+                }
             ]
         '''
 
-        FUNC_NAME = " __create_data_n_table(cls, templateRow, formLabels, n):"
+        FUNC_NAME = " __create_data_n_table(cls, formTemplate, formLabels, n):"
 
         if(isinstance(n, int)):
             if(n < 0):
@@ -450,36 +434,41 @@ class CylinderReport(Reports):
             print(f"Error: {FUNC_NAME}: n = {n} is not an integer")
             return False
 
+        startVal = 1  #Start at 0 or 1
 
         dataList = []
 
-        startVal = 1  #Start at 0 or 1
-
         for i in range(n):
-            index = str(i + startVal)
-            data = copy.deepcopy(templateRow)
-            data['title'] = data['title'].replace('{n}', index)   #Replace any instances of {n} in 'title' with index
+            #Don't include index value if only one loop
+            if(n == 1):
+                index = ''
+            else:
+                index = str(i + startVal)
 
-            name = data['name']
-            data['name'] = name + index #Concatenate the index value to the name
+            #Iterate through each row of the template and append values
+            for item in formTemplate:
+                data = copy.deepcopy(item) #Deepcopy the row
+                data['title'] = data['title'].replace('{n}', index)   #Replace any instances of {n} in 'title' with index
 
-            for row in formLabels:
-                key = row['label']  #The key to be used with the 'data' dict is simply the 'label' key from the formLabels row
-                label = HLP.capitalizeFirst(key)
-                fullLabel = name + label + index
-                fieldData = {}  #Create a new dict to hold the curren key values
+                name = data['name']
+                data['name'] = name + index #Concatenate the index value to the name
 
-                #Assign the key values to fieldData
-                fieldData['label'] = fullLabel
-                fieldData['val'] = None
-                fieldData['dataType'] = row['dataType']
-                fieldData['size'] = row['size']
-                fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
+                for row in formLabels:
+                    key = row['label']  #The key to be used with the 'data' dict is simply the 'label' key from the formLabels row
+                    label = HLP.capitalizeFirst(key)
+                    fullLabel = name + label + index
+                    fieldData = {}  #Create a new dict to hold the curren key values
 
-                data['dataFields'][key] = fieldData
+                    #Assign the key values to fieldData
+                    fieldData['label'] = fullLabel
+                    fieldData['val'] = ''
+                    fieldData['dataType'] = row['dataType']
+                    fieldData['size'] = copy.deepcopy(row['size'])
+                    fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
 
+                    data['dataFields'][key] = fieldData
 
-            dataList.append(data)
+                dataList.append(data)
 
         return dataList
 
@@ -501,56 +490,54 @@ class CylinderReport(Reports):
 
     @classmethod
     def __sql_to_html_field(self, sqlResult, formTable):
-        formData = copy.deepcopy(formTable)
+        formData = copy.deepcopy(formTable[0])
+        sqlResult = processSql(sqlResult[0])
 
-        sqlResult = replaceNone(sqlResult)
+        #Assign the 'dataFields' sub-dict to dataFields (passes a reference so changes to dataFields will change formData)
+        dataFields = formData['dataFields']
 
-        #formTable only has 1 list element
-        for row in formData:
-            row['valueData']['projectID'] = sqlResult['project_id']
-            row['valueData']['cylinderID'] = sqlResult['auto_id']
-            row['valueData']['dateCreated'] = sqlResult['date_created']
-            row['valueData']['createdBy'] = sqlResult['created_by']
-            row['valueData']['reportTitle'] = sqlResult['report_title']
-            row['valueData']['status'] = sqlResult['status']
-            row['valueData']['projectName'] = sqlResult['project_name']
-            row['valueData']['ticketNum'] = sqlResult['ticket_num']
-            row['valueData']['supplier'] = sqlResult['supplier']
-            row['valueData']['truckNum'] = sqlResult['truck_num']
-            row['valueData']['loadNum'] = sqlResult['load_num']
-            row['valueData']['contractor'] = sqlResult['contractor']
-            row['valueData']['sampledFrom'] = sqlResult['sampled_from']
-            row['valueData']['mixID'] = sqlResult['mix_id']
-            row['valueData']['mouldType'] = sqlResult['mould_type']
-            row['valueData']['poNum'] = sqlResult['po_num']
-            row['valueData']['placementType'] = sqlResult['placement_type']
-            row['valueData']['cementType'] = sqlResult['cement_type']
-            row['valueData']['volume'] = sqlResult['load_volume']
-            row['valueData']['volumeUnits'] = sqlResult['load_volume_units']
-            row['valueData']['castDate'] = sqlResult['date_cast']
-            row['valueData']['castTime'] = sqlResult['time_cast']
-            row['valueData']['batchTime'] = sqlResult['time_batch']
-            row['valueData']['sampleTime'] = sqlResult['time_sample']
-            row['valueData']['dateTransported'] = sqlResult['date_transported']
-            row['valueData']['dateReceived'] = sqlResult['date_received']
-            row['valueData']['dateSpecimen'] = sqlResult['date_specimen']
+        dataFields['projectID']['val'] = sqlResult['project_id']
+        dataFields['cylinderID']['val'] = sqlResult['auto_id']
+        dataFields['dateCreated']['val'] = sqlResult['date_created']
+        dataFields['createdBy']['val'] = sqlResult['created_by']
+        dataFields['reportTitle']['val'] = sqlResult['report_title']
+        dataFields['status']['val'] = sqlResult['status']
+        dataFields['projectName']['val'] = sqlResult['project_name']
+        dataFields['ticketNum']['val'] = sqlResult['ticket_num']
+        dataFields['supplier']['val'] = sqlResult['supplier']
+        dataFields['truckNum']['val'] = sqlResult['truck_num']
+        dataFields['loadNum']['val'] = sqlResult['load_num']
+        dataFields['contractor']['val'] = sqlResult['contractor']
+        dataFields['sampledFrom']['val'] = sqlResult['sampled_from']
+        dataFields['mixID']['val'] = sqlResult['mix_id']
+        dataFields['mouldType']['val'] = sqlResult['mould_type']
+        dataFields['poNum']['val'] = sqlResult['po_num']
+        dataFields['placementType']['val'] = sqlResult['placement_type']
+        dataFields['cementType']['val'] = sqlResult['cement_type']
+        dataFields['volume']['val'] = sqlResult['load_volume']
+        dataFields['volumeUnits']['val'] = sqlResult['load_volume_units']
+        dataFields['castDate']['val'] = sqlResult['date_cast']
+        dataFields['castTime']['val'] = sqlResult['time_cast']
+        dataFields['batchTime']['val'] = sqlResult['time_batch']
+        dataFields['sampleTime']['val'] = sqlResult['time_sample']
+        dataFields['dateTransported']['val'] = sqlResult['date_transported']
+        dataFields['dateReceived']['val'] = sqlResult['date_received']
+        dataFields['dateSpecimen']['val'] = sqlResult['date_specimen']
 
-            row['valueData']['notes'] = sqlResult['notes']
-            row['valueData']['isScc'] = sqlResult['is_scc']
+        dataFields['notes']['val'] = sqlResult['notes']
+        dataFields['isScc']['val'] = sqlResult['is_scc']
 
-            # Do some processing for the dateReceivedEqual checkbox
-            if (sqlResult['date_received_equal'] == 1):
-                row['valueData']['dateReceivedEqual'] = 'checked'
-            else:
-                row['valueData']['dateReceivedEqual'] = ''
+        # Do some processing for the dateReceivedEqual checkbox
+        if (sqlResult['date_received_equal'] == 1):
+            dataFields['dateReceivedEqual']['val'] = 'checked'
+        else:
+            dataFields['dateReceivedEqual']['val'] = ''
 
-            # Do some processing for the dateSpecimenEqual
-            if (sqlResult['date_specimen_equal'] == 1):
-                row['valueData']['dateSpecimenEqual'] = 'checked'
-            else:
-                row['valueData']['dateSpecimenEqual'] = ''
-
-
+        # Do some processing for the dateSpecimenEqual
+        if (sqlResult['date_specimen_equal'] == 1):
+            dataFields['dateSpecimenEqual']['val'] = 'checked'
+        else:
+            dataFields['dateSpecimenEqual']['val'] = ''
 
         return formData
 
@@ -570,7 +557,7 @@ class CylinderReport(Reports):
         sqlResult = copy.deepcopy(sqlResult)
 
         #Ensure all None values are removed
-        sqlResult = replaceNone(sqlResult)
+        sqlResult = processSql(sqlResult)
 
 
         #Populate the strenTable with the SQL results
@@ -591,10 +578,8 @@ class CylinderReport(Reports):
 
             strList.append(strenTable[i])
 
-
         for item in strList:
             print(item)
-
 
         return strList
 
@@ -603,25 +588,26 @@ class CylinderReport(Reports):
         newFormTable = copy.deepcopy(formTable)
 
         #Ensure all None values are removed
-        sqlResult = replaceNone(sqlResult)
+        sqlResult = processSql(sqlResult)
 
         #Ensure the 'property' fields match and populate the table
         for row in newFormTable:
+            dataFields = row['dataFields']
             for sql in sqlResult:
                 if(row['property'] == sql['property']):
-                    row['valueData']['actual'] = sql['val_actual']
-                    row['valueData']['min'] = sql['val_min']
-                    row['valueData']['max'] = sql['val_max']
-                    row['valueData']['notes'] = sql['notes']
-                    row['valueData']['cylReportID'] = sql['cyl_report_id']
-                    row['valueData']['autoID'] = sql['auto_id']
+                    dataFields['actual']['val'] = sql['val_actual']
+                    dataFields['min']['val'] = sql['val_min']
+                    dataFields['max']['val'] = sql['val_max']
+                    dataFields['notes']['val'] = sql['notes']
+                    dataFields['cylReportID']['val'] = sql['cyl_report_id']
+                    dataFields['autoID']['val'] = sql['auto_id']
                     break
 
         return newFormTable
 
     @classmethod
     def __sql_to_html_cyl_items(self, sqlResult, formTable):
-        sqlResult = HLP.replaceNone(sqlResult)
+        sqlResult = processSql(sqlResult)
 
         newFormTable = []
 
@@ -646,7 +632,6 @@ class CylinderReport(Reports):
 
         return newFormTable
 
-
     #Read form data and create SQL entry
     def submit_form(self):
         fieldData = HLP.get_form_values(self.field_table)
@@ -666,11 +651,10 @@ class CylinderReport(Reports):
 
     def submit_edit(self):
         fieldData = HLP.get_form_values(self.field_table)
-
         fieldDataClean = self.__field_form_to_sql(fieldData)
-        HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
 
-        strengthData = HLP.get_form_values_str(self.strength_table)
+        HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
+        strengthData = HLP.get_form_values(self.strength_table)
 
         strDataClean = self.__strength_form_to_sql(strengthData, self.id)
         HLP.sql_update(self.TB_STR_REQ, strDataClean)
@@ -682,60 +666,59 @@ class CylinderReport(Reports):
     def delete(self):
         HLP.sql_delete(self.TB_REPORT_DATA, self.id)
 
-
     def __field_form_to_sql(self, fieldData):
         sqlData = copy.deepcopy(self.SQL_REPORT_PROPERTIES)
 
-        #Grab the only key
-        key = next(iter(fieldData))
+        fieldData = fieldData[0]
 
-        sqlData['project_id']['data'] = fieldData[key]['valueData']['projectID']
+        fieldData = fieldData['dataFields']
 
-        sqlData['date_created']['data'] = fieldData[key]['valueData']['dateCreated']
-        sqlData['created_by']['data'] = fieldData[key]['valueData']['createdBy']
-        sqlData['report_title']['data'] = fieldData[key]['valueData']['reportTitle']
-        sqlData['status']['data'] = fieldData[key]['valueData']['status']
-        sqlData['is_scc']['data'] = fieldData[key]['valueData']['isScc']
-        sqlData['ticket_num']['data'] = fieldData[key]['valueData']['ticketNum']
-        sqlData['project_name']['data'] = fieldData[key]['valueData']['projectName']
-        sqlData['supplier']['data'] = fieldData[key]['valueData']['supplier']
-        sqlData['load_num']['data'] = fieldData[key]['valueData']['loadNum']
-        sqlData['truck_num']['data'] = fieldData[key]['valueData']['truckNum']
-        sqlData['contractor']['data'] = fieldData[key]['valueData']['contractor']
-        sqlData['sampled_from']['data'] = fieldData[key]['valueData']['sampledFrom']
-        sqlData['mould_type']['data'] = fieldData[key]['valueData']['mouldType']
-        sqlData['mix_id']['data'] = fieldData[key]['valueData']['mixID']
-        sqlData['po_num']['data'] = fieldData[key]['valueData']['poNum']
-        sqlData['placement_type']['data'] = fieldData[key]['valueData']['placementType']
-        sqlData['cement_type']['data'] = fieldData[key]['valueData']['cementType']
-        sqlData['load_volume']['data'] = fieldData[key]['valueData']['volume']
-        sqlData['load_volume_units']['data'] =  fieldData[key]['valueData']['volumeUnits']
-        sqlData['date_cast']['data'] = fieldData[key]['valueData']['castDate']
-        sqlData['time_batch']['data'] = fieldData[key]['valueData']['batchTime']
-        sqlData['time_sample']['data'] = fieldData[key]['valueData']['sampleTime']
-        sqlData['time_cast']['data'] = fieldData[key]['valueData']['castTime']
-        sqlData['date_transported']['data'] = fieldData[key]['valueData']['dateTransported']
-        sqlData['date_specimen']['data'] = fieldData[key]['valueData']['dateSpecimen']
-        sqlData['notes']['data'] = fieldData[key]['valueData']['notes']
+        sqlData['project_id']['data'] = fieldData['projectID']['val']
+        sqlData['date_created']['data'] = fieldData['dateCreated']['val']
+        sqlData['created_by']['data'] = fieldData['createdBy']['val']
+        sqlData['report_title']['data'] = fieldData['reportTitle']['val']
+        sqlData['status']['data'] = fieldData['status']['val']
+        sqlData['is_scc']['data'] = fieldData['isScc']['val']
+        sqlData['ticket_num']['data'] = fieldData['ticketNum']['val']
+        sqlData['project_name']['data'] = fieldData['projectName']['val']
+        sqlData['supplier']['data'] = fieldData['supplier']['val']
+        sqlData['load_num']['data'] = fieldData['loadNum']['val']
+        sqlData['truck_num']['data'] = fieldData['truckNum']['val']
+        sqlData['contractor']['data'] = fieldData['contractor']['val']
+        sqlData['sampled_from']['data'] = fieldData['sampledFrom']['val']
+        sqlData['mould_type']['data'] = fieldData['mouldType']['val']
+        sqlData['mix_id']['data'] = fieldData['mixID']['val']
+        sqlData['po_num']['data'] = fieldData['poNum']['val']
+        sqlData['placement_type']['data'] = fieldData['placementType']['val']
+        sqlData['cement_type']['data'] = fieldData['cementType']['val']
+        sqlData['load_volume']['data'] = fieldData['volume']['val']
+        sqlData['load_volume_units']['data'] =  fieldData['volumeUnits']['val']
+        sqlData['date_cast']['data'] = fieldData['castDate']['val']
+        sqlData['time_batch']['data'] = fieldData['batchTime']['val']
+        sqlData['time_sample']['data'] = fieldData['sampleTime']['val']
+        sqlData['time_cast']['data'] = fieldData['castTime']['val']
+        sqlData['date_transported']['data'] = fieldData['dateTransported']['val']
+        sqlData['date_specimen']['data'] = fieldData['dateSpecimen']['val']
+        sqlData['notes']['data'] = fieldData['notes']['val']
 
-        sqlData['auto_id']['data'] = fieldData[key]['valueData']['cylinderID']
+        sqlData['auto_id']['data'] = fieldData['cylinderID']['val']
 
 
         #Processing dateReceived checkbox. 'on' is what a checked checkbox returns if no value specified
-        if(fieldData[key]['valueData']['dateReceivedEqual'] == 'on'):
+        if(fieldData['dateReceivedEqual']['val'] == 'on'):
             sqlData['date_received_equal']['data'] = 1
-            sqlData['date_received']['data'] = fieldData[key]['valueData']['dateTransported']
+            sqlData['date_received']['data'] = fieldData['dateTransported']['val']
         else:
             sqlData['date_received_equal']['data'] = 0
-            sqlData['date_received']['data'] = fieldData[key]['valueData']['dateReceived']
+            sqlData['date_received']['data'] = fieldData['dateReceived']['val']
 
         #Processing dateSpecimen checkbox. 'on' is what a checked checkbox returns if no value specified
-        if(fieldData[key]['valueData']['dateSpecimenEqual'] == 'on'):
+        if(fieldData['dateSpecimenEqual']['val'] == 'on'):
             sqlData['date_specimen_equal']['data'] = 1
-            sqlData['date_specimen']['data'] = fieldData[key]['valueData']['castDate']
+            sqlData['date_specimen']['data'] = fieldData['castDate']['val']
         else:
             sqlData['date_specimen_equal']['data'] = 0
-            sqlData['date_specimen']['data'] = fieldData[key]['valueData']['dateSpecimen']
+            sqlData['date_specimen']['data'] = fieldData['dateSpecimen']['val']
 
 
 
@@ -754,25 +737,26 @@ class CylinderReport(Reports):
         3. Sanitize the data with a helper function
         4. Return the list
 
-        :param conData: A dictionaries where each main key's value corresponds to HTML form input data. There is a 'valueData'
+        :param conData: A list of dictionaries where each main key's value corresponds to HTML form input data. There is a 'valueData'
             sub-dictionary which will be populated with key:values which correspond to some SQL database columns
         :return: A list of dictionaries which correspond to a specific SQL table with clean data ready to be inserted into the
             database
         """
+
         dataList = []
 
-        for key, val in conData.items():
+        for row in conData:
             sqlData = copy.deepcopy(self.SQL_CONDITIONS_PROPERTIES)
 
             sqlData['cyl_report_id']['data'] = cylID
-            sqlData['property']['data'] = conData[key]['property']
-            sqlData['val_actual']['data'] = conData[key]['valueData']['actual']
-            sqlData['val_min']['data'] = conData[key]['valueData']['min']
-            sqlData['val_max']['data'] = conData[key]['valueData']['max']
-            sqlData['notes']['data'] = conData[key]['valueData']['notes']
-            sqlData['auto_id']['data'] = conData[key]['valueData']['autoID']
-
+            sqlData['property']['data'] = row['property']
+            sqlData['val_actual']['data'] = row['dataFields']['actual']['val']
+            sqlData['val_min']['data'] = row['dataFields']['min']['val']
+            sqlData['val_max']['data'] = row['dataFields']['max']['val']
+            sqlData['notes']['data'] = row['dataFields']['notes']['val']
+            sqlData['auto_id']['data'] = row['dataFields']['autoID']['val']
             dataList.append(sqlData)
+
 
         dataList = HLP.sql_sanitize(dataList)
 
@@ -785,18 +769,15 @@ class CylinderReport(Reports):
         3. Sanitize the data with a helper function
         4. Return the list
 
-        :param strData: A dictionaries where each main key's value corresponds to HTML form input data
+        :param strData: A lis of dictionaries corresponding to HTML form input data
         :return: A list of dictionaries which correspond to a specific SQL table with clean data ready to be inserted into the
             database
         """
         dataList = []
 
-        print(strData)
-
-        for key, val in strData.items():
+        for row in strData:
             sqlData = copy.deepcopy(self.SQL_STR_REQ_PROPERTIES.copy())
-            dataFields = strData[key]['dataFields']
-
+            dataFields = row['dataFields']
 
             sqlData['cyl_report_id']['data'] = cylID
             sqlData['target_strength']['data'] = dataFields['strength']['val']
@@ -808,7 +789,6 @@ class CylinderReport(Reports):
         dataList = HLP.sql_sanitize(dataList)
 
 
-
         #Ensure the first item of the strength table is always visible
         dataList[0]['target_visible']['data'] = 1
 
@@ -817,13 +797,12 @@ class CylinderReport(Reports):
 
         return dataList
 
-
     #Convert object dict
     def to_dict(self):
 
         objectData = {
-            "id":self.id,   #id is also in 'fieldTable', but this allows quick acccess
-            "fieldTable":self.field_table[0], #Return 0th item because even though it is a list it only has 1 entry
+            "id":self.id,   #id is also in 'fieldTable', but this allows quick access
+            "fieldTable":self.field_table,
             "strTable": self.strength_table,
             "conditionsTable": self.conditions_table,
             "cylItemsTable": self.cyl_items_table

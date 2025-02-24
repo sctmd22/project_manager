@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timedelta
 from sys import exception
 
 from werkzeug.exceptions import BadRequestKeyError
@@ -12,23 +12,33 @@ import db as db
 from db import sql_data as SQL
 
 
-def get_form_values_str(formData):
+def get_form_values(formData):
     '''
     Iterate through the 'label' keys of formData, using the labels as parameters to request data from the submitted
     form. With the requested form data, update the 'val' key's in formData
 
     formData layout:
     [
-        {'<NAME>': {
-            'title':VALUE,
+        Row 1:
+        {   'name':...,
+            'title':...,
             'dataFields': {
                 <FIELD1>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
                 <FIELD2>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
                 ....
                 },
-            }
         }
-        etc...
+
+        Row 2:
+        {   'name':...,
+            'title':...,
+            'dataFields': {
+                <FIELD1>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
+                <FIELD2>: {'label':VALUE, 'val':VALUE, 'dataType':VALUE, 'size':{...}, 'errorLabel':VALUE},
+                ....
+                },
+        }
+        Row n...
     ]
 
     :param formData: A list of FORM data (formatted to the FORM template style)
@@ -40,12 +50,17 @@ def get_form_values_str(formData):
         print(f"Error: {FUNC_NAME}: formData is empty")
         return None
 
-    if(not isinstance(formData, list)):
-        print(f"Error: {FUNC_NAME}: formData is not a list. formData = {formData}")
+    dataList = []
+
+    if(isinstance(formData, dict)):
+        dataList.append(copy.deepcopy(formData))
+
+    elif (isinstance(formData, list)):
+        dataList = copy.deepcopy(formData)
+
+    else:
+        print(f"Error: {FUNC_NAME}: formData is not a list or dict. Returning None. formData = {formData}")
         return None
-
-
-    dataList = copy.deepcopy(formData)
 
     for row in dataList:
         dataFields = row['dataFields']
@@ -62,15 +77,17 @@ def get_form_values_str(formData):
 
     #Convert list of dicts to dictionary for easier value assignment. Use the value in the 'name' key as the new
         #key for each dict entry
+    '''
     for row in dataList:
         key = row['name']
         del row['name']
         data[key] = row
+    '''
 
-    return data
+    return dataList
 
 
-def get_form_values(formData):
+def get_form_values_old(formData):
     FUNC_NAME = "get_form_values(formData)"
 
     if(not formData):
@@ -552,31 +569,31 @@ def toStr(val):
         return None
 
 
-
-def replaceNone(noneData):
+def processSql(sqlData):
     """
-    Replace all instances of None with the returnType ('')
+    1. Replace all instances of None with the returnType ('')
+    2. Stringify timedeltas
 
-    :param noneData: Any data which may contain None types
+    :param sqlData: Any data which may contain None types
         1. A single variable
         2. A dictionary or nested dictionary
-        3. A list of dictionaries
+        3. A list of dictionaries/nested dictionaries
     :return: A copy of the input data with None replaced with the returnType
     """
     returnType = ''
 
-    if(noneData == None):
+    if(sqlData == None):
         return returnType
 
-    elif(isinstance(noneData, dict)):
-        newDict = copy.deepcopy(noneData)
+    elif(isinstance(sqlData, dict)):
+        newDict = copy.deepcopy(sqlData)
 
         return __replaceNoneDict(newDict, returnType)
 
-    elif(isinstance(noneData, list)):
+    elif(isinstance(sqlData, list)):
         newList = []
 
-        for row in noneData:
+        for row in sqlData:
             newRow = copy.deepcopy(row)
             replaced = __replaceNoneDict(newRow, returnType)
             newList.append(replaced)
@@ -584,7 +601,7 @@ def replaceNone(noneData):
         return newList
 
     else:
-        return noneData
+        return sqlData
 
 
 def __replaceNoneDict(data, returnType):
@@ -597,13 +614,14 @@ def __replaceNoneDict(data, returnType):
     if(data == None):
         return returnType
 
+    elif(isinstance(data, timedelta)):
+        return str(data)
+
     elif(isinstance(data, dict)):
         for key, val in data.items():
             data[key] = __replaceNoneDict(data[key], returnType)
 
     return data
-
-
 
 def capitalizeFirst(val):
      #Capitalize the first letter of the passed string
