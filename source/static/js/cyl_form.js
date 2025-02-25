@@ -1,9 +1,9 @@
-//Class name of CSS class which will hide an HTML element
-const HIDDEN_CLASS = 'hidden';
-
+const CYL_EDITING = cyl_editing_json;
 
 class InputElement {
-
+	/*
+		Used to define input element objects which contain info and methods related to form inputs
+	*/
 		constructor(inputID, errorID) {
 			this.inputID = inputID;
 			this.errorID = errorID;
@@ -80,6 +80,13 @@ class InputElement {
 				this.inputElement.dispatchEvent(event);
 			}
 		}
+		
+		clear(){
+			if(this.inputElement){
+				this.inputElement.value = '';
+			}
+		}
+		
 	}
 	
 class TextInput extends InputElement {
@@ -89,17 +96,21 @@ class TextInput extends InputElement {
 		
 	}
 	
-	
+	//No forward or back slashes, single or double quotes
 	verifyNoSlashesNoQuotes(){
 		this.inputElement.value = this.inputElement.value.replace(/[/\\'"]/g, ""); 
 		this.verifySize();
+		console.log('a');
 	}
 	
+	//Upper and lower case letters AND digits 0-9
 	verifyAlphaNumeric(){
+		//[^...] in regex indicates negation, so replace anything that doesnt NOT match a-z, A-Z and 0-9
 		this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z0-9]/g, ""); 
 		this.verifySize();
 	}
 	
+	//Upper and lowercase letters only
 	verifyUpperLower(){
 		this.inputElement.value = this.inputElement.value.replace(/[^a-zA-Z]/g, "");
 		this.verifySize();
@@ -108,14 +119,10 @@ class TextInput extends InputElement {
 	
 
 	verifySize(){
-		const ERROR_SIZE = `Please enter at least one character`;
-		
 		const val = this.inputElement.value;
 		this.inputElement.value = val.slice(0, this.maxSize);
 		
-		
 		if(val.length == 0){
-			this.showErr(ERROR_SIZE)
 			this.valid = false;
 			this.val = null;
 		} else {
@@ -163,12 +170,19 @@ class IntInput extends InputElement {
 	}
 	
 	verifySize(){
-		const num = parseInt(this.inputElement.value);
-				
+		const rawNum = this.inputElement.value;
+		const num = parseInt(rawNum);
+		
 		const ERROR_NAN = "Not a valid number";
 		const ERROR_SIZE = `Value must be between ${this.minSize} and ${this.maxSize}`;
 	
-		if(isNaN(num)){
+		//Don't display an error for an empty string
+		if(rawNum == ''){
+			this.val = null;
+			this.valid = false;
+			this.hideErr();
+			
+		}else if(isNaN(num)){
 			this.val = null;
 			this.showErr(ERROR_NAN);
 			this.valid = false;
@@ -208,6 +222,35 @@ class IntInput extends InputElement {
 		this.verifySize();
 				
 	}
+}
+
+class NumberInput extends InputElement {
+	constructor(inputID, errorID){
+		super(inputID, errorID);
+		
+	}
+	
+	verifyNumber(){
+		let val = this.inputElement.value
+		
+		//Use regex to filter out invalid characters
+		const regex = /^-?\d*\.?\d*$/; // Allows optional negative sign, digits, and optional decimal
+		let newValue = '';
+
+		//Build the new value character by character
+			//Does not append any characters that do not pass the regex test
+		for (let chara of val) {
+			if (regex.test(newValue + chara)) {
+				newValue += chara;
+			}
+		}
+
+		//Update the input field value
+		this.inputElement.value = newValue;
+	}
+
+	
+	
 }
 
 class DateInput extends InputElement {
@@ -269,6 +312,27 @@ class DateInput extends InputElement {
 	}
 }
 
+const FIELD_FUNCTIONS = (function(){
+	
+	if(CYL_EDITING){
+		FIELD_VALIDATION();
+	}
+	
+	function FIELD_VALIDATION(){
+		
+		const FIELD_TABLE = cyl_data_json.fieldTable;
+		
+		const volumeInput = new NumberInput(FIELD_TABLE.dataFields.volume.label, FIELD_TABLE.dataFields.volume.errorLabel);
+		
+		volumeInput.inputElement.addEventListener('input', ()=>{
+			volumeInput.verifyNumber();
+			
+		});
+	}
+	
+	
+})();
+
 const ITEMS_FUNCTIONS = (function(){
 	
 	const checkboxReceivedEqual = document.getElementById(cyl_data_json.fieldTable.dataFields.dateReceivedEqual.label);
@@ -292,8 +356,12 @@ const ITEMS_FUNCTIONS = (function(){
 	const setDropdown = new DropInput('itemsSetSelect');
 	const separatorDropdown = new DropInput('itemsSeparatorSelect');
 
+	if(CYL_EDITING){
+		ADD_ITEMS();
+	}
+
 	//Handle realtime functionality of the "Add Cylinders/Cubes/X" forms
-	(function(){
+	function ADD_ITEMS(){
 		//Run toggleCheck to set the initial value
 		toggleCheck(checkboxReceivedEqual, dateTransported.inputElement, dateReceived.inputElement);
 		toggleCheck(checkboxSpecimenEqual, dateCast.inputElement, dateSpecimenID.inputElement);			
@@ -465,9 +533,7 @@ const ITEMS_FUNCTIONS = (function(){
 			
 		};
 		
-	})();
-	
-	console.log(cyl_data_json.cylItemsTable);
+	};
 		
 	
 	function createItemsRow(){
@@ -475,8 +541,6 @@ const ITEMS_FUNCTIONS = (function(){
 		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);
 		
 		const numRows = numItems.val;
-		
-		
 		
 		for(let i = 0; i < numRows; i++){
 			
@@ -517,18 +581,18 @@ const ITEMS_FUNCTIONS = (function(){
 })();
 
 const STR_FUNCTIONS = (function(){
-	
-	
 	const STRENGTH_TABLE = cyl_data_json.strTable;
 
+	if(cyl_editing_json){
+		STRENGTH_VALIDATION();
+	}
 	
-	(function(){
-
+	function STRENGTH_VALIDATION() {
 		
 		//Add event listeners for each day and strength input
 		for (let row of STRENGTH_TABLE){
-			const strengthInput = new IntInput(row.dataFields.strength.label, row.dataFields.strength.errorLabel, 0, 999);
-			const daysInput = new IntInput(row.dataFields.days.label, row.dataFields.days.errorLabel, 0, 999);
+			const strengthInput = new IntInput(row.dataFields.strength.label, row.dataFields.strength.errorLabel, row.dataFields.strength.size.min, row.dataFields.strength.size.max);
+			const daysInput = new IntInput(row.dataFields.days.label, row.dataFields.days.errorLabel, row.dataFields.days.size.min, row.dataFields.days.size.max);
 			
 			strengthInput.inputElement.addEventListener('input', ()=>{
 				strengthInput.verifyPosInt();
@@ -538,10 +602,7 @@ const STR_FUNCTIONS = (function(){
 				daysInput.verifyPosInt();
 			});
 		}
-		
-		
-	})();
-
+	};
 
 	const SHOW_HIDE = (function(){
 		/*
@@ -653,36 +714,87 @@ const CONDITIONS_FUNCTIONS = (function(){
 	//Get data from the <script></script> tags passed from Python to Jinja
 	const CONDITIONS_TABLE = cyl_data_json.conditionsTable;
 	
-	//Add event listeners to ensure only decimal numbers can be entered into the text boxes
 	
-	(function(){
-		
-		
-		for(let row in CONDITIONS_TABLE){
-			//let actual = new TextInput(row.dataFields);
-		
+	if(CYL_EDITING){
+		CONDITIONS_VALIDATION();
+		NATURAL_AIR();
+	}
+	
+	//Add event listeners to ensure only decimal numbers can be entered into the text boxes
+	function CONDITIONS_VALIDATION() {
+		//Add event listeners for each day and strength input
+		for (let row of CONDITIONS_TABLE){
+			const actualInput = new NumberInput(row.dataFields.actual.label, row.dataFields.actual.errorLabel);
+			const minInput = new NumberInput(row.dataFields.min.label, row.dataFields.min.errorLabel);
+			const maxInput = new NumberInput(row.dataFields.max.label, row.dataFields.max.errorLabel);
+
+			actualInput.inputElement.addEventListener('input', ()=>{
+				actualInput.verifyNumber();
+			});
+			
+			minInput.inputElement.addEventListener('input', ()=>{
+				minInput.verifyNumber();
+			});
+			
+			maxInput.inputElement.addEventListener('input', ()=>{
+				maxInput.verifyNumber();
+			});
+			
 		}
+	};
+	
+	//Disable the airMin and airMax inputs if the 'Natural Air' checkbox is set
+	function NATURAL_AIR(){
 		
+		const airCheckbox = document.getElementById(cyl_data_json.fieldTable.dataFields.naturalAir.label);
+		let airMin = null;
+		let airMax = null;
 		
-	})();
+		for (let row of CONDITIONS_TABLE){
+			if(row.property === 'air'){
+				airMax = new InputElement(row.dataFields.max.label);
+				airMin = new InputElement(row.dataFields.min.label);
+			}
+		}
+	
+		//Call to set initial value
+		toggleAir();
+
+		airCheckbox.addEventListener('change', ()=>{
+			toggleAir();
+		});
+				
+		function toggleAir(){
+			if(airCheckbox.checked){
+				airMax.disable();
+				airMax.clear();
+				
+				airMin.disable();
+				airMin.clear();
+			} else {
+				airMax.enable();
+				airMin.enable();
+			}
+		}
+	}
 	
 	
 	//Hide/show conditions table elements depending on value of SCC Radio Button
 	(function(){
-	const IS_SCC = cyl_data_json.fieldTable.dataFields.isScc.val;
-	const SCC_ID = cyl_data_json.fieldTable.dataFields.isScc.label;
-	const CYL_EDITING = cyl_editing_json;
-	
-	// Get references to the radio buttons and the target element
-	const sccRadioButtons = document.querySelectorAll(`input[name="${SCC_ID}"]`);
+		const IS_SCC = cyl_data_json.fieldTable.dataFields.isScc.val;
+		const SCC_ID = cyl_data_json.fieldTable.dataFields.isScc.label;
 
-	// Add event listeners to the radio buttons
-	sccRadioButtons.forEach(button => {
-		button.addEventListener('change', toggleElement);
-	});
-	
-	// Call the function initially to set the correct state
-	toggleElement();
+		
+		// Get references to the radio buttons and the target element
+		const sccRadioButtons = document.querySelectorAll(`input[name="${SCC_ID}"]`);
+
+		// Add event listeners to the radio buttons
+		sccRadioButtons.forEach(button => {
+			button.addEventListener('change', toggleElement);
+		});
+		
+		// Call the function initially to set the correct state
+		toggleElement();
 
 
 	// Function to show or hide the element based on the selected radio button
@@ -693,7 +805,7 @@ const CONDITIONS_FUNCTIONS = (function(){
 		let prevKey = 'SCC';
 		
 		//Get SCC value either directly from checkboxes or from the IS_SCC variable passed from flask/python
-		if(CYL_EDITING === true){
+		if(CYL_EDITING){
 			//input[name="cylSCC"] is CSS selector syntax
 			sccVal = document.querySelector(`input[name="${SCC_ID}"]:checked`).value;
 
@@ -720,8 +832,6 @@ const CONDITIONS_FUNCTIONS = (function(){
 				//Grab the inputs under the table row and clear the values
 					//All inputs are text EXCEPT auto_id which is hidden, which we do not want to reset
 				const inputs = targetElement.querySelectorAll('input[type="text"]');
-				
-			
 				
 			   inputs.forEach(input => {
 					input.value = '';

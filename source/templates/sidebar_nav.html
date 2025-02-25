@@ -29,8 +29,8 @@
 					</a> 
 				</li>
 					
-				<li class="nav-item"> 
-					<a href="{{ url_for('projects_bp.projects') }}" class="nav-link"> <i class="nav-icon bi bi-box-seam-fill"></i>
+				<li class="nav-item" id="projects_menu"> 
+					<a href="{{ url_for('projects_bp.projects') }}" id="" class="nav-link"> <i class="nav-icon bi bi-box-seam-fill"></i>
 						<p>Projects</p>
 					</a>
 				</li>	
@@ -58,7 +58,7 @@
 								<p>Grout and Epoxy Cubes</p>
 							</a> </li>
 						<li class="nav-item">
-							<a href="#" id="prism_bp" class="nav-link">
+							<a href="{{ url_for('prisms_bp.prisms')}}" id="prisms_bp" class="nav-link">
 								<i class="nav-icon bi bi-circle"></i>
 								<p>Shrinkage Prisms</p>
 							</a> 
@@ -66,7 +66,7 @@
 					</ul>
 				</li>
 				
-				 <li class="nav-item" id="reports_menu">
+				 <li class="nav-item" id="settings_menu">
 					<a href="#" class="nav-link"> 
 					<i class="nav-icon bi bi-clipboard-fill"></i>
 						<p>
@@ -76,20 +76,26 @@
 					
 					<ul class="nav nav-treeview">
 						<li class="nav-item"> 
-							<a href="" id="" class="nav-link"> 
+							<a href="{{ url_for('settings_bp.user')}}" id="settings-user" class="nav-link"> 
 								<i class="nav-icon bi bi-circle"></i>
 								<p>User</p>
 							</a> 
 						</li>
 						<li class="nav-item"> 
-							<a href="" id="" class="nav-link"> 
+							<a href="{{ url_for('settings_bp.email_lists')}}" id="settings-email_lists" class="nav-link"> 
 								<i class="nav-icon bi bi-circle"></i>
 								<p>Email Lists</p>
 							</a> </li>
 						<li class="nav-item">
-							<a href="#" id="" class="nav-link">
+							<a href="#" id="settings-break_schedules"  class="nav-link">
 								<i class="nav-icon bi bi-circle"></i>
 								<p>Break Schedules</p>
+							</a> 
+						</li>
+						<li class="nav-item">
+							<a href="{{ url_for('settings_bp.reports')}}" id="settings-reports"  class="nav-link">
+								<i class="nav-icon bi bi-circle"></i>
+								<p>Reports</p>
 							</a> 
 						</li>
 					</ul>

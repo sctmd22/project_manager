@@ -6,13 +6,13 @@ from helpers.helpers import generateBreadcrumbs
 TB_REPORT_DATA = "cube_report_data"
 
 #Define blueprint for cylinder_routes.py
-bp = Blueprint('cubes_bp', __name__, url_prefix='/cubes')
+cubes_bp = Blueprint('cubes_bp', __name__, url_prefix='/reports/cubes')
 
 pageData = {}
 pageData['navItemID'] = "reports_menu"
 pageData["navLinkID"] = "cubes_bp"
 
-@bp.route("/")
+@cubes_bp.route("/")
 def cubes():
     breadCrumbs = generateBreadcrumbs()
 
@@ -36,5 +36,5 @@ def cubes():
     dbCon.close()  # return connection to pool
     '''
 
-    return render_template("cubes/cubes.html", breadCrumbs=breadCrumbs, data=result, pageData=pageData)
+    return render_template("reports/cubes/cubes.html", breadCrumbs=breadCrumbs, data=result, pageData=pageData)
 

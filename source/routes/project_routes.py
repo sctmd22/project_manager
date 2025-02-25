@@ -5,21 +5,20 @@ import GLOBALS as GB
 from helpers.helpers import generateBreadcrumbs
 
 #Define blueprint for projects.py
-bp = Blueprint('projects_bp', __name__, url_prefix='/projects')
+projects_bp = Blueprint('projects_bp', __name__, url_prefix='/projects')
 
 TB_PROJECTS = "project_master"
 
 pageData = {}
 pageData['navItemID'] = "projects_menu"
 
-@bp.route("/")
+@projects_bp.route("/")
 def projects():
     breadCrumbs = generateBreadcrumbs()
 
     pageData["pageTitle"] = "Projects"
     pageData["bcTitle"] = pageData["pageTitle"]
     pageData["navLinkID"] = ""
-
 
     dbCon = db_connect()
     cursor = dbCon.cursor(dictionary=True)
@@ -35,7 +34,7 @@ def projects():
     return render_template("projects/projects.html", data=result, breadCrumbs=breadCrumbs, pageData=pageData)
 
 
-@bp.route("/new")
+@projects_bp.route("/new")
 def new_project():
     breadCrumbs = generateBreadcrumbs()
 
@@ -60,10 +59,8 @@ def new_project():
     return render_template("projects/view_project.html", data=data, breadCrumbs=breadCrumbs, editData=editing, statusData = GB.PROJECT_STATUS, newProject = newProject)
 
 
-
-
 #Handle new project submission then redirect to the project template page
-@bp.route("/new/submit", methods=["POST"])
+@projects_bp.route("/new/submit", methods=["POST"])
 def submit_project():
 
     #dateCreated = datetime.strptime(rawDateCreated, "%Y-%m-%d %H:%M:%S.%f")
@@ -102,7 +99,7 @@ def submit_project():
     return redirect(url_for("projects_bp.view_project", project_id=id))
 
 
-@bp.route("/update", methods=['POST'])
+@projects_bp.route("/update", methods=['POST'])
 def update_project():
     id = request.form['project_id']
     title = request.form['projectTitle']
@@ -136,7 +133,7 @@ def update_project():
     return redirect(url_for("projects_bp.view_project", project_id=id))
 
 
-@bp.route("/<int:project_id>")
+@projects_bp.route("/<int:project_id>")
 def view_project(project_id):
     breadCrumbs = generateBreadcrumbs()
     #Get url parameters
@@ -180,13 +177,13 @@ def view_project(project_id):
 
 
 
-@bp.route("/delete/cancel/<int:project_id>")
+@projects_bp.route("/delete/cancel/<int:project_id>")
 def cancel_delete(project_id):
 
     return redirect(url_for("projects_bp.view_project", project_id=project_id))
 
 
-@bp.route("/delete/<int:project_id>")
+@projects_bp.route("/delete/<int:project_id>")
 def confirm_delete(project_id):
 
     data = {}
@@ -197,7 +194,7 @@ def confirm_delete(project_id):
 
     return render_template("projects/delete_project.html", data=data, breadcrumb=bcData)
 
-@bp.route("/delete/submit", methods=["POST"])
+@projects_bp.route("/delete/submit", methods=["POST"])
 def delete_project():
     if request.method == 'POST':
 

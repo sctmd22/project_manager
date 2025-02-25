@@ -98,7 +98,6 @@ def get_form_values_old(formData):
         print(f"Error: {FUNC_NAME}: formData is not a list. formData = {formData}")
         return None
 
-
     dataList = copy.deepcopy(formData)
 
     for row in dataList:

@@ -22,3 +22,5 @@ VALIDATION_TYPES = {
     'TEXT':5,
     'EMAIL':6
 }
+
+
