@@ -42,8 +42,6 @@ class Reports:
             print(f"Error: {func_name}: Could not process provided query and or values")
             return None
 
-
-
     #Return a blank string if val is False/None
     @classmethod
     def remove_none(cls, val):
@@ -103,39 +101,52 @@ class CylinderReport(Reports):
         '6':'6'
     }
 
+    CONDITIONS_PRECISION = {
+        'flow':         {'actual': 0, 'min': 0, 'max': 0},
+        't_50':         {'actual': 0, 'min': 0, 'max': 0},
+        'vsi':          {'actual': 0, 'min': 0, 'max': 0},
+        'slump':        {'actual': 0, 'min': 0, 'max': 0},
+        'air':          {'actual': 0, 'min': 0, 'max': 0},
+        'density':      {'actual': 0, 'min': 0, 'max': 0},
+        'sampleTemp':   {'actual': 0, 'min': 0, 'max': 0},
+        'ambientTemp':  {'actual': 0, 'min': 0, 'max': 0},
+        'initialTemp':  {'actual': 0, 'min': 0, 'max': 0},
+    }
+
 
     FORM_LABELS = [
-        {'label': 'projectID',          'dataType': None, 'size': None, 'sqlID':'project_id'},
-        {'label': 'cylinderID',         'dataType': None, 'size': None, 'sqlID':'auto_id'},
-        {'label': 'dateCreated',        'dataType': None, 'size': None, 'sqlID':'date_created'},
-        {'label': 'createdBy',          'dataType': None, 'size': None, 'sqlID':'created_by'},
-        {'label': 'reportTitle',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 50, 'sqlID':'report_title'},
-        {'label': 'status',             'dataType': None, 'size': None, 'sqlID':'status'},
-        {'label': 'projectName',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 50, 'sqlID':'project_name'},
-        {'label': 'ticketNum',          'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'ticket_num'},
-        {'label': 'supplier',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'supplier'},
-        {'label': 'loadNum',            'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'load_num'},
-        {'label': 'truckNum',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'truck_num'},
-        {'label': 'contractor',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'contractor'},
-        {'label': 'sampledFrom',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'sampled_from'},
-        {'label': 'mixID',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'mix_id'},
-        {'label': 'mouldType',          'dataType': None, 'size': None, 'sqlID':'mould_type'},
-        {'label': 'poNum',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'po_num'},
-        {'label': 'placementType',      'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'placement_type'},
-        {'label': 'cementType',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 25, 'sqlID':'cement_type'},
-        {'label': 'volume',             'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': 5, 'sqlID':'load_volume'},
-        {'label': 'volumeUnits',        'dataType': None, 'size': None, 'sqlID':'volume_units'},
-        {'label': 'castDate',           'dataType': None, 'size': None, 'sqlID':'date_cast'},
-        {'label': 'castTime',           'dataType': None, 'size': None, 'sqlID':'time_cast'},
-        {'label': 'batchTime',          'dataType': None, 'size': None, 'sqlID':'time_batch'},
-        {'label': 'sampleTime',         'dataType': None, 'size': None, 'sqlID':'time_sample'},
-        {'label': 'dateTransported',    'dataType': None, 'size': None, 'sqlID':'date_transported'},
-        {'label': 'dateReceived',       'dataType': None, 'size': None, 'sqlID':'date_received'},
-        {'label': 'dateReceivedEqual',  'dataType': None, 'size': None, 'sqlID':'date_received_equal'},
-        {'label': 'dateSpecimen',       'dataType': None, 'size': None, 'sqlID':'date_specimen'},
-        {'label': 'dateSpecimenEqual',  'dataType': None, 'size': None, 'sqlID':'date_specimen_equal'},
-        {'label': 'notes',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'size': None, 'sqlID':'notes'},
-        {'label': 'isScc',              'dataType': None, 'size': None, 'sqlID':'is_scc'},
+        {'label': 'projectID',                                                                      'sqlID':'project_id'},
+        {'label': 'cylinderID',                                                                     'sqlID':'auto_id'},
+        {'label': 'dateCreated',                                                                    'sqlID':'date_created'},
+        {'label': 'createdBy',                                                                      'sqlID':'created_by'},
+        {'label': 'reportTitle',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 255, 'sqlID':'report_title'},
+        {'label': 'status',                                                                         'sqlID':'status'},
+        {'label': 'projectName',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'project_name'},
+        {'label': 'ticketNum',          'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'ticket_num'},
+        {'label': 'supplier',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'supplier'},
+        {'label': 'loadNum',            'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'load_num'},
+        {'label': 'truckNum',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'truck_num'},
+        {'label': 'contractor',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'contractor'},
+        {'label': 'sampledFrom',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'sampled_from'},
+        {'label': 'mixID',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'mix_id'},
+        {'label': 'mouldType',                                                                      'sqlID':'mould_type'},
+        {'label': 'poNum',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'po_num'},
+        {'label': 'placementType',      'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'placement_type'},
+        {'label': 'cementType',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'cement_type'},
+        {'label': 'volume',             'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 5, 'sqlID':'load_volume'},
+        {'label': 'volumeUnits',                                                                    'sqlID':'volume_units'},
+        {'label': 'castDate',                                                                       'sqlID':'date_cast'},
+        {'label': 'castTime',                                                                       'sqlID':'time_cast'},
+        {'label': 'batchTime',                                                                      'sqlID':'time_batch'},
+        {'label': 'sampleTime',                                                                     'sqlID':'time_sample'},
+        {'label': 'dateTransported',                                                                'sqlID':'date_transported'},
+        {'label': 'dateReceived',                                                                   'sqlID':'date_received'},
+        {'label': 'dateReceivedEqual',                                                              'sqlID':'date_received_equal'},
+        {'label': 'dateSpecimen',                                                                   'sqlID':'date_specimen'},
+        {'label': 'dateSpecimenEqual',                                                              'sqlID':'date_specimen_equal'},
+        {'label': 'notes',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 2000,'sqlID':'notes'},
+        {'label': 'isScc',                                                                          'sqlID':'is_scc'},
+        {'label': 'naturalAir',                                                                      'sqlID':'natural_air'},
     ]
 
     FORM_FIELD_TEMPLATE = [{
@@ -156,8 +167,8 @@ class CylinderReport(Reports):
     STR_LABELS = [
         {'label':'strength',     'dataType':GLB.VALIDATION_TYPES['POS_INT'],        'size':{'min': 0, 'max': 999},      'sqlID':'target_strength'},
         {'label':'days',         'dataType':GLB.VALIDATION_TYPES['POS_INT'],        'size':{'min': 0, 'max': 999},      'sqlID':'target_days'},
-        {'label':'visible',      'dataType':None,                                   'size': None,                       'sqlID':'target_visible'},
-        {'label':'autoID',       'dataType':None,                                   'size': None,                       'sqlID':'auto_id'},
+        {'label':'visible', 'sqlID':'target_visible'},
+        {'label':'autoID',  'sqlID':'auto_id'},
     ]
 
     FORM_STR_TEMPLATE = [
@@ -166,12 +177,12 @@ class CylinderReport(Reports):
 
 
     CONDITIONS_LABELS = [
-        {'label': 'actual',     'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
-        {'label': 'min',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
-        {'label': 'max',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'size': 10},
-        {'label': 'notes',      'dataType': GLB.VALIDATION_TYPES['TEXT'],   'size': 2000},
-        {'label': 'cylReportID','dataType': None,                           'size': None},
-        {'label': 'autoID',     'dataType': None,                           'size': None},
+        {'label': 'actual',     'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
+        {'label': 'min',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
+        {'label': 'max',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
+        {'label': 'notes',      'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 500},
+        {'label': 'cylReportID'},
+        {'label': 'autoID'},
     ]
 
     #Template for field/measurement data and properties
@@ -274,7 +285,7 @@ class CylinderReport(Reports):
         'po_num':                      {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50,                                      'data':None},
         'placement_type':              {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50,                                      'data':None},
         'cement_type':                 {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50,                                      'data':None},
-        'load_volume':                 {'dataType': SQL.DATATYPES.VARCHAR,     'size': 50,                                      'data':None},
+        'load_volume':                 {'dataType': SQL.DATATYPES.VARCHAR_DECIMAL,     'size': 10,                              'data':None},
         'load_volume_units':           {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums': UNITS_OPTIONS,            'data':None},
         'date_cast':                   {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
         'time_batch':                  {'dataType': SQL.DATATYPES.TIME,        'size': None,                                    'data':None},
@@ -285,6 +296,7 @@ class CylinderReport(Reports):
         'date_received_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
         'date_specimen':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
         'date_specimen_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
+        'natural_air':                 {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
         'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
@@ -462,8 +474,22 @@ class CylinderReport(Reports):
                     #Assign the key values to fieldData
                     fieldData['label'] = fullLabel
                     fieldData['val'] = ''
-                    fieldData['dataType'] = row['dataType']
-                    fieldData['size'] = copy.deepcopy(row['size'])
+
+                    if (not 'size' in row):
+                        fieldData['size'] = None
+                    else:
+                        fieldData['size'] = copy.deepcopy(row['size'])
+
+                    if (not 'maxlength' in row):
+                        fieldData['maxlength'] = None
+                    else:
+                        fieldData['maxlength'] = row['maxlength']
+
+                    if (not 'dataType' in row):
+                        fieldData['dataType'] = None
+                    else:
+                        fieldData['dataType'] = row['dataType']
+
                     fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
 
                     data['dataFields'][key] = fieldData
@@ -526,6 +552,11 @@ class CylinderReport(Reports):
 
         dataFields['notes']['val'] = sqlResult['notes']
         dataFields['isScc']['val'] = sqlResult['is_scc']
+
+        if(sqlResult['natural_air'] == 1):
+            dataFields['naturalAir']['val'] = 'checked'
+        else:
+            dataFields['naturalAir']['val'] = ''
 
         # Do some processing for the dateReceivedEqual checkbox
         if (sqlResult['date_received_equal'] == 1):
@@ -703,6 +734,10 @@ class CylinderReport(Reports):
 
         sqlData['auto_id']['data'] = fieldData['cylinderID']['val']
 
+        if(fieldData['naturalAir']['val'] == 'on'):
+            sqlData['natural_air']['data'] = 1
+        else:
+            sqlData['natural_air']['data'] = 0
 
         #Processing dateReceived checkbox. 'on' is what a checked checkbox returns if no value specified
         if(fieldData['dateReceivedEqual']['val'] == 'on'):
@@ -818,7 +853,8 @@ class CylinderReport(Reports):
             "sccData": self.SCC_OPTIONS,
             "statusData": self.STATUS_TABLE,
             "separatorData": self.SEPARATOR_OPTIONS,
-            "setData": self.SET_OPTIONS
+            "setData": self.SET_OPTIONS,
+            "conditionsPrecision":self.CONDITIONS_PRECISION
         }
 
         return dataTables

@@ -29,7 +29,7 @@
 
 			{% if pageData.editing %}
 
-				<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.reportTitle.label }}" name="{{ data.fieldTable.dataFields.reportTitle.label }}" size="60" value="{{ data.fieldTable.dataFields.reportTitle.val }}" aria-describedby="textDesc">
+				<input type="text" class="form-control"  size="80" maxlength="{{ data.fieldTable.dataFields.reportTitle.maxlength }}" id="{{ data.fieldTable.dataFields.reportTitle.label }}" name="{{ data.fieldTable.dataFields.reportTitle.label }}" value="{{ data.fieldTable.dataFields.reportTitle.val }}" aria-describedby="textDesc">
 			{% else %}
 				{{ data.fieldTable.dataFields.reportTitle.val | e }}
 			{% endif %}
@@ -61,7 +61,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" maxlength="50" class="form-control" id="{{ data.fieldTable.dataFields.projectName.label }}" name="{{ data.fieldTable.dataFields.projectName.label }}"  value="{{ data.fieldTable.dataFields.projectName.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.projectName.maxlength }}" id="{{ data.fieldTable.dataFields.projectName.label }}" name="{{ data.fieldTable.dataFields.projectName.label }}"  value="{{ data.fieldTable.dataFields.projectName.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.projectName.val | e }}
 							{% endif %}
@@ -76,7 +76,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.contractor.label }}" name="{{ data.fieldTable.dataFields.contractor.label }}"  value="{{ data.fieldTable.dataFields.contractor.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.contractor.maxlength }}" id="{{ data.fieldTable.dataFields.contractor.label }}" name="{{ data.fieldTable.dataFields.contractor.label }}"  value="{{ data.fieldTable.dataFields.contractor.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.contractor.val | e }}
 							{% endif %}
@@ -85,8 +85,6 @@
 					</div>
 						
 				</div>
-
-
 				
 				<div class="row">
 					<div class="col">
@@ -96,7 +94,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.placementType.label }}" name="{{ data.fieldTable.dataFields.placementType.label }}"  value="{{ data.fieldTable.dataFields.placementType.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.placementType.maxlength }}" id="{{ data.fieldTable.dataFields.placementType.label }}" name="{{ data.fieldTable.dataFields.placementType.label }}"  value="{{ data.fieldTable.dataFields.placementType.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.placementType.val | e }}
 							{% endif %}
@@ -111,7 +109,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.ticketNum.label }}" name="{{ data.fieldTable.dataFields.ticketNum.label }}"  value="{{ data.fieldTable.dataFields.ticketNum.val }}" aria-describedby="textDesc">
+								<input type="text" maxlength="{{ data.fieldTable.dataFields.ticketNum.maxlength }}" class="form-control" id="{{ data.fieldTable.dataFields.ticketNum.label }}" name="{{ data.fieldTable.dataFields.ticketNum.label }}"  value="{{ data.fieldTable.dataFields.ticketNum.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.ticketNum.val | e }}
 							{% endif %}
@@ -130,7 +128,7 @@
 							
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.sampledFrom.label }}" name="{{ data.fieldTable.dataFields.sampledFrom.label }}"  value="{{ data.fieldTable.dataFields.sampledFrom.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.sampledFrom.maxlength }}" id="{{ data.fieldTable.dataFields.sampledFrom.label }}" name="{{ data.fieldTable.dataFields.sampledFrom.label }}"  value="{{ data.fieldTable.dataFields.sampledFrom.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.sampledFrom.val | e }}
 							{% endif %}
@@ -145,7 +143,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.cementType.label }}" name="{{ data.fieldTable.dataFields.cementType.label }}"  value="{{ data.fieldTable.dataFields.cementType.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.cementType.maxlength }}" id="{{ data.fieldTable.dataFields.cementType.label }}" name="{{ data.fieldTable.dataFields.cementType.label }}"  value="{{ data.fieldTable.dataFields.cementType.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.cementType.val | e }}
 							{% endif %}
@@ -165,7 +163,7 @@
 							
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.supplier.label }}" name="{{ data.fieldTable.dataFields.supplier.label }}"  value="{{ data.fieldTable.dataFields.supplier.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.supplier.maxlength }}" id="{{ data.fieldTable.dataFields.supplier.label }}" name="{{ data.fieldTable.dataFields.supplier.label }}"  value="{{ data.fieldTable.dataFields.supplier.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.supplier.val | e }}
 							{% endif %}
@@ -180,7 +178,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.mixID.label }}" name="{{ data.fieldTable.dataFields.mixID.label }}"  value="{{ data.fieldTable.dataFields.mixID.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.mixID.maxlength }}" id="{{ data.fieldTable.dataFields.mixID.label }}" name="{{ data.fieldTable.dataFields.mixID.label }}"  value="{{ data.fieldTable.dataFields.mixID.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.mixID.val | e }}
 							{% endif %}
@@ -202,7 +200,7 @@
 							{% if pageData.editing %}
 								<div class="row align-items-center">
 									<div class="col-5">
-										<input type="text" maxlength="4" class="form-control" id="{{ data.fieldTable.dataFields.volume.label }}" name="{{ data.fieldTable.dataFields.volume.label }}"  value="{{ data.fieldTable.dataFields.volume.val }}" aria-describedby="textDesc">
+										<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.volume.maxlength }}" id="{{ data.fieldTable.dataFields.volume.label }}" name="{{ data.fieldTable.dataFields.volume.label }}"  value="{{ data.fieldTable.dataFields.volume.val }}" aria-describedby="textDesc">
 									</div>
 									
 									{% for key,value in tables.loadVolumeData.items() %}
@@ -231,7 +229,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.loadNum.label }}" name="{{ data.fieldTable.dataFields.loadNum.label }}"  value="{{ data.fieldTable.dataFields.loadNum.label.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.loadNum.maxlength }}" id="{{ data.fieldTable.dataFields.loadNum.label }}" name="{{ data.fieldTable.dataFields.loadNum.label }}"  value="{{ data.fieldTable.dataFields.loadNum.label.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.loadNum.val | e }}
 							{% endif %}
@@ -250,7 +248,7 @@
 							
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.truckNum.label }}" name="{{ data.fieldTable.dataFields.truckNum.label }}"  value="{{ data.fieldTable.dataFields.truckNum.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.truckNum.maxlength }}" id="{{ data.fieldTable.dataFields.truckNum.label }}" name="{{ data.fieldTable.dataFields.truckNum.label }}"  value="{{ data.fieldTable.dataFields.truckNum.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.truckNum.val | e }}
 							{% endif %}
@@ -287,7 +285,7 @@
 							</div>
 							<div class="cylFormData">
 							{% if pageData.editing %}
-								<input type="text" class="form-control" id="{{ data.fieldTable.dataFields.poNum.label }}" name="{{ data.fieldTable.dataFields.poNum.label }}"  value="{{ data.fieldTable.dataFields.poNum.val }}" aria-describedby="textDesc">
+								<input type="text" class="form-control" maxlength="{{ data.fieldTable.dataFields.poNum.maxlength }}" id="{{ data.fieldTable.dataFields.poNum.label }}" name="{{ data.fieldTable.dataFields.poNum.label }}"  value="{{ data.fieldTable.dataFields.poNum.val }}" aria-describedby="textDesc">
 							{% else %}
 								{{ data.fieldTable.dataFields.poNum.val | e }}
 							{% endif %}
@@ -512,8 +510,27 @@
 	<table class="table table-bordered align-middle">
 		<thead>
 			<tr>
-				<th colspan="5">Measurements:</td>
+				<th colspan="5">Measurements:</th>
 			</tr>
+			
+			{% if pageData.editing %}
+			<tr>
+				<th colspan="5">	
+				<div class="row">
+					<div class="col">
+						<label class="form-check-label">Options:</label>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<input class="form-check-input" type="checkbox" id="{{ data.fieldTable.dataFields.naturalAir.label }}" name="{{ data.fieldTable.dataFields.naturalAir.label }}"  {{ data.fieldTable.dataFields.naturalAir.val }}> 
+						<label class="form-check-label normal-text" for="{{ data.fieldTable.dataFields.naturalAir.label }}">Natural Air</label>
+					</div>
+				</div>
+		
+					</th>
+			</tr>
+			{% endif %}
 
 			<tr class="align-center">
 				<th scope="col" class="cylConditionsLabel"></th>
@@ -534,18 +551,23 @@
 	
 				{% if pageData.editing %}
 					
-					
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.dataFields.actual.label }}" name="{{ row.dataFields.actual.label }}"  value="{{ row.dataFields.actual.val }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.dataFields.min.label }}" name="{{ row.dataFields.min.label }}"  value="{{ row.dataFields.min.val }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control cylConditionsData" id="{{ row.dataFields.max.label }}" name="{{ row.dataFields.max.label }}"  value="{{ row.dataFields.max.val }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1000" class="form-control cylConditionsNotesText" id="{{ row.dataFields.notes.label }}" name="{{ row.dataFields.notes.label }}"  value="{{ row.dataFields.notes.val }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="{{ row.dataFields.actual.maxlength }}" class="form-control cylConditionsData" id="{{ row.dataFields.actual.label }}" name="{{ row.dataFields.actual.label }}"  value="{{ row.dataFields.actual.val }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="{{ row.dataFields.min.maxlength }}" class="form-control cylConditionsData" id="{{ row.dataFields.min.label }}" name="{{ row.dataFields.min.label }}"  value="{{ row.dataFields.min.val }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="{{ row.dataFields.max.maxlength }}" class="form-control cylConditionsData" id="{{ row.dataFields.max.label }}" name="{{ row.dataFields.max.label }}"  value="{{ row.dataFields.max.val }}" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="{{ row.dataFields.notes.maxlength }}" class="form-control cylConditionsNotesText" id="{{ row.dataFields.notes.label }}" name="{{ row.dataFields.notes.label }}"  value="{{ row.dataFields.notes.val }}" aria-describedby="textDesc"></td>
 					<input type="hidden" name="{{ row.dataFields.autoID.label }}" value="{{ row.dataFields.autoID.val }}">
 
 				{% else %}
 					
-					<td>{{ row.dataFields.actual.val | measurements_f }}</td>
-					<td>{{ row.dataFields.min.val | measurements_f }}</td>
-					<td>{{ row.dataFields.max.val | measurements_f }}</td>
+					<td>{{ row.dataFields.actual.val | conditions_val_f }}</td>
+					
+					{% if ((row.property == 'air') and (data.fieldTable.dataFields.naturalAir.val == 'checked')) %}
+						<td colspan="2">Natural</td>
+					{% else %}	
+						<td>{{ row.dataFields.min.val | measurements_f }}</td>
+						<td>{{ row.dataFields.max.val | measurements_f }}</td>
+
+					{% endif %}
 					<td class="align-left">{{ row.dataFields.notes.val }}</td>
 					
 				{% endif %}
@@ -843,6 +865,10 @@
 				<td>Date Created:</td>
 				<td> {{ data.fieldTable.dataFields.dateCreated.val | date_created_f }} </td>
 			</tr>
+			<tr class="align-middle">
+				<td>Date Modified:</td>
+				<td>  </td>
+			</tr>
 
 
 		</tbody>
@@ -883,8 +909,8 @@
     </script>
 
 
-	{% if pageData.editing %}
-		<script src="{{ url_for('static', filename='js/cyl_form_edit.js') }}"></script> 
-	{% endif %}
-		<script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
+
+	<script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
+
+		
 {% endblock %}

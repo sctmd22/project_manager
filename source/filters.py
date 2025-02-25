@@ -129,10 +129,16 @@ def scc_f(str):
     return fStr
 
 def measurements_f(val):
+    return val
 
 
+def conditions_val_f(val):
+    if(val == ''):
+        return val
 
     return val
+
+
 
 
 filters = {
@@ -147,6 +153,7 @@ filters = {
     'volume_units_f':volume_units_f,
     'volume_precision_f':volume_precision_f,
     'scc_f':scc_f,
-    'measurements_f':measurements_f
+    'measurements_f':measurements_f,
+    'conditions_val_f':conditions_val_f
 
 }

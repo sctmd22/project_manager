@@ -1,7 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for
 
-#Custom file routes
-from routes import project_routes, cylinder_routes, cube_routes
+
+from routes.project_routes import projects_bp
+
+from routes.reports.cylinder_routes import cylinders_bp
+from routes.reports.cube_routes import cubes_bp
+from routes.reports.prism_routes import prisms_bp
+
+from routes.settings_routes import settings_bp
 
 #Custom flask filters
 from filters import filters
@@ -9,10 +15,13 @@ from helpers.helpers import generateBreadcrumbs
 
 app = Flask(__name__)
 
-#Register custom routes as blueprints
-app.register_blueprint(project_routes.bp)
-app.register_blueprint(cylinder_routes.bp)
-app.register_blueprint(cube_routes.bp)
+app.register_blueprint(projects_bp)
+
+app.register_blueprint(cylinders_bp)
+app.register_blueprint(cubes_bp)
+app.register_blueprint(prisms_bp)
+
+app.register_blueprint(settings_bp)
 
 #Register custom filters
 for name,func in filters.items():
