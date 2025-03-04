@@ -1,9 +1,14 @@
+import datetime
+import decimal
+
+from datetime import datetime, timedelta
+
 import GLOBALS as GB
 import classes as CLS
+from decimal import Decimal, ROUND_HALF_UP
+from helpers import helpers as HLP
 
 def strip_date_f(date):
-    if(date == None):
-        return ""
 
     try:
         newDate = date.strftime('%I:%M')
@@ -16,8 +21,10 @@ def strip_date_f(date):
 def date_created_f(date):
     """Custom Jinja filter to format start_dates in project reports"""
 
+    newDate = HLP.parseDate(date, GB.DATE_FORMATS)
+
     try:
-        newDate = date.strftime('%B %d, %Y - %I:%M:%S %p')
+        newDate = newDate.strftime('%B %d, %Y - %I:%M:%S %p')
 
     except:
         return date
@@ -128,16 +135,28 @@ def scc_f(str):
 
     return fStr
 
-def measurements_f(val):
-    return val
-
-
-def conditions_val_f(val):
+def round_val_f(val, precision=0):
+    FUNC_NAME = "round_val_f(val, precision=0)"
     if(val == ''):
         return val
 
-    return val
+    if(not isinstance(precision, int)):
+        print(f"Error: {FUNC_NAME}: precision is not an integer. precision = {precision}")
+        return val
 
+    try:
+        num = Decimal(val)
+        # Ensure 0.5 rounds to 1
+        rounded_value = num.quantize(Decimal(f"1e-{precision}"), rounding=ROUND_HALF_UP)
+
+        return rounded_value
+
+    except ValueError as e:
+        print(f"{e}")
+        return val
+
+    except decimal.InvalidOperation as e:
+        print(f"{e}")
 
 
 
@@ -153,7 +172,5 @@ filters = {
     'volume_units_f':volume_units_f,
     'volume_precision_f':volume_precision_f,
     'scc_f':scc_f,
-    'measurements_f':measurements_f,
-    'conditions_val_f':conditions_val_f
-
+    'round_val_f':round_val_f
 }
