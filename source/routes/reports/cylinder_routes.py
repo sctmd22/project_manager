@@ -35,6 +35,19 @@ def cylinders():
     return render_template("reports/cylinders/cylinders.html", breadCrumbs=breadCrumbs, data=result, pageData=pageData)
 
 
+@cylinders_bp.route("/get_json_data/<int:cylinder_id>")
+def get_json_data(cylinder_id):
+    editing = HLP.get_edit()
+
+    if(cylinder_id > 0):
+        cylReport = CylinderReport.create_from_db(cylinder_id, editing)
+    else:
+        cylReport = CylinderReport.create_default()
+
+    jsonData = cylReport.to_json()
+
+    return jsonData
+
 @cylinders_bp.route("/new")
 def new_cylinder():
     breadCrumbs = generateBreadcrumbs()
@@ -47,7 +60,7 @@ def new_cylinder():
     #Create the CylinderReport object with defaults
     cylReport = CylinderReport.create_default()
 
-    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
+    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), jsonData=cylReport.to_json(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
 
 @cylinders_bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
@@ -59,37 +72,13 @@ def view_cylinder(cylinder_id):
     pageData["pageTitle"] = "Cylinder Report"
     pageData["bcTitle"] = pageData["pageTitle"]
     pageData["editing"] = editing
-
+    pageData['newCylinder'] = False
 
     #Create the CylinderReport object loading the data from the database
     cylReport = CylinderReport.create_from_db(cylinder_id, editing)
 
-    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), tables = cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
+    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), jsonData=cylReport.to_json(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
 
-
-@cylinders_bp.route("/submit", methods=['POST'])
-def submit_cylinder():
-
-    #Create the CylinderReport object with defaults
-    cylReport = CylinderReport.create_default()
-
-    print(f"Debugging? submit_cylinder(): cylReport.id = {cylReport.id}")
-
-    cylReport.submit_form()
-
-    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=cylReport.id))
-
-
-
-@cylinders_bp.route("/update", methods=['POST'])
-def update_cylinder():
-    cylinder_id = request.form['cylinderID']
-
-    cylReport = CylinderReport.create_from_db(cylinder_id, True)    #Set editing to True so the strength table creates the full table before submission
-
-    cylReport.submit_edit()
-
-    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=cylinder_id))
 
 @cylinders_bp.route("/<int:cylinder_id>/delete")
 def confirm_delete(cylinder_id):
@@ -102,6 +91,25 @@ def confirm_delete(cylinder_id):
     data['id'] = cylinder_id #Need to pass the id to a hidden input so the actual delete function can read it back
 
     return render_template("reports/cylinders/delete_cylinder.html", data=data, breadCrumbs=breadCrumbs, pageData=pageData)
+
+@cylinders_bp.route("/submit", methods=['POST'])
+def submit_cylinder():
+    #Create the CylinderReport object with defaults
+    cylReport = CylinderReport.create_default()
+
+    cylReport.submit_form()
+
+    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=cylReport.id))
+
+@cylinders_bp.route("/update", methods=['POST'])
+def update_cylinder():
+    cylinder_id = request.form['cylinderID']
+
+    cylReport = CylinderReport.create_from_db(cylinder_id, True)    #Set editing to True so the strength table creates the full table before submission
+
+    cylReport.submit_edit()
+
+    return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id=cylinder_id))
 
 
 @cylinders_bp.route("/delete/submit", methods=["POST"])
@@ -118,3 +126,5 @@ def delete_cylinder():
 def cancel_delete(cylinder_id):
 
     return redirect(url_for("cylinders_bp.view_cylinder", cylinder_id = cylinder_id))
+
+

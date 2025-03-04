@@ -1,16 +1,18 @@
 import copy
 from datetime import datetime, timedelta
 from sys import exception
+from time import strptime
 
 from werkzeug.exceptions import BadRequestKeyError
 
-from GLOBALS import *
+import GLOBALS as GB
 from flask import request
 import decimal
 import db as db
 
 from db import sql_data as SQL
 
+MODULE_NAME = "helpers"
 
 def get_form_values(formData):
     '''
@@ -86,41 +88,6 @@ def get_form_values(formData):
 
     return dataList
 
-
-def get_form_values_old(formData):
-    FUNC_NAME = "get_form_values(formData)"
-
-    if(not formData):
-        print(f"Error: {FUNC_NAME}: formData is empty")
-        return None
-
-    if(not isinstance(formData, list)):
-        print(f"Error: {FUNC_NAME}: formData is not a list. formData = {formData}")
-        return None
-
-    dataList = copy.deepcopy(formData)
-
-    for row in dataList:
-
-        #If the labels key exists and has data, iterate through the elements requesting the form data
-        if('labels' in row):
-            for key, val in row['labels'].items():
-                try:
-                    row['valueData'][key] = request.form[row['labels'][key]]
-                except BadRequestKeyError as e:
-                    print(f"Error: {FUNC_NAME}: Could not request HTML element where name = {row['labels'][key]}")
-
-    data = {}
-
-    #Convert list of dicts to dictionary for easier value assignment. Use the value in the 'name' key as the new
-        #key for each dict entry
-    for row in dataList:
-        key = row['name']
-        del row['name']
-        data[key] = row
-
-    return data
-
 def strToIntID(val):
     FUNC_NAME = "strToIntID()"
 
@@ -137,7 +104,6 @@ def strToIntID(val):
 
     return newInt
 
-
 #Get the 'edit' argument from the url and check if it is true or false
 def get_edit():
     arg = 'edit'
@@ -148,7 +114,6 @@ def get_edit():
         return True
     else:
         return False
-
 
 def sql_delete(sql_table, delID):
     """
@@ -176,7 +141,6 @@ def sql_delete(sql_table, delID):
         return numRows
     else:
         return 0
-
 
 def __sql_delete_item(sql_table, id):
     FUNC_NAME = "__sql_delete_item(sql_table, id):"
@@ -206,7 +170,6 @@ def __sql_delete_item(sql_table, id):
     except db.Error as e:
         print(f"Error: {FUNC_NAME}: {e}")
         return 0
-
 
 def sql_update(sql_table, dataListIn):
     """
@@ -282,7 +245,6 @@ def sql_update(sql_table, dataListIn):
             returnVal = False
 
     return returnVal
-
 
 def sql_insert(sql_table, dataList):
     """
@@ -371,6 +333,43 @@ def sql_insert(sql_table, dataList):
 
     return IDList
 
+def parseDate(data, ENUMS):
+    '''
+        Convert a string to a datetime object
+
+    :param date:
+    :return:
+    '''
+
+    FUNC_NAME = MODULE_NAME + ".parseDate(data, ENUMS)"
+
+    if(not data):
+        print(f"Warning: {FUNC_NAME}: data={data} is false")
+        return None
+
+    if(not isinstance(data, str)):
+        data = toStr(data)
+
+    success = False
+
+    # Attempt to convert from string to a date time object using several formats
+    if (data):
+        for format in ENUMS:
+            try:
+                data = datetime.strptime(data, format.value)
+
+            except ValueError:
+                continue
+
+            else:
+                success = True
+                return data
+
+    if (not success):
+        print(f"Warning: {FUNC_NAME}: data={data} could not be formatted to a datetime object")
+
+    return None
+
 def sql_sanitize(valueList):
     """
         Ensure all the incoming data is formatted and truncated for the SQL database
@@ -413,7 +412,6 @@ def sql_sanitize(valueList):
                 sizeMin = sizeLimit['MIN']
                 sizeMax = sizeLimit['MAX']
 
-
             if(dataType == SQL.DATATYPES.VARCHAR):
                 data = str(data)
                 dataLen = len(data)
@@ -447,46 +445,12 @@ def sql_sanitize(valueList):
 
             elif(dataType == SQL.DATATYPES.DATETIME):
                 data = toStr(data)
-                success = False
-
-                # Attempt to convert from string to a date time object using several formats
-                if(data):
-                    for format in DATE_FORMATS:
-                        try:
-                            data = datetime.strptime(data, format.value)
-
-                        except ValueError:
-                            continue
-
-                        else:
-                            success = True
-                            break
-
-                if(not success):
-                    print(f"Warning: {FUNC_NAME}: data={data} could not be formatted to a datetime object")
-                    data = None
+                data = parseDate(data, GB.DATE_FORMATS)
 
 
             elif(dataType == SQL.DATATYPES.TIME):
                 data = toStr(data)
-                success = False
-
-                # Attempt to convert from string to a date time object using several formats
-                if (data):
-                    for format in TIME_FORMATS:
-                        try:
-                            data = datetime.strptime(data, format.value)
-
-                        except ValueError:
-                            continue
-
-                        else:
-                            success = True
-                            break
-
-                if (not success):
-                    print(f"Warning: {FUNC_NAME}: data={data} could not be formatted to a datetime object")
-                    data = None
+                data = parseDate(data, GB.TIME_FORMATS)
 
             elif(dataType == SQL.DATATYPES.ENUM):
                 #Checking to ensure passed enum exists in passed dict
@@ -514,12 +478,9 @@ def sql_sanitize(valueList):
             else:
                 data = None
 
-
             newRow[key]['data'] = data
 
         newList.append(newRow)
-
-
     return newList
 
 def compare_int_size(integer, min, max):
@@ -571,7 +532,7 @@ def toStr(val):
 def processSql(sqlData):
     """
     1. Replace all instances of None with the returnType ('')
-    2. Stringify timedeltas
+    2. Stringify timedeltas (need to do this for json serialization)
 
     :param sqlData: Any data which may contain None types
         1. A single variable
@@ -602,7 +563,6 @@ def processSql(sqlData):
     else:
         return sqlData
 
-
 def __replaceNoneDict(data, returnType):
     """
     :param dataDict:     Recursively iterate through a dictionary, setting all values of None to ''
@@ -614,6 +574,7 @@ def __replaceNoneDict(data, returnType):
         return returnType
 
     elif(isinstance(data, timedelta)):
+        #print(f"Found timedelta = {data}. Converting to string = {str(data)}")
         return str(data)
 
     elif(isinstance(data, dict)):
@@ -631,8 +592,6 @@ def capitalizeFirst(val):
         return val
 
     return val[:1].upper() + val[1:]
-
-
 
 def generateBreadcrumbs():
     '''
@@ -681,4 +640,30 @@ def generateBreadcrumbs():
         breadCrumbsList.append(data)
 
     return breadCrumbsList
+
+def dateToStr(date, format):
+    '''
+    Convert a datetime object to a string in the specified format
+
+    :param date: A datetime object
+    :param format: A string of date formatting options
+    :return: The formatted date string
+    '''
+    FUNC_NAME = "dateToStr(date, format)"
+
+    if(not isinstance(date, datetime)):
+        print(f"Error: {FUNC_NAME}: date={date} is not a datetime object")
+        return ''
+
+    try:
+        newDate = date.strftime(format)
+        return newDate
+
+    except:
+        print(f"Error: {FUNC_NAME}: Could not format date={date} is not a datetime object")
+        return date
+
+
+def listToDict():
+    pass
 

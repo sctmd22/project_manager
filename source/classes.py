@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+import json
 
 from filters import strip_date_f
 from helpers import helpers as HLP
@@ -89,6 +89,11 @@ class CylinderReport(Reports):
         'yards': 'yd'
     }
 
+    AIR_OPTIONS = {
+        'custom':'As Measured',
+        'natural':'Natural Air',
+        'none':'No Air Spec'
+    }
 
     #This looks stupid. As with other 'options', the left is what is stored in SQL and the right is what is displayed
         #on the webpage
@@ -101,52 +106,39 @@ class CylinderReport(Reports):
         '6':'6'
     }
 
-    CONDITIONS_PRECISION = {
-        'flow':         {'actual': 0, 'min': 0, 'max': 0},
-        't_50':         {'actual': 0, 'min': 0, 'max': 0},
-        'vsi':          {'actual': 0, 'min': 0, 'max': 0},
-        'slump':        {'actual': 0, 'min': 0, 'max': 0},
-        'air':          {'actual': 0, 'min': 0, 'max': 0},
-        'density':      {'actual': 0, 'min': 0, 'max': 0},
-        'sampleTemp':   {'actual': 0, 'min': 0, 'max': 0},
-        'ambientTemp':  {'actual': 0, 'min': 0, 'max': 0},
-        'initialTemp':  {'actual': 0, 'min': 0, 'max': 0},
-    }
-
-
     FORM_LABELS = [
-        {'label': 'projectID',                                                                      'sqlID':'project_id'},
-        {'label': 'cylinderID',                                                                     'sqlID':'auto_id'},
-        {'label': 'dateCreated',                                                                    'sqlID':'date_created'},
-        {'label': 'createdBy',                                                                      'sqlID':'created_by'},
-        {'label': 'reportTitle',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 255, 'sqlID':'report_title'},
-        {'label': 'status',                                                                         'sqlID':'status'},
-        {'label': 'projectName',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'project_name'},
-        {'label': 'ticketNum',          'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'ticket_num'},
-        {'label': 'supplier',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'supplier'},
-        {'label': 'loadNum',            'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'load_num'},
-        {'label': 'truckNum',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'truck_num'},
-        {'label': 'contractor',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'contractor'},
-        {'label': 'sampledFrom',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'sampled_from'},
-        {'label': 'mixID',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'mix_id'},
-        {'label': 'mouldType',                                                                      'sqlID':'mould_type'},
-        {'label': 'poNum',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'po_num'},
-        {'label': 'placementType',      'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'placement_type'},
-        {'label': 'cementType',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25,  'sqlID':'cement_type'},
-        {'label': 'volume',             'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 5, 'sqlID':'load_volume'},
-        {'label': 'volumeUnits',                                                                    'sqlID':'volume_units'},
-        {'label': 'castDate',                                                                       'sqlID':'date_cast'},
-        {'label': 'castTime',                                                                       'sqlID':'time_cast'},
-        {'label': 'batchTime',                                                                      'sqlID':'time_batch'},
-        {'label': 'sampleTime',                                                                     'sqlID':'time_sample'},
-        {'label': 'dateTransported',                                                                'sqlID':'date_transported'},
-        {'label': 'dateReceived',                                                                   'sqlID':'date_received'},
-        {'label': 'dateReceivedEqual',                                                              'sqlID':'date_received_equal'},
-        {'label': 'dateSpecimen',                                                                   'sqlID':'date_specimen'},
-        {'label': 'dateSpecimenEqual',                                                              'sqlID':'date_specimen_equal'},
-        {'label': 'notes',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 2000,'sqlID':'notes'},
-        {'label': 'isScc',                                                                          'sqlID':'is_scc'},
-        {'label': 'naturalAir',                                                                      'sqlID':'natural_air'},
+        {'label': 'projectID'},
+        {'label': 'cylinderID'},
+        {'label': 'dateCreated'},
+        {'label': 'createdBy'},
+        {'label': 'reportTitle',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 255},
+        {'label': 'status'},
+        {'label': 'projectName',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'ticketNum',          'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'supplier',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'loadNum',            'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'truckNum',           'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'contractor',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'sampledFrom',        'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'mixID',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'mouldType',                                                                    },
+        {'label': 'poNum',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'placementType',      'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'cementType',         'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 25},
+        {'label': 'volume',             'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 5, 'precision':2},
+        {'label': 'volumeUnits',                                                                  },
+        {'label': 'castDate',                                                                     },
+        {'label': 'castTime',                                                                     },
+        {'label': 'batchTime',                                                                    },
+        {'label': 'sampleTime',                                                                   },
+        {'label': 'dateTransported',                                                              },
+        {'label': 'dateReceived',                                                                 },
+        {'label': 'dateReceivedEqual',                                                            },
+        {'label': 'dateSpecimen',                                                                 },
+        {'label': 'dateSpecimenEqual',                                                            },
+        {'label': 'notes',              'dataType': GLB.VALIDATION_TYPES['TEXT'], 'maxlength': 2000},
+        {'label': 'isScc',                                                                         },
+        {'label': 'airOptions',                                                                    },
     ]
 
     FORM_FIELD_TEMPLATE = [{
@@ -177,11 +169,10 @@ class CylinderReport(Reports):
 
 
     CONDITIONS_LABELS = [
-        {'label': 'actual',     'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
-        {'label': 'min',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
-        {'label': 'max',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 10},
+        {'label': 'actual',     'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 7},
+        {'label': 'min',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 7},
+        {'label': 'max',        'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 7},
         {'label': 'notes',      'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 500},
-        {'label': 'cylReportID'},
         {'label': 'autoID'},
     ]
 
@@ -189,40 +180,39 @@ class CylinderReport(Reports):
         #'title': Used to output a text title in HTML
         #'property': These are stored as VARCHARs in SQL to keep track of each property. Also used to match the data when going from the HTML form to SQL and reverse
     FORM_CONDITIONS_TEMPLATE = [
-        {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'dataFields':{}},
-        {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'dataFields':{}},
-        {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'dataFields':{}},
-        {'name':'cylConSlump',              'title':'Slump (mm)',                          'property':'slump',          'SCC':False, 'CYL':True,    'dataFields':{}},
-        {'name':'cylConAir',                'title':'Air (%)',                             'property':'air',            'SCC':True, 'CYL':True,     'dataFields':{}},
-        {'name':'cylConDensity',            'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',        'SCC':True, 'CYL': True,    'dataFields':{}},
-        {'name':'cylConSampleTemp',         'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',     'SCC':True, 'CYL': True,    'dataFields':{}},
-        {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'dataFields':{}},
-        {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'dataFields':{}},
+        {'name':'cylConFlow',               'title':'Flow (mm)',                           'property':'flow',           'SCC':True, 'CYL': False,   'dataFields':{}, 'precision':{'actual': 0, 'min': 0, 'max': 0}},
+        {'name':'cylConT50',                'title':'T<sub>50</sub>(s)',                   'property':'t_50',           'SCC':True, 'CYL': False,   'dataFields':{}, 'precision':{'actual': 0, 'min': 0, 'max': 0}},
+        {'name':'cylConVSI',                'title':'VSI',                                 'property':'vsi',            'SCC':True, 'CYL': False,   'dataFields':{}, 'precision':{'actual': 0, 'min': 0, 'max': 0}},
+        {'name':'cylConSlump',              'title':'Slump (mm)',                          'property':'slump',          'SCC':False, 'CYL':True,    'dataFields':{}, 'precision':{'actual': 0, 'min': 0, 'max': 0}},
+        {'name':'cylConAir',                'title':'Air (%)',                             'property':'air',            'SCC':True, 'CYL':True,     'dataFields':{}, 'precision':{'actual': 1, 'min': 0, 'max': 0}},
+        {'name':'cylConDensity',            'title':'Unit Density (kg/m<sup>3</sup>)',     'property':'density',        'SCC':True, 'CYL': True,    'dataFields':{}, 'precision':{'actual': 1, 'min': 0, 'max': 0}},
+        {'name':'cylConSampleTemp',         'title':'Sample Temp (&deg;C)',                'property':'sampleTemp',     'SCC':True, 'CYL': True,    'dataFields':{}, 'precision':{'actual': 1, 'min': 0, 'max': 0}},
+        {'name':'cylConAmbientTemp',        'title':'Ambient Temp (&deg;C)',               'property':'ambientTemp',    'SCC':True, 'CYL': True,    'dataFields':{}, 'precision':{'actual': 1, 'min': 0, 'max': 0}},
+        {'name':'cylConInitialTemp',        'title':'Initial Curing Conditions (&deg;C)',  'property':'initialTemp',    'SCC':True, 'CYL': True,    'dataFields':{}, 'precision':{'actual': 1, 'min': 0, 'max': 0}},
     ]
 
 
-    CYL_ITEMS_LABELS = (
-        'itemID',
-        'dateReceived',
-        'dateTested',
-        'age',
-        'diameter',
-        'length',
-        'area',
-        'weight',
-        'strength',
-        'breakType',
-        'requiredStrength',
-        'percentStrength',
-        'initials',
-        'autoID'
-    )
+    CYL_ITEMS_LABELS = [
+        {'label': 'itemID',             'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 16},
+        {'label': 'dateReceived',       'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 10},
+        {'label': 'dateTested',         'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 10},
+        {'label': 'age',                'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 3},
+        {'label': 'diameter',           'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 3, 'precision':0},
+        {'label': 'length',             'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 3, 'precision':0},
+        {'label': 'area',               'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 5, 'precision':0, 'disabled':True},
+        {'label': 'weight',             'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 6, 'precision':1},
+        {'label': 'strength',           'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 6, 'precision':2},
+        {'label': 'breakType',          'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 1, 'precision':0},
+        {'label': 'requiredStrength',   'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 6, 'precision':0, 'disabled':True},
+        {'label': 'percentStrength',    'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 4, 'precision':0, 'disabled':True},
+        {'label': 'initials',           'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 3},
+
+    ]
 
 
-
-    FORM_ITEMS_TEMPLATE = [{
-        'name':'cylItem',   'title':'',   'labels': {},    'valueData':{}
-    }]
+    FORM_ITEMS_TEMPLATE = [
+        {'name':'cylItem',   'title':'',   'dataFields':{}}
+    ]
 
     '''-------------------------------------SQL DATA-------------------------------------'''
 
@@ -234,8 +224,6 @@ class CylinderReport(Reports):
         'auto_id':            {'dataType': SQL.DATATYPES.INT,       'size':SQL.INT_SIZES['UINT'],      'data':None}
     }
 
-
-
     SQL_CONDITIONS_PROPERTIES = {
         'cyl_report_id':           {'dataType': SQL.DATATYPES.INT,              'size': SQL.INT_SIZES['INT'],       'data':None},
         'property':                {'dataType': SQL.DATATYPES.VARCHAR,          'size': 255,                        'data':None},
@@ -245,7 +233,6 @@ class CylinderReport(Reports):
         'notes':                   {'dataType': SQL.DATATYPES.VARCHAR,          'size': 1000,                       'data':None},
         'auto_id':                 {'dataType': SQL.DATATYPES.INT,              'size': SQL.INT_SIZES['INT'],       'data':None}
     }
-
 
     SQL_CYLINDERS_PROPERTIES = {
         'cyl_report_id':               {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None},
@@ -264,7 +251,6 @@ class CylinderReport(Reports):
         'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
-
 
     SQL_REPORT_PROPERTIES = {
         'project_id':                  {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None},
@@ -296,7 +282,7 @@ class CylinderReport(Reports):
         'date_received_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
         'date_specimen':               {'dataType': SQL.DATATYPES.DATETIME,    'size': None,                                    'data':None},
         'date_specimen_equal':         {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
-        'natural_air':                 {'dataType': SQL.DATATYPES.BOOL,        'size': None,                                    'data':None},
+        'air_options':                 {'dataType': SQL.DATATYPES.ENUM,        'size': None, 'enums':AIR_OPTIONS,               'data':None},
         'notes':                       {'dataType': SQL.DATATYPES.TEXT,        'size': SQL.TEXT_SIZES['TEXT'],                  'data':None},
         'auto_id':                     {'dataType': SQL.DATATYPES.INT,         'size': SQL.INT_SIZES['INT'],                    'data':None}
     }
@@ -308,18 +294,20 @@ class CylinderReport(Reports):
         self.strength_table = data['strTable']
         self.conditions_table = data['conditionsTable']
         self.cyl_items_table = data['cylItemsTable']
+        self.cyl_items_table_template = data['cylItemsTableTemplate']
 
     #Create a new cylinder report with default values
     @classmethod
     def create_default(cls):
         parent_id = None
-        cylinder_id = None
+        cylinder_id = 0
         createdby = 'admin'
 
         #Create data tables from templates
         fieldTable = cls.__create_data_n_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
         conTable = cls.__create_data_n_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
+        cylTable = cls.__create_data_n_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
 
         #Ensure first item is always visible
         strTable[0]['dataFields']['visible']['val'] = 1
@@ -329,7 +317,7 @@ class CylinderReport(Reports):
         #Insert some default values
         fieldTable['dataFields']['projectID']['val'] = parent_id
         fieldTable['dataFields']['cylinderID']['val'] = cylinder_id
-        fieldTable['dataFields']['dateCreated']['val'] = datetime.today()
+        fieldTable['dataFields']['dateCreated']['val'] = HLP.dateToStr(datetime.today(), GLB.DATE_FORMATS.ISO_DATE_FORMAT.value)
         fieldTable['dataFields']['createdBy']['val'] = createdby
         fieldTable['dataFields']['reportTitle']['val'] = 'Report Title'
         fieldTable['dataFields']['status']['val'] = 'active'
@@ -339,12 +327,12 @@ class CylinderReport(Reports):
         fieldTable['dataFields']['dateReceivedEqual']['val'] = "checked"
         fieldTable['dataFields']['dateSpecimenEqual']['val'] = "checked"
 
-
         defaultData = {
             "fieldTable": fieldTable,
             "strTable": strTable,
             "conditionsTable": conTable,
-            "cylItemsTable": ""
+            "cylItemsTable": cylTable,
+            "cylItemsTableTemplate": cylTable
         }
 
         #Call the CylinderReport constructor to create a class instance with the default data
@@ -361,7 +349,7 @@ class CylinderReport(Reports):
         fieldTable = cls.__create_data_n_table(cls.FORM_FIELD_TEMPLATE, cls.FORM_LABELS)
         strTable = cls.__create_data_n_table(cls.FORM_STR_TEMPLATE, cls.STR_LABELS, cls.NUM_STR_TARGETS)
         conTable = cls.__create_data_n_table(cls.FORM_CONDITIONS_TEMPLATE, cls.CONDITIONS_LABELS)
-        cylTable = cls.__create_data_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
+        cylTable = cls.__create_data_n_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
 
         field_result = cls.__sql_to_html_field(report_sql, fieldTable)
         str_result = cls.__sql_to_html_strength(str_sql, strTable, editing)
@@ -374,7 +362,8 @@ class CylinderReport(Reports):
             "fieldTable":field_result,
             "strTable": str_result,
             "conditionsTable": con_result,
-            "cylItemsTable": cyl_items_result
+            "cylItemsTable": cyl_items_result,
+            "cylItemsTableTemplate":cylTable
         }
 
         return cls(data, id)
@@ -490,6 +479,16 @@ class CylinderReport(Reports):
                     else:
                         fieldData['dataType'] = row['dataType']
 
+                    if(not 'precision' in row):
+                        fieldData['precision'] = None
+                    else:
+                        fieldData['precision'] = row['precision']
+
+                    if(not 'disalbed' in row):
+                        fieldData['disabled'] = False
+                    else:
+                        fieldData['disabled'] = row['disabled']
+
                     fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
 
                     data['dataFields'][key] = fieldData
@@ -516,15 +515,23 @@ class CylinderReport(Reports):
 
     @classmethod
     def __sql_to_html_field(self, sqlResult, formTable):
+
         formData = copy.deepcopy(formTable[0])
         sqlResult = processSql(sqlResult[0])
 
         #Assign the 'dataFields' sub-dict to dataFields (passes a reference so changes to dataFields will change formData)
         dataFields = formData['dataFields']
 
+        dateCreated = HLP.dateToStr(sqlResult['date_created'], GLB.DATE_FORMATS.ISO_DATE_FORMAT.value)
+
+        dateTransported = HLP.dateToStr(sqlResult['date_transported'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
+        dateCast = HLP.dateToStr(sqlResult['date_cast'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
+        dateReceived = HLP.dateToStr(sqlResult['date_received'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
+        dateSpecimen = HLP.dateToStr(sqlResult['date_specimen'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
+
         dataFields['projectID']['val'] = sqlResult['project_id']
         dataFields['cylinderID']['val'] = sqlResult['auto_id']
-        dataFields['dateCreated']['val'] = sqlResult['date_created']
+        dataFields['dateCreated']['val'] = dateCreated
         dataFields['createdBy']['val'] = sqlResult['created_by']
         dataFields['reportTitle']['val'] = sqlResult['report_title']
         dataFields['status']['val'] = sqlResult['status']
@@ -542,21 +549,17 @@ class CylinderReport(Reports):
         dataFields['cementType']['val'] = sqlResult['cement_type']
         dataFields['volume']['val'] = sqlResult['load_volume']
         dataFields['volumeUnits']['val'] = sqlResult['load_volume_units']
-        dataFields['castDate']['val'] = sqlResult['date_cast']
+        dataFields['castDate']['val'] = dateCast
         dataFields['castTime']['val'] = sqlResult['time_cast']
         dataFields['batchTime']['val'] = sqlResult['time_batch']
         dataFields['sampleTime']['val'] = sqlResult['time_sample']
-        dataFields['dateTransported']['val'] = sqlResult['date_transported']
-        dataFields['dateReceived']['val'] = sqlResult['date_received']
-        dataFields['dateSpecimen']['val'] = sqlResult['date_specimen']
+        dataFields['dateTransported']['val'] = dateTransported
+        dataFields['dateReceived']['val'] = dateReceived
+        dataFields['dateSpecimen']['val'] = dateSpecimen
+        dataFields['airOptions']['val'] = sqlResult['air_options']
 
         dataFields['notes']['val'] = sqlResult['notes']
         dataFields['isScc']['val'] = sqlResult['is_scc']
-
-        if(sqlResult['natural_air'] == 1):
-            dataFields['naturalAir']['val'] = 'checked'
-        else:
-            dataFields['naturalAir']['val'] = ''
 
         # Do some processing for the dateReceivedEqual checkbox
         if (sqlResult['date_received_equal'] == 1):
@@ -609,9 +612,6 @@ class CylinderReport(Reports):
 
             strList.append(strenTable[i])
 
-        for item in strList:
-            print(item)
-
         return strList
 
     @classmethod
@@ -630,7 +630,6 @@ class CylinderReport(Reports):
                     dataFields['min']['val'] = sql['val_min']
                     dataFields['max']['val'] = sql['val_max']
                     dataFields['notes']['val'] = sql['notes']
-                    dataFields['cylReportID']['val'] = sql['cyl_report_id']
                     dataFields['autoID']['val'] = sql['auto_id']
                     break
 
@@ -663,40 +662,6 @@ class CylinderReport(Reports):
 
         return newFormTable
 
-    #Read form data and create SQL entry
-    def submit_form(self):
-        fieldData = HLP.get_form_values(self.field_table)
-        fieldDataClean = self.__field_form_to_sql(fieldData)
-        cylID = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
-
-        self.id = cylID #Populate submitted_id so the newly inserted cylinder can be loaded back from the DB
-
-        strengthData = HLP.get_form_values(self.strength_table)
-        strDataClean = self.__strength_form_to_sql(strengthData, cylID)
-        HLP.sql_insert(self.TB_STR_REQ, strDataClean)
-
-        conData = HLP.get_form_values(self.conditions_table)
-
-        conDataClean = self.__con_form_to_sql(conData, cylID)
-        HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
-
-    def submit_edit(self):
-        fieldData = HLP.get_form_values(self.field_table)
-        fieldDataClean = self.__field_form_to_sql(fieldData)
-
-        HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
-        strengthData = HLP.get_form_values(self.strength_table)
-
-        strDataClean = self.__strength_form_to_sql(strengthData, self.id)
-        HLP.sql_update(self.TB_STR_REQ, strDataClean)
-
-        conData = HLP.get_form_values(self.conditions_table)
-        conDataClean = self.__con_form_to_sql(conData, self.id)
-        HLP.sql_update(self.TB_CONDITIONS, conDataClean)
-
-    def delete(self):
-        HLP.sql_delete(self.TB_REPORT_DATA, self.id)
-
     def __field_form_to_sql(self, fieldData):
         sqlData = copy.deepcopy(self.SQL_REPORT_PROPERTIES)
 
@@ -705,6 +670,7 @@ class CylinderReport(Reports):
         fieldData = fieldData['dataFields']
 
         sqlData['project_id']['data'] = fieldData['projectID']['val']
+
         sqlData['date_created']['data'] = fieldData['dateCreated']['val']
         sqlData['created_by']['data'] = fieldData['createdBy']['val']
         sqlData['report_title']['data'] = fieldData['reportTitle']['val']
@@ -731,13 +697,11 @@ class CylinderReport(Reports):
         sqlData['date_transported']['data'] = fieldData['dateTransported']['val']
         sqlData['date_specimen']['data'] = fieldData['dateSpecimen']['val']
         sqlData['notes']['data'] = fieldData['notes']['val']
+        sqlData['air_options']['data'] = fieldData['airOptions']['val']
 
         sqlData['auto_id']['data'] = fieldData['cylinderID']['val']
 
-        if(fieldData['naturalAir']['val'] == 'on'):
-            sqlData['natural_air']['data'] = 1
-        else:
-            sqlData['natural_air']['data'] = 0
+        self.airOptionVal = fieldData['airOptions']['val']
 
         #Processing dateReceived checkbox. 'on' is what a checked checkbox returns if no value specified
         if(fieldData['dateReceivedEqual']['val'] == 'on'):
@@ -754,8 +718,6 @@ class CylinderReport(Reports):
         else:
             sqlData['date_specimen_equal']['data'] = 0
             sqlData['date_specimen']['data'] = fieldData['dateSpecimen']['val']
-
-
 
         #Convert to list
         dataList = []
@@ -784,10 +746,20 @@ class CylinderReport(Reports):
             sqlData = copy.deepcopy(self.SQL_CONDITIONS_PROPERTIES)
 
             sqlData['cyl_report_id']['data'] = cylID
-            sqlData['property']['data'] = row['property']
+            property = row['property']
+
+            minVal = row['dataFields']['min']['val']
+            maxVal = row['dataFields']['max']['val']
+
+            if(property == 'air'):
+                if(not self.airOptionVal == 'custom'):
+                    minVal = None
+                    maxVal = None
+
+            sqlData['property']['data'] = property
             sqlData['val_actual']['data'] = row['dataFields']['actual']['val']
-            sqlData['val_min']['data'] = row['dataFields']['min']['val']
-            sqlData['val_max']['data'] = row['dataFields']['max']['val']
+            sqlData['val_min']['data'] = minVal
+            sqlData['val_max']['data'] = maxVal
             sqlData['notes']['data'] = row['dataFields']['notes']['val']
             sqlData['auto_id']['data'] = row['dataFields']['autoID']['val']
             dataList.append(sqlData)
@@ -827,10 +799,41 @@ class CylinderReport(Reports):
         #Ensure the first item of the strength table is always visible
         dataList[0]['target_visible']['data'] = 1
 
-        for row in dataList:
-            print(row)
-
         return dataList
+
+    #Read form data and create SQL entry
+    def submit_form(self):
+        fieldData = HLP.get_form_values(self.field_table)
+        fieldDataClean = self.__field_form_to_sql(fieldData)
+        cylID = HLP.sql_insert(self.TB_REPORT_DATA, fieldDataClean)
+
+        self.id = cylID #Populate submitted_id so the newly inserted cylinder can be loaded back from the DB
+
+        strengthData = HLP.get_form_values(self.strength_table)
+        strDataClean = self.__strength_form_to_sql(strengthData, cylID)
+        HLP.sql_insert(self.TB_STR_REQ, strDataClean)
+
+        conData = HLP.get_form_values(self.conditions_table)
+
+        conDataClean = self.__con_form_to_sql(conData, cylID)
+        HLP.sql_insert(self.TB_CONDITIONS, conDataClean)
+
+    def submit_edit(self):
+        fieldData = HLP.get_form_values(self.field_table)
+        fieldDataClean = self.__field_form_to_sql(fieldData)
+
+        HLP.sql_update(self.TB_REPORT_DATA, fieldDataClean)
+        strengthData = HLP.get_form_values(self.strength_table)
+
+        strDataClean = self.__strength_form_to_sql(strengthData, self.id)
+        HLP.sql_update(self.TB_STR_REQ, strDataClean)
+
+        conData = HLP.get_form_values(self.conditions_table)
+        conDataClean = self.__con_form_to_sql(conData, self.id)
+        HLP.sql_update(self.TB_CONDITIONS, conDataClean)
+
+    def delete(self):
+        HLP.sql_delete(self.TB_REPORT_DATA, self.id)
 
     #Convert object dict
     def to_dict(self):
@@ -840,10 +843,18 @@ class CylinderReport(Reports):
             "fieldTable":self.field_table,
             "strTable": self.strength_table,
             "conditionsTable": self.conditions_table,
-            "cylItemsTable": self.cyl_items_table
+            "cylItemsTable": self.cyl_items_table,
+            "cylItemsTableTemplate":self.cyl_items_table_template
         }
 
         return objectData
+
+
+    def to_json(self):
+        data = self.to_dict()
+
+        return json.dumps(data)
+
 
     #Return data tables as dicts
     def tables_to_dict(self):
@@ -854,7 +865,7 @@ class CylinderReport(Reports):
             "statusData": self.STATUS_TABLE,
             "separatorData": self.SEPARATOR_OPTIONS,
             "setData": self.SET_OPTIONS,
-            "conditionsPrecision":self.CONDITIONS_PRECISION
+            "airOptions":self.AIR_OPTIONS,
         }
 
         return dataTables

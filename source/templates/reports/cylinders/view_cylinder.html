@@ -2,7 +2,6 @@
  
 {% block content %}
 
-
 {% if pageData.editing %}
 
 
@@ -12,21 +11,12 @@
 		<form action="{{ url_for('cylinders_bp.update_cylinder') }}" method="POST" id="cylReportForm">
 	{% endif %}
 		<input type="hidden" name="cylinderID" value="{{ data.id }}">
-		<input type="hidden" name="{{ data.fieldTable.dataFields.cylinderID.label }}" value="{{ data.fieldTable.dataFields.cylinderID.val }}">
-
 		<input type="hidden" name="newCylinder" value="{{ pageData.newCylinder }}">
-		<input type="hidden" name="{{ data.fieldTable.dataFields.createdBy.label }}" value="{{ data.fieldTable.dataFields.createdBy.val }}">
-		<input type="hidden" name="{{ data.fieldTable.dataFields.dateCreated.label }}" value="{{ data.fieldTable.dataFields.dateCreated.val }}">
-		
-
-		
-		
 {% endif %}
 
 <div class="card card-primary card-outline mb-4 view_cylinder">
 	<div class="card-header">
 		<div class="card-title">
-
 			{% if pageData.editing %}
 
 				<input type="text" class="form-control"  size="80" maxlength="{{ data.fieldTable.dataFields.reportTitle.maxlength }}" id="{{ data.fieldTable.dataFields.reportTitle.label }}" name="{{ data.fieldTable.dataFields.reportTitle.label }}" value="{{ data.fieldTable.dataFields.reportTitle.val }}" aria-describedby="textDesc">
@@ -34,17 +24,11 @@
 				{{ data.fieldTable.dataFields.reportTitle.val | e }}
 			{% endif %}
 			
-
 		</div>
 	</div>
 	
-	
 <div class="card-body">
-
-
-
 	<table class="table table-bordered">
-
 
 	<tbody>
 		<tr>
@@ -216,7 +200,7 @@
 								</div>
 								
 							{% else %}
-								{{ data.fieldTable.dataFields.volume.val }}
+								{{ data.fieldTable.dataFields.volume.val | round_val_f(data.fieldTable.dataFields.volume.precision) }}
 							{% endif %}
 							</div>
 						</div>
@@ -449,8 +433,8 @@
 		{% if pageData.editing %}
 		<tr>
 			<td colspan="3">
-				<button type="button" class="btn btn-primary" onclick="STR_FUNCTIONS.addStrTarget()">Add Target</button>
-				<button type="button" class="btn btn-primary" onclick="STR_FUNCTIONS.removeStrTarget()">Remove Target</button>
+				<button type="button" id="strAddTarget" class="btn btn-primary">Add Target</button>
+				<button type="button" id="strRemoveTarget" class="btn btn-primary">Remove Target</button>
 			</td>	
 		</tr>
 		{% endif %}
@@ -515,20 +499,30 @@
 			
 			{% if pageData.editing %}
 			<tr>
-				<th colspan="5">	
-				<div class="row">
+				<th colspan="5">
 					<div class="col">
-						<label class="form-check-label">Options:</label>
+						<div class="container">
+							<div class="row align-items-center">
+
+								<div class="cylFormLabels">
+										<label>Air Options:</label>
+								</div>
+								
+								<div class="cylFormData">
+										{% if pageData.editing %}
+											<select class="form-select" name="{{ data.fieldTable.dataFields.airOptions.label  }}" id="{{ data.fieldTable.dataFields.airOptions.label  }}">
+											{% for key,value in tables.airOptions.items() %}	
+												<option value="{{ key }}" {% if key == data.fieldTable.dataFields.airOptions.val %}selected{% endif %}>{{ value }}</option>
+											{% endfor %}
+											</select>
+										{% else %}
+											{{ data.fieldTable.dataFields.airOptions.val | mould_f }}
+										{% endif %}				
+								</div>					
+							</div>
+						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="col">
-						<input class="form-check-input" type="checkbox" id="{{ data.fieldTable.dataFields.naturalAir.label }}" name="{{ data.fieldTable.dataFields.naturalAir.label }}"  {{ data.fieldTable.dataFields.naturalAir.val }}> 
-						<label class="form-check-label normal-text" for="{{ data.fieldTable.dataFields.naturalAir.label }}">Natural Air</label>
-					</div>
-				</div>
-		
-					</th>
+				</th>
 			</tr>
 			{% endif %}
 
@@ -559,13 +553,13 @@
 
 				{% else %}
 					
-					<td>{{ row.dataFields.actual.val | conditions_val_f }}</td>
+					<td>{{ row.dataFields.actual.val | round_val_f(row.precision.actual) }}</td>
 					
-					{% if ((row.property == 'air') and (data.fieldTable.dataFields.naturalAir.val == 'checked')) %}
+					{% if ((row.property == 'air') and (data.fieldTable.dataFields.airOptions.val == 'natural')) %}
 						<td colspan="2">Natural</td>
 					{% else %}	
-						<td>{{ row.dataFields.min.val | measurements_f }}</td>
-						<td>{{ row.dataFields.max.val | measurements_f }}</td>
+						<td>{{ row.dataFields.min.val | round_val_f(row.precision.min) }}</td>
+						<td>{{ row.dataFields.max.val | round_val_f(row.precision.max) }}</td>
 
 					{% endif %}
 					<td class="align-left">{{ row.dataFields.notes.val }}</td>
@@ -578,7 +572,6 @@
 
 	</table>		
 	</div>
-
 	
 	
 	{% if pageData.editing %}
@@ -610,10 +603,8 @@
 							<label for="" class="underline">Specimen ID</label>
 						</div>
 					</div>
-					
 						
 					<div class="row align-items-center mt-3 mb-3">
-
 						<div class="cylFormLabels">
 							<label for="" class="">Tech Initials:</label>
 						</div>
@@ -622,8 +613,6 @@
 								<input maxlength="20" type="text" class="form-control" name="itemsInitialsIn" id="itemsInitialsIn" value="">
 								<div class="form-text error-msg" id="itemsInitialsErrorMsg"></div>
 						</div>
-
-
 					</div>
 					
 					<div class="row align-items-center mt-3 mb-3">
@@ -717,21 +706,21 @@
 						</div>
 							
 						<div class="cylFormDate">
-							<select class="form-select" name="{{ data.fieldTable.dataFields.mouldType.label }}" id="{{ data.fieldTable.dataFields.mouldType.label }}">
+							<select class="form-select" name="" id="">
 								<option value="{{ key }}" {% if key == data.fieldTable.dataFields.mouldType.val %}selected{% endif %}>{{ value }}</option>
 							</select>
 						</div>
 
 					</div>
 				</div>
-				<button type="button" class="btn btn-primary" onclick="ITEMS_FUNCTIONS.createItemsRow()" id="btnAddItems" disabled>Add Cylinders</button>
+				<button type="button" class="btn btn-primary" id="btnAddItems" disabled>Add Cylinders</button>
 			</th>	
 		</tr>
 	</table>
 	{% endif %}
 
-	
-	
+	<br />
+
 	<div class="table-responsive">
 		<table class="table table-bordered align-middle" id="cylItemsTable">
 			<thead>
@@ -759,49 +748,18 @@
 				
 			</tr>
 			
-			
 			{% for row in data.cylItemsTable %}
-
 
 			<tr class="align-center" id="">
 
 				{% if pageData.editing %}
-					<!--
-					<td><input type="text" maxlength="16" class="form-control" id="{{ row.labels.itemID }}" name="{{ row.labels.itemID }}" value="{{ row.valueData.itemID }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control" id="{{ row.labels.dateReceived }}" name="{{ row.labels.dateReceived }}" value="{{ row.valueData.dateReceived }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control" id="{{ row.labels.dateTested }}" name="{{ row.labels.dateTested }}" value="{{ row.valueData.dateTested }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="{{ row.labels.age }}" name="{{ row.labels.age }}" value="{{ row.valueData.age }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="{{ row.labels.diameter }}" name="{{ row.labels.diameter }}" value="{{ row.valueData.diameter }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="{{ row.labels.length }}" name="{{ row.labels.length }}" value="{{ row.valueData.length }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="5" class="form-control" id="{{ row.labels.area }}" name="{{ row.labels.area }}" value="{{ row.valueData.area }}" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="6" class="form-control" id="{{ row.labels.weight }}" name="{{ row.labels.weight }}" value="{{ row.valueData.weight }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="6" class="form-control" id="{{ row.labels.strength }}" name="{{ row.labels.strength }}" value="{{ row.valueData.strength }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1" class="form-control" id="{{ row.labels.breakType }}" name="{{ row.labels.breakType }}" value="{{ row.valueData.breakType }}" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="4" class="form-control" id="{{ row.labels.requiredStrength }}" name="{{ row.labels.requiredStrength }}" value="{{ row.valueData.requiredStrength }}" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="4" class="form-control" id="{{ row.labels.percentStrength }}" name="{{ row.labels.percentStrength }}" value="{{ row.valueData.percentStrength }}" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="3" class="form-control" id="{{ row.labels.initials }}" name="{{ row.labels.initials }}" value="{{ row.valueData.initials }}" aria-describedby="textDesc"></td>
-					-->
-					
-					
-					<input type="hidden" name="{{ row.labels.autoID }}" value="{{ row.valueData.autoID }}">
+				
+
 
 				{% else %}
 					
 	
-					<td>{{ row.valueData.itemID }}</td>
-					<td>{{ row.valueData.dateReceived | strip_time_f }}</td>
-					<td>{{ row.valueData.dateTested | strip_time_f }}</td>
-					<td>{{ row.valueData.age }}</td>
-					<td>{{ row.valueData.diameter }}</td>
-					<td>{{ row.valueData.length }}</td>
-					<td>{{ row.valueData.area }}</td>
-					<td>{{ row.valueData.weight }}</td>
-					<td>{{ row.valueData.strength }}</td>
-					<td>{{ row.valueData.breakType }}</td>
-					<td>{{ row.valueData.requiredStrength }}</td>
-					<td>{{ row.valueData.percentStrength }}%</td>
-					<td>{{ row.valueData.initials }}</td>
-					
+
 				{% endif %}
 				
 
@@ -811,7 +769,6 @@
 
 		</table>		
 	</div>
-	
 		
 	<table class="table table-bordered">
 		<tbody>	
@@ -846,7 +803,7 @@
 				<td>Status:</td>
 				<td>
 				{% if pageData.editing %}
-						<select class="form-select cylFormData" name="data.fieldTable.dataFields.status.label" id="data.fieldTable.dataFields.status.label">
+						<select class="form-select cylFormData" name="{{ data.fieldTable.dataFields.status.label }}" id="{{ data.fieldTable.dataFields.status.label }}">
 						{% for key,value in tables.statusData.items() %}	
 							<option value="{{ key }}" {% if key == data.fieldTable.dataFields.status.val %}selected{% endif %}>{{ value }}</option>
 						{% endfor %}
@@ -874,25 +831,20 @@
 		</tbody>
 	</table>
 
-
 	<br />
 	
 	{% if pageData.editing %}
 		<button type="submit" class="btn btn-primary" form="cylReportForm">Save</button> 
 		{% if pageData.newCylinder %}
 			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.cylinders') }}'">Cancel</button> 
-		
 		{% else %}
-		
 			<button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('cylinders_bp.view_cylinder', cylinder_id = data.fieldTable.dataFields.cylinderID.val) }}'">Cancel</button> 
-		
 		{% endif %}
 
 	{% else %}
 		<a href="{{ url_for('cylinders_bp.view_cylinder', cylinder_id=data.fieldTable.dataFields.cylinderID.val, edit=True) }}"><button type="button" class="btn btn-primary">Edit Cylinder</button></a>
 		<div style="float:right"><a href="{{ url_for('cylinders_bp.confirm_delete', cylinder_id=data.fieldTable.dataFields.cylinderID.val) }}"><button type="button" class="btn btn-danger">Delete</button></a></div>
 	{% endif %}
-
 
 	</div>
 
@@ -903,12 +855,9 @@
 {% endif %}
 
 	<script>
-		//Jsonify the data passed through Flask for the cyl_from.js script
 		const cyl_editing_json = {{ pageData.editing | tojson }};
-		const cyl_data_json = {{ data | tojson}};
-    </script>
-
-
+		const cyl_id = {{ data.id | tojson }};
+	</script>
 
 	<script src="{{ url_for('static', filename='js/cyl_form.js') }}"></script> 
 
