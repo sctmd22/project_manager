@@ -1,35 +1,40 @@
 const EDITING = cyl_editing_json;
 
-if(EDITING){
-	let CYL_ID = cyl_id;
+let CYL_ID = cyl_id;
 
-	
-	// Fetch additional data based on the cylinder ID
-	fetch(`/reports/cylinders/get_json_data/${CYL_ID}`)
-		.then(response => response.json())
-		.then(data => {
-			 // Use the additional data
-			FORM_FUNCTIONS(data);
+//Fetch additional data based on the cylinder ID
+//Add the "XMLHttpRequest" header data to allow access
+fetch(`/reports/cylinders/get_json_data/${CYL_ID}`, {
+		headers: {
+			"X-Requested-With": "XMLHttpRequest"
+		}
+})
+	.then(response => response.json())
+	.then(data => {
+		 // Use the additional data
+		FORM_FUNCTIONS(data);
+});
 
-	});
-}
 const FORM_FUNCTIONS = function(data){
 	let FORM_DATA_JSON = data;
 
 
-	class InputElement {
+	class FormElement {
 		/*
 			Used to define input element objects which contain info and methods related to form inputs
 		*/
 			constructor(inputID, errorID) {
 				this.inputID = inputID;
-				this.errorID = errorID;
-				this.valid = false;
-
 				this.inputElement = this.getElement(this.inputID);
-				this.errorElement = this.getElement(this.errorID);
 				
-				this.updateVal();
+				if(errorID){
+					this.errorID = errorID;
+					this.errorElement = this.getElement(this.errorID);
+					
+				}
+				
+				this.valid = false;
+				//this.updateVal();
 				this.hideErr();
 					
 			}
@@ -52,12 +57,19 @@ const FORM_FUNCTIONS = function(data){
 				}
 			}
 				
-			
+			//Read the elements current value and update self.val. Call this inside eventlisteners
 			updateVal(){
 				if(this.inputElement){
 					this.val = this.inputElement.value;
 				} else {
 					this.val = null;
+				}
+			}
+			
+			getVal(){
+				if(this.inputElement){
+					this.val = this.inputElement.value;
+					return this.val;
 				}
 			}
 
@@ -115,7 +127,7 @@ const FORM_FUNCTIONS = function(data){
 			
 		}
 		
-	class TextInput extends InputElement {
+	class TextInput extends FormElement {
 		constructor(inputID, errorID, maxSize = 255){
 			super(inputID, errorID);
 			this.maxSize = maxSize;
@@ -126,7 +138,6 @@ const FORM_FUNCTIONS = function(data){
 		verifyNoSlashesNoQuotes(){
 			this.inputElement.value = this.inputElement.value.replace(/[/\\'"]/g, ""); 
 			this.verifySize();
-			console.log('a');
 		}
 		
 		//Upper and lower case letters AND digits 0-9
@@ -160,7 +171,7 @@ const FORM_FUNCTIONS = function(data){
 		}
 	}
 
-	class DropInput extends InputElement {
+	class DropInput extends FormElement {
 		constructor(inputID){
 			super(inputID);
 		}
@@ -183,9 +194,15 @@ const FORM_FUNCTIONS = function(data){
 				this.val = ' ';
 			}
 		}
+		
+		
+		//Don't read directly from the input - the values will be decoded by another function and this.val set directly
+		getVal(){
+			return this.val;
+		}
 	}
 
-	class IntInput extends InputElement {
+	class IntInput extends FormElement {
 		
 		constructor(inputID, errorID, minSize = 0, maxSize = 0){
 			super(inputID, errorID);
@@ -250,7 +267,7 @@ const FORM_FUNCTIONS = function(data){
 		}
 	}
 
-	class NumberInput extends InputElement {
+	class NumberInput extends FormElement {
 		constructor(inputID, errorID){
 			super(inputID, errorID);
 			
@@ -277,7 +294,7 @@ const FORM_FUNCTIONS = function(data){
 		
 	}
 
-	class DateInput extends InputElement {
+	class DateInput extends FormElement {
 
 		constructor(inputID, errorID){
 			super(inputID, errorID); //Call parent constructor
@@ -336,6 +353,42 @@ const FORM_FUNCTIONS = function(data){
 		}
 	}
 
+	class OutputElement {
+		constructor(id){
+			this.outputID = id;
+			this.outputElement = document.getElementById(id);
+			
+		}
+		
+		getVal(){
+			if(this.outputElement){
+				return this.val;
+			
+			}
+		}
+		
+		setVal(data){
+			if(this.outputElement){
+				this.val = data;
+				this.outputElement.innerText = data;
+			}
+		}
+		
+		disable(){
+			if(this.outputElement){
+				this.outputElement.disabled = true;
+			}
+		}
+		
+		enable(){
+			if(this.outputElement){
+				this.outputElement.disabled = false;
+			}
+		}
+			
+		
+	}
+
 	const FIELD_FUNCTIONS = (function(){
 		
 		if(EDITING){
@@ -365,7 +418,9 @@ const FORM_FUNCTIONS = function(data){
 		const checkboxCustomID = document.getElementById('customIDCheck');
 		
 		const addButtonElement = document.getElementById('btnAddItems');	
-		const exampleOutputElement = document.getElementById('itemsExampleID');
+		//const exampleOutputElement = document.getElementById('itemsExampleID');
+
+		const exampleOutput = new OutputElement('itemsExampleID');
 
 		const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 1, 30);
 		
@@ -487,14 +542,13 @@ const FORM_FUNCTIONS = function(data){
 			function updateExample(){
 				if(initials.valid && dateSpecimenID.valid && !customIDCheck.checked){
 					
-					exampleOutputElement.textContent = `${initials.val}${dateSpecimenID.toDayMonthStr()}${setDropdown.val}${separatorDropdown.val}1`;
+					exampleOutput.setVal(`${initials.getVal()}${dateSpecimenID.toDayMonthStr()}${setDropdown.getVal()}${separatorDropdown.getVal()}1`);
 					
 				} else if(customID.valid && customIDCheck.checked) {
-					exampleOutputElement.textContent = `${customID.inputElement.value}1`;
+					exampleOutput.setVal(`${customID.getVal()}1`);
 			
 				} else {
-
-					exampleOutputElement.textContent = '';
+					exampleOutput.setVal('');
 				}
 			}
 			
@@ -563,64 +617,75 @@ const FORM_FUNCTIONS = function(data){
 				}
 			};
 		};
-			
 		
+
 		function createItemsRow(){
 			const ITEMS_TABLE = FORM_DATA_JSON.cylItemsTable;
-			const ITEMS_TEMPLATE = FORM_DATA_JSON.cylItemsTableTemplate[0];
+			
+			//Template to be used to fill the HTML properties such as id, maxlength, etc. of each input of the items row
+			let ITEMS_TEMPLATE = FORM_DATA_JSON.cylItemsTableTemplate[0]; 
 			
 			const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
-			const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`);
+			const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`); //Select <tbody> of ITEMS_TABLE_ID
 			
-			const numRows = numItems.val;
+			const numRows = numItems.val; //Read the value from the numItems object
 			
+			let idIndex = 1;
+			
+			//Convert 'disabled' property from true/false to 'disabled'/''
+			for(let key in ITEMS_TEMPLATE.dataFields){
+				if(ITEMS_TEMPLATE.dataFields[key].disabled == true){
+					ITEMS_TEMPLATE.dataFields[key].disabled = 'disabled';
+				} else {
+					ITEMS_TEMPLATE.dataFields[key].disabled = '';
+				}
+			}
+			
+
 			for(let i = 0; i < numRows; i++){
 				let newRow = null;
-		
 				const tableRow = document.createElement('tr');			
+
+				let rowData = ITEMS_TEMPLATE.dataFields;
 				
+				let specimenID = `${exampleOutput.getVal().slice(0,-1)}${idIndex}`;
+				let dateReceivedVal = dateReceived.getVal();
+				let dateTestedVal = '';
+
+
 				
-				for(let key in ITEMS_TEMPLATE.dataFields){
-					let rowData = ITEMS_TEMPLATE.dataFields[key];
-					
-					let maxLen = rowData.maxLength;
-					let id = rowData.name;
-					let disabled = '';
-					
-					if(rowData.disabled){
-						disabled = 'disabled';
-					}
-						
-					
-					tableRow.innerHTML += `
-						<td><input type="text" maxlength="${maxLen}" class="form-control" id="${id}" name=" value="" aria-describedby="textDesc" ${disabled}></td>
-					`;
-				
-				}
-				
-				/*
 				tableRow.innerHTML = `
-					<td><input type="text" maxlength="" class="form-control" id="" name=" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="8" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="5" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="6" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="6" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="1" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
-					<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="4" class="form-control" id="" name="" value="" aria-describedby="textDesc" disabled></td>
-					<td><input type="text" maxlength="3" class="form-control" id="" name="" value="" aria-describedby="textDesc"></td>
+					<td><input type="text" maxlength="${rowData.itemID.maxlength}" class="form-control" id="${rowData.itemID.label}${idIndex}" name="" value="${specimenID}" aria-describedby="textDesc" ${rowData.itemID.disabled}></td>
+					<td><input type="text" maxlength="${rowData.dateReceived.maxlength}" class="form-control" id="${rowData.dateReceived.label}${idIndex}" name="" value="${dateReceivedVal}" aria-describedby="textDesc" ${rowData.dateReceived.disabled}></td>
+					<td><input type="text" maxlength="${rowData.dateTested.maxlength}" class="form-control" id="${rowData.dateTested.label}${idIndex}" name="" value="${dateTestedVal}" aria-describedby="textDesc" ${rowData.dateTested.disabled}></td>
+					<td><input type="text" maxlength="${rowData.age.maxlength}" class="form-control" id="${rowData.age.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.age.disabled}></td>
+					<td><input type="text" maxlength="${rowData.diameter.maxlength}" class="form-control" id="${rowData.diameter.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.diameter.disabled}></td>
+					<td><input type="text" maxlength="${rowData.length.maxlength}" class="form-control" id="${rowData.length.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.length.disabled}></td>
+					<td><input type="text" maxlength="${rowData.area.maxlength}" class="form-control" id="${rowData.area.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.area.disabled}></td>
+					<td><input type="text" maxlength="${rowData.weight.maxlength}" class="form-control" id="${rowData.weight.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.weight.disabled}></td>
+					<td><input type="text" maxlength="${rowData.strength.maxlength}" class="form-control" id="${rowData.strength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.strength.disabled}></td>
+					<td><input type="text" maxlength="${rowData.breakType.maxlength}" class="form-control" id="${rowData.breakType.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.breakType.disabled}></td>
+					<td><input type="text" maxlength="${rowData.requiredStrength.maxlength}" class="form-control" id="${rowData.requiredStrength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.requiredStrength.disabled}></td>
+					<td><input type="text" maxlength="${rowData.percentStrength.maxlength}" class="form-control" id="${rowData.percentStrength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.percentStrength.disabled}></td>
+					<td><input type="text" maxlength="${rowData.initials.maxlength}" class="form-control" id="${rowData.initials.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.initials.disabled}></td>
 			
 				`;
-				*/
+				
+				idIndex++;
+				itemsTableBody.appendChild(tableRow);	
 			
-			itemsTableBody.appendChild(tableRow);	
+				
 			
 			}
+
+		}
 		
+		//Add event listeners to all 'diameter' and 'length' inputs
+		//Add event listeners to all 'age' inputs
+		
+		function calcArea(diam){
+			
+			
 		}
 		
 	})();
@@ -659,66 +724,69 @@ const FORM_FUNCTIONS = function(data){
 				2. Hide strength table rows where visible = 0 (or none) by assigning the classId "hidden"
 				3. Count the number of inputs that are visible (value = 1) to get the index for the addStrTarget() and removeStrTarget() functions
 			*/
-
-			const ADD_TARGET_ID = "strAddTarget";
-			const REMOVE_TARGET_ID = "strRemoveTarget";
-			
-			const addTargetBtn = document.getElementById(ADD_TARGET_ID);
-			const removeTargetBtn = document.getElementById(REMOVE_TARGET_ID);
-
-			//Add event listeners for the "Add Target" and "Remove Target" buttons
-			addTargetBtn.addEventListener('click', ()=>{
-				addStrTarget();
-			});
 			
 						
-			removeTargetBtn.addEventListener('click', ()=>{
-				removeStrTarget();
-			});
-			
 			const numStrTargets = STRENGTH_TABLE.length;
 			let strIndex = 0;
-			
-			function addStrTarget(){
+
+			if(EDITING){
+				const ADD_TARGET_ID = "strAddTarget";
+				const REMOVE_TARGET_ID = "strRemoveTarget";
 				
-				if(strIndex <= (numStrTargets - 1)){
-					//Select the correct row based on the strIndex
-					let targetRow = STRENGTH_TABLE[strIndex];
-					
-					//Get the hidden input which holds the 'visible' value and set to 1
-					let visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
-					visibleInput.value = 1;
-					
-					//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
-					let strTr = document.getElementById(targetRow['name']);
-					strTr.classList.remove(HIDDEN_CLASS);
-					
-					strIndex++; //Increment last
-				}
-			}
+				const addTargetBtn = document.getElementById(ADD_TARGET_ID);
+				const removeTargetBtn = document.getElementById(REMOVE_TARGET_ID);
+
 			
-			function removeStrTarget(){
+				//Add event listeners for the "Add Target" and "Remove Target" buttons
+				addTargetBtn.addEventListener('click', ()=>{
+					addStrTarget();
+				});
 				
-				if(strIndex > 1){
-					strIndex--; //Decrement first
+							
+				removeTargetBtn.addEventListener('click', ()=>{
+					removeStrTarget();
+				});
+
+				
+				function addStrTarget(){
 					
-					const targetRow = STRENGTH_TABLE[strIndex];
-					
-					const visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
-					visibleInput.value = 0;
-					
-					const strTr = document.getElementById(targetRow['name']);
-					strTr.classList.add(HIDDEN_CLASS);
-					
-					//Reset inputs to ''
-					const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
-					
-					inputs.forEach(input => {
-						input.value = '';
-					});
-					
+					if(strIndex <= (numStrTargets - 1)){
+						//Select the correct row based on the strIndex
+						let targetRow = STRENGTH_TABLE[strIndex];
+						
+						//Get the hidden input which holds the 'visible' value and set to 1
+						let visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
+						visibleInput.value = 1;
+						
+						//Get the strength table row based on the id (which is stored as the 'name' in STRENGTH_TABLE)  
+						let strTr = document.getElementById(targetRow['name']);
+						strTr.classList.remove(HIDDEN_CLASS);
+						
+						strIndex++; //Increment last
+					}
 				}
 				
+				function removeStrTarget(){
+					
+					if(strIndex > 1){
+						strIndex--; //Decrement first
+						
+						const targetRow = STRENGTH_TABLE[strIndex];
+						
+						const visibleInput = document.getElementById(targetRow['dataFields']['visible']['label']);
+						visibleInput.value = 0;
+						
+						const strTr = document.getElementById(targetRow['name']);
+						strTr.classList.add(HIDDEN_CLASS);
+						
+						//Reset inputs to ''
+						const inputs = strTr.querySelectorAll('input[type="number"]'); //CSS Selector to select html inputs where type="number"
+						
+						inputs.forEach(input => {
+							input.value = '';
+						});
+					}
+				}
 			}
 			
 			//Hide/show the necessary elements. Also count the number of visible elements to get start index
@@ -803,8 +871,8 @@ const FORM_FUNCTIONS = function(data){
 			//Grab the MAX and MIN input box elements for the 'air' property
 			for (let row of CONDITIONS_TABLE){
 				if(row.property === 'air'){
-					airMax = new InputElement(row.dataFields.max.label);
-					airMin = new InputElement(row.dataFields.min.label);
+					airMax = new FormElement(row.dataFields.max.label);
+					airMin = new FormElement(row.dataFields.min.label);
 				}
 			}
 		
@@ -857,49 +925,49 @@ const FORM_FUNCTIONS = function(data){
 			toggleElement();
 
 
-		// Function to show or hide the element based on the selected radio button
-		function toggleElement() {
-			//console.log("Triggered");
-			let sccVal = IS_SCC;
-			let currentKey = 'CYL';
-			let prevKey = 'SCC';
-			
-			//Get SCC value either directly from checkboxes or from the IS_SCC variable passed from flask/python
-			if(EDITING){
-				//input[name="cylSCC"] is CSS selector syntax
-				sccVal = document.querySelector(`input[name="${SCC_ID}"]:checked`).value;
+			// Function to show or hide the element based on the selected radio button
+			function toggleElement() {
+				//console.log("Triggered");
+				let sccVal = IS_SCC;
+				let currentKey = 'CYL';
+				let prevKey = 'SCC';
+				
+				//Get SCC value either directly from checkboxes or from the IS_SCC variable passed from flask/python
+				if(EDITING){
+					//input[name="cylSCC"] is CSS selector syntax
+					sccVal = document.querySelector(`input[name="${SCC_ID}"]:checked`).value;
 
-			}
-			
-			//Reverse current and prev keys if sccVal set
-			if (sccVal === 'yes'){
-				currentKey = 'SCC';
-				prevKey = 'CYL';
+				}
 				
-			}
+				//Reverse current and prev keys if sccVal set
+				if (sccVal === 'yes'){
+					currentKey = 'SCC';
+					prevKey = 'CYL';
+					
+				}
 
-			for (let row of CONDITIONS_TABLE){
-				let targetElement = document.getElementById(row['name']+'Row');
-				
-				//Show all table rows initially
-				targetElement.classList.remove(HIDDEN_CLASS);
-				
-				//Hide only where the currentKey is false and different from other key
-				if(!row[currentKey] && (row[currentKey] !== row[prevKey])){
+				for (let row of CONDITIONS_TABLE){
+					let targetElement = document.getElementById(row['name']+'Row');
 					
-					targetElement.classList.add(HIDDEN_CLASS);
+					//Show all table rows initially
+					targetElement.classList.remove(HIDDEN_CLASS);
 					
-					//Grab the inputs under the table row and clear the values
-						//All inputs are text EXCEPT auto_id which is hidden, which we do not want to reset
-					const inputs = targetElement.querySelectorAll('input[type="text"]');
-					
-				   inputs.forEach(input => {
-						input.value = '';
-					});
+					//Hide only where the currentKey is false and different from other key
+					if(!row[currentKey] && (row[currentKey] !== row[prevKey])){
+						
+						targetElement.classList.add(HIDDEN_CLASS);
+						
+						//Grab the inputs under the table row and clear the values
+							//All inputs are text EXCEPT auto_id which is hidden, which we do not want to reset
+						const inputs = targetElement.querySelectorAll('input[type="text"]');
+						
+					   inputs.forEach(input => {
+							input.value = '';
+						});
+					}
 				}
 			}
-		}
-			
+				
 		})();
 		
 		
