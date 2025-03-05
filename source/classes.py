@@ -486,9 +486,9 @@ class CylinderReport(Reports):
                         fieldData['precision'] = row['precision']
 
                     if(not 'disabled' in row):
-                        fieldData['disabled'] = False
+                        fieldData['disabled'] = ''
                     else:
-                        fieldData['disabled'] = row['disabled']
+                        fieldData['disabled'] = 'disabled'
 
                     fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
 

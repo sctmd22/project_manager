@@ -418,7 +418,6 @@ const FORM_FUNCTIONS = function(data){
 		const checkboxCustomID = document.getElementById('customIDCheck');
 		
 		const addButtonElement = document.getElementById('btnAddItems');	
-		//const exampleOutputElement = document.getElementById('itemsExampleID');
 
 		const exampleOutput = new OutputElement('itemsExampleID');
 
@@ -435,6 +434,7 @@ const FORM_FUNCTIONS = function(data){
 
 		const setDropdown = new DropInput('itemsSetSelect');
 		const separatorDropdown = new DropInput('itemsSeparatorSelect');
+
 
 		if(EDITING){
 			ADD_ITEMS();
@@ -618,32 +618,89 @@ const FORM_FUNCTIONS = function(data){
 			};
 		};
 		
-
-		function createItemsRow(){
-			const ITEMS_TABLE = FORM_DATA_JSON.cylItemsTable;
+		
+		/*---------------------------------------------------------------------------------------------------------------------------------------------*/
 			
-			//Template to be used to fill the HTML properties such as id, maxlength, etc. of each input of the items row
-			let ITEMS_TEMPLATE = FORM_DATA_JSON.cylItemsTableTemplate[0]; 
 			
-			const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
-			const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`); //Select <tbody> of ITEMS_TABLE_ID
-			
-			const numRows = numItems.val; //Read the value from the numItems object
-			
-			let idIndex = 1;
-			
-			//Convert 'disabled' property from true/false to 'disabled'/''
-			for(let key in ITEMS_TEMPLATE.dataFields){
-				if(ITEMS_TEMPLATE.dataFields[key].disabled == true){
-					ITEMS_TEMPLATE.dataFields[key].disabled = 'disabled';
-				} else {
-					ITEMS_TEMPLATE.dataFields[key].disabled = '';
-				}
+		class ItemsTable {
+			constructor(itemsData, template, tableID){
+				/*
+					itemsData: 	An array of objects, each row corresponding to an items row. Use it to initialize the table
+					template:	An array (1 element) of objects, where the object properties correpsond to HTML properties of each row
+					tableID:	The HTML ID of the table to append data to
+				*/
 			}
 			
-
+			
+			displayTable(){
+				
+			}
+			
+			
+			addTableRows(numRows, specimenID, dateReceived, dateTransported){
+				
+				
+			}
+			
+			
+			deleteRow(rowNum){
+				
+				
+			}
+			
+			insertRow(){
+				
+			}
+			
+			
+			
+		}
+			
+			
+		//Items table declarations
+		const ITEMS_TABLE = FORM_DATA_JSON.cylItemsTable;
+		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
+		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`); //Select <tbody> of ITEMS_TABLE_ID
+		
+		//Template to be used to fill the HTML properties such as id, maxlength, etc. of each input of the items row
+		let ITEMS_TEMPLATE = FORM_DATA_JSON.cylItemsTableTemplate[0]; 
+		
+		
+		itemsTable = new ItemsTable(ITEMS_TABLE, ITEMS_TEMPLATE, ITEMS_TABLE_ID);
+		let idIndex = 1;
+		
+		
+		if(EDITING){
+			outputDBItems();
+		}
+		
+		//Output item rows loaded from the database
+		function outputDBItems(){
+			
+			numRows = ITEMS_TABLE.length;
+			
 			for(let i = 0; i < numRows; i++){
-				let newRow = null;
+				let row = ITEMS_TABLE[i].dataFields;
+				
+				const tableRow = document.createElement('tr');	
+				
+				tableRow.innerHTML = populateRow(row, idIndex);
+				
+				itemsTableBody.appendChild(tableRow);
+				
+				idIndex++;
+			}
+			
+		}
+		
+
+		//Add x number of new rows to the items table depending on the value of the "Add X" form
+		function createItemsRow(){
+
+			
+			const numRows = numItems.val; //Read the number of rows to add from the numItems object
+			
+			for(let i = 0; i < numRows; i++){
 				const tableRow = document.createElement('tr');			
 
 				let rowData = ITEMS_TEMPLATE.dataFields;
@@ -653,32 +710,46 @@ const FORM_FUNCTIONS = function(data){
 				let dateTestedVal = '';
 
 
+				const values = {};
 				
-				tableRow.innerHTML = `
-					<td><input type="text" maxlength="${rowData.itemID.maxlength}" class="form-control" id="${rowData.itemID.label}${idIndex}" name="" value="${specimenID}" aria-describedby="textDesc" ${rowData.itemID.disabled}></td>
-					<td><input type="text" maxlength="${rowData.dateReceived.maxlength}" class="form-control" id="${rowData.dateReceived.label}${idIndex}" name="" value="${dateReceivedVal}" aria-describedby="textDesc" ${rowData.dateReceived.disabled}></td>
-					<td><input type="text" maxlength="${rowData.dateTested.maxlength}" class="form-control" id="${rowData.dateTested.label}${idIndex}" name="" value="${dateTestedVal}" aria-describedby="textDesc" ${rowData.dateTested.disabled}></td>
-					<td><input type="text" maxlength="${rowData.age.maxlength}" class="form-control" id="${rowData.age.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.age.disabled}></td>
-					<td><input type="text" maxlength="${rowData.diameter.maxlength}" class="form-control" id="${rowData.diameter.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.diameter.disabled}></td>
-					<td><input type="text" maxlength="${rowData.length.maxlength}" class="form-control" id="${rowData.length.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.length.disabled}></td>
-					<td><input type="text" maxlength="${rowData.area.maxlength}" class="form-control" id="${rowData.area.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.area.disabled}></td>
-					<td><input type="text" maxlength="${rowData.weight.maxlength}" class="form-control" id="${rowData.weight.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.weight.disabled}></td>
-					<td><input type="text" maxlength="${rowData.strength.maxlength}" class="form-control" id="${rowData.strength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.strength.disabled}></td>
-					<td><input type="text" maxlength="${rowData.breakType.maxlength}" class="form-control" id="${rowData.breakType.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.breakType.disabled}></td>
-					<td><input type="text" maxlength="${rowData.requiredStrength.maxlength}" class="form-control" id="${rowData.requiredStrength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.requiredStrength.disabled}></td>
-					<td><input type="text" maxlength="${rowData.percentStrength.maxlength}" class="form-control" id="${rowData.percentStrength.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.percentStrength.disabled}></td>
-					<td><input type="text" maxlength="${rowData.initials.maxlength}" class="form-control" id="${rowData.initials.label}${idIndex}" name="" value="" aria-describedby="textDesc" ${rowData.initials.disabled}></td>
-			
-				`;
+				rowData.itemID.val = specimenID;
+				rowData.dateReceived.val = dateReceivedVal;
+				rowData.dateTested.val = dateTestedVal;
+
+				tableRow.innerHTML = populateRow(rowData, idIndex);
 				
 				idIndex++;
 				itemsTableBody.appendChild(tableRow);	
 			
-				
-			
 			}
-
 		}
+		
+		
+		function populateRow(dataTable, idIndex){
+
+			const rows = `
+				<td><input type="text" maxlength="${dataTable.itemID.maxlength}" class="form-control" id="${dataTable.itemID.label}${idIndex}" name="" value="${dataTable.itemID.val}" aria-describedby="textDesc" ${dataTable.itemID.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.dateReceived.maxlength}" class="form-control" id="${dataTable.dateReceived.label}${idIndex}" name="" value="${dataTable.dateReceived.val}" aria-describedby="textDesc" ${dataTable.dateReceived.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.dateTested.maxlength}" class="form-control" id="${dataTable.dateTested.label}${idIndex}" name="" value="${dataTable.dateTested.val}" aria-describedby="textDesc" ${dataTable.dateTested.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.age.maxlength}" class="form-control" id="${dataTable.age.label}${idIndex}" name="" value="${dataTable.age.val}" aria-describedby="textDesc" ${dataTable.age.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.diameter.maxlength}" class="form-control" id="${dataTable.diameter.label}${idIndex}" name="" value="${dataTable.diameter.val}" aria-describedby="textDesc" ${dataTable.diameter.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.length.maxlength}" class="form-control" id="${dataTable.length.label}${idIndex}" name="" value="${dataTable.length.val}" aria-describedby="textDesc" ${dataTable.length.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.area.maxlength}" class="form-control" id="${dataTable.area.label}${idIndex}" name="" value="${dataTable.area.val}" aria-describedby="textDesc" ${dataTable.area.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.weight.maxlength}" class="form-control" id="${dataTable.weight.label}${idIndex}" name="" value="${dataTable.weight.val}" aria-describedby="textDesc" ${dataTable.weight.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.strength.maxlength}" class="form-control" id="${dataTable.strength.label}${idIndex}" name="" value="${dataTable.strength.val}" aria-describedby="textDesc" ${dataTable.strength.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.breakType.maxlength}" class="form-control" id="${dataTable.breakType.label}${idIndex}" name="" value="${dataTable.breakType.val}" aria-describedby="textDesc" ${dataTable.breakType.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.requiredStrength.maxlength}" class="form-control" id="${dataTable.requiredStrength.label}${idIndex}" name="" value="${dataTable.requiredStrength.val}" aria-describedby="textDesc" ${dataTable.requiredStrength.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.percentStrength.maxlength}" class="form-control" id="${dataTable.percentStrength.label}${idIndex}" name="" value="${dataTable.percentStrength.val}" aria-describedby="textDesc" ${dataTable.percentStrength.disabled}></td>
+				<td><input type="text" maxlength="${dataTable.initials.maxlength}" class="form-control" id="${dataTable.initials.label}${idIndex}" name="" value="${dataTable.initials.val}" aria-describedby="textDesc" ${dataTable.initials.disabled}></td>
+			`;
+			
+			return rows
+			
+		}
+		
+		
+		
+		
 		
 		//Add event listeners to all 'diameter' and 'length' inputs
 		//Add event listeners to all 'age' inputs
