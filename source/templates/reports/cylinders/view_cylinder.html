@@ -699,19 +699,6 @@
 						</div>
 					</div>
 					
-					<div class="row align-items-center mt-3 mb-3">
-
-						<div class="cylFormLabels">
-							<label for="" class="">Break Schedule:</label>
-						</div>
-							
-						<div class="cylFormDate">
-							<select class="form-select" name="" id="">
-								<option value="{{ key }}" {% if key == data.fieldTable.dataFields.mouldType.val %}selected{% endif %}>{{ value }}</option>
-							</select>
-						</div>
-
-					</div>
 				</div>
 				<button type="button" class="btn btn-primary" id="btnAddItems" disabled>Add Cylinders</button>
 			</th>	
@@ -732,25 +719,48 @@
 			
 			<tbody>
 			<tr class="align-center">
-				<th scope="col" class="itemIDCol">Specimen ID</th>
-				<th scope="col" class="itemsDateCol">Date Received</th>
-				<th scope="col" class="itemsDateCol">Date Tested</th>
-				<th scope="col" class="itemsSmallCol">Age (Days)</th>
-				<th scope="col" class="itemsSmallCol">Diameter (mm)</th>
-				<th scope="col" class="itemsSmallCol">Length (mm)</th>
-				<th scope="col" class="itemsSmallCol-2">Area (mm<sup>2</sup>)</th>
-				<th scope="col" class="itemsSmallCol-3">Weight (g)</th>
-				<th scope="col" class="itemsSmallCol-3">Strength (Mpa)</th>
-				<th scope="col" class="itemsSmallCol">Break Type</th>
-				<th scope="col" class="itemsSmallCol">Required Strength</th>
-				<th scope="col" class="itemsSmallCol">% of Required</th>
-				<th scope="col" class="itemsSmallCol">Tech Initial</th>
+				<th scope="col" class="size11">Specimen ID</th>
+				<th scope="col" class="size9">Date Received</th>
+				<th scope="col" class="size9">Date Tested</th>
+				<th scope="col" class="size3">Age (Days)</th>
+				<th scope="col" class="size3">Diameter (mm)</th>
+				<th scope="col" class="size3">Length (mm)</th>
+				<th scope="col" class="size5">Area (mm<sup>2</sup>)</th>
+				<th scope="col" class="size6">Weight (g)</th>
+				<th scope="col" class="size5">Strength (Mpa)</th>
+				<th scope="col" class="size2">Break Type</th>
+				<th scope="col" class="size3">Required Strength</th>
+				<th scope="col" class="size3">% of Required</th>
+				<th scope="col" class="size3">Tech Initial</th>
 				
 			</tr>
 			
 
-			<tr class="align-center" id="cylItemsRows">
-			</tr>
+			{%  if pageData.editing %}
+				<tr class="align-center" id="cylItemsRows">
+			
+				</tr>
+			{% else %}
+			
+				{% for row in data.cylItemsTable %}
+					<tr class="align-center" id="cylItemsRows">
+						<td>{{ row.dataFields.itemID.val }}</td>
+						<td>{{ row.dataFields.dateReceived.val }}</td>
+						<td>{{ row.dataFields.dateTested.val }}</td>
+						<td>{{ row.dataFields.age.val }}</td>
+						<td>{{ row.dataFields.diameter.val }}</td>
+						<td>{{ row.dataFields.length.val }}</td>
+						<td>{{ row.dataFields.area.val }}</td>
+						<td>{{ row.dataFields.weight.val }}</td>
+						<td>{{ row.dataFields.strength.val }}</td>
+						<td>{{ row.dataFields.breakType.val }}</td>
+						<td>{{ row.dataFields.requiredStrength.val }}</td>
+						<td>{{ row.dataFields.percentStrength.val }}</td>
+						<td>{{ row.dataFields.initials.val }}</td>
+						
+					</tr>
+				{% endfor %}
+			{% endif %}
 
 
 		</table>		

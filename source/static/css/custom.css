@@ -83,51 +83,47 @@
 }
 
 
-
-/* Cylinder Items */
-
-.cylItemsSmall, .cylItemsSmall2, .cylItemsSmall3, .cylItemsID, .cylItemsDate {
-	display: inline;
-
+.size1 {
+	min-width: 51px;
 }
 
-
-.itemsSmall {
-	min-width: 68px;
+.size2 {
+	min-width: 60px;
 }
 
-.itemsSmall-2 {
-	width: 65px;
+.size3 {
+	min-width: 69px;
 }
 
-.itemsSmall-3 {
-	width: 75px;
+.size4 {
+	min-width: 78px;
+}	
+
+.size5 {
+	min-width: 87px;
 }
 
-.cylItemsID {
-	width: 110px;
+.size6 {
+	min-width: 96px;
+}	
+
+
+.size7 {
+	min-width: 105px;
 }
 
-.cylItemsDate {
-	width: 100px;
+.size8 {
+	min-width: 114px;
 }
 
-.itemIDCol {
-	min-width: 118px;
+.size9{
+	min-width: 123px;
 }
 
-.itemsDateCol {
-	min-width: 118px;
+.size10 {
+	min-width: 132px;
 }
 
-.itemsSmallCol {
-	min-width: 68px;
-}
-
-.itemsSmallCol-2 {
-	min-width: 76px;
-}
-
-.itemsSmallCol-3 {
-	min-width: 86px;
+.size11 {
+	min-width: 141px;
 }
