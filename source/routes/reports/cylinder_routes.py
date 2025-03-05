@@ -34,13 +34,17 @@ def cylinders():
 
     return render_template("reports/cylinders/cylinders.html", breadCrumbs=breadCrumbs, data=result, pageData=pageData)
 
-
+#API to pass data to the javascript frontend
 @cylinders_bp.route("/get_json_data/<int:cylinder_id>")
 def get_json_data(cylinder_id):
-    editing = HLP.get_edit()
+
+    #Deny requests that do not have the "XMLHttpRequest" header
+        #Prevents the end-user from directly accessing this route
+    if not request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return "Access denied", 403  # Return a 403 Forbidden error
 
     if(cylinder_id > 0):
-        cylReport = CylinderReport.create_from_db(cylinder_id, editing)
+        cylReport = CylinderReport.create_from_db(cylinder_id)
     else:
         cylReport = CylinderReport.create_default()
 
@@ -60,7 +64,7 @@ def new_cylinder():
     #Create the CylinderReport object with defaults
     cylReport = CylinderReport.create_default()
 
-    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), jsonData=cylReport.to_json(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
+    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
 
 @cylinders_bp.route("/<int:cylinder_id>")
 def view_cylinder(cylinder_id):
@@ -75,9 +79,9 @@ def view_cylinder(cylinder_id):
     pageData['newCylinder'] = False
 
     #Create the CylinderReport object loading the data from the database
-    cylReport = CylinderReport.create_from_db(cylinder_id, editing)
+    cylReport = CylinderReport.create_from_db(cylinder_id)
 
-    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), jsonData=cylReport.to_json(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
+    return render_template("reports/cylinders/view_cylinder.html", data=cylReport.to_dict(), tables=cylReport.tables_to_dict(), breadCrumbs=breadCrumbs, pageData=pageData)
 
 
 @cylinders_bp.route("/<int:cylinder_id>/delete")
@@ -105,7 +109,7 @@ def submit_cylinder():
 def update_cylinder():
     cylinder_id = request.form['cylinderID']
 
-    cylReport = CylinderReport.create_from_db(cylinder_id, True)    #Set editing to True so the strength table creates the full table before submission
+    cylReport = CylinderReport.create_from_db(cylinder_id)    #Set editing to True so the strength table creates the full table before submission
 
     cylReport.submit_edit()
 
@@ -116,7 +120,7 @@ def update_cylinder():
 def delete_cylinder():
     cylinder_id = request.form['cylinder_id']
 
-    cylReport = CylinderReport.create_from_db(cylinder_id, True)
+    cylReport = CylinderReport.create_from_db(cylinder_id)
     cylReport.delete()
 
     return redirect(url_for("cylinders_bp.cylinders"))

@@ -206,6 +206,7 @@ class CylinderReport(Reports):
         {'label': 'requiredStrength',   'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 6, 'precision':0, 'disabled':True},
         {'label': 'percentStrength',    'dataType': GLB.VALIDATION_TYPES['NUMBER'], 'maxlength': 4, 'precision':0, 'disabled':True},
         {'label': 'initials',           'dataType': GLB.VALIDATION_TYPES['TEXT'],   'maxlength': 3},
+        {'label': 'autoID'},
 
     ]
 
@@ -339,7 +340,7 @@ class CylinderReport(Reports):
         return cls(defaultData, cylinder_id)
 
     @classmethod
-    def create_from_db(cls, id, editing=False):
+    def create_from_db(cls, id):
         #Get database values
         report_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_REPORT_DATA} WHERE auto_id = %s", (id,)) #The (id,) is a tuple of values which corresponds to %s
         str_sql = super().sql_fetchall(f"SELECT * FROM {cls.TB_STR_REQ} WHERE cyl_report_id = %s ORDER BY auto_id ASC", (id,))
@@ -352,7 +353,7 @@ class CylinderReport(Reports):
         cylTable = cls.__create_data_n_table(cls.FORM_ITEMS_TEMPLATE, cls.CYL_ITEMS_LABELS)
 
         field_result = cls.__sql_to_html_field(report_sql, fieldTable)
-        str_result = cls.__sql_to_html_strength(str_sql, strTable, editing)
+        str_result = cls.__sql_to_html_strength(str_sql, strTable)
         con_result = cls.__sql_to_html_con(con_sql, conTable)
         cyl_items_result = cls.__sql_to_html_cyl_items(cyl_items_sql, cylTable)
 
@@ -484,7 +485,7 @@ class CylinderReport(Reports):
                     else:
                         fieldData['precision'] = row['precision']
 
-                    if(not 'disalbed' in row):
+                    if(not 'disabled' in row):
                         fieldData['disabled'] = False
                     else:
                         fieldData['disabled'] = row['disabled']
@@ -498,24 +499,13 @@ class CylinderReport(Reports):
         return dataList
 
     @classmethod
-    def __create_data_table(cls, template, formLabels):
-        dataList = []
-
-        for row in template:
-            newRow = copy.deepcopy(row) #copy.deepcopy(): copies nested dicts as copy() alone passes references to nested dicts
-
-            for key in formLabels:
-                label = HLP.capitalizeFirst(key)
-                newRow['labels'][key] = row['name'] + label
-                newRow['valueData'][key] = ''
-
-            dataList.append(newRow)
-
-        return dataList
-
-    @classmethod
     def __sql_to_html_field(self, sqlResult, formTable):
-
+        '''
+            Assign sqlResult data to the formTable template
+        :param sqlResult: A list which should only ever contain 1 dictionary
+        :param formTable:
+        :return:
+        '''
         formData = copy.deepcopy(formTable[0])
         sqlResult = processSql(sqlResult[0])
 
@@ -576,39 +566,38 @@ class CylinderReport(Reports):
         return formData
 
     @classmethod
-    def __sql_to_html_strength(self, sqlResult, formTable, editing):
+    def __sql_to_html_strength(self, sqlResult, formTable):
         """
-        Assign SQL data to FORM template. Remove any trailing results where both days and strength are 0
+        Assign SQL data to FORM template
 
-        :param sqlResult: List of SQL results
-        :param formTable: List of HTML form values and properties
+        :param sqlResult: List of SQL results as dictionaries.
+        :param formTable: List of HTML form values and properties as dictionaries. Each row corresponds to a group of
+            HTML input elements and properties.
         :param editing: Boolean. True if the form is being edited, false otherwise
-        :return: A list of HTML form values ready to be output to the page
+        :return: A list dictionaries, each dictioanry corresponding to HTML form values and properties
         """
         strList = []
 
         strenTable = copy.deepcopy(formTable)
         sqlResult = copy.deepcopy(sqlResult)
 
-        #Ensure all None values are removed
         sqlResult = processSql(sqlResult)
 
-
         #Populate the strenTable with the SQL results
-        for i, row in enumerate(sqlResult):
-            data = strenTable[i]['dataFields']
-            sqlData = sqlResult[i]
-            data['strength']['val'] = sqlData['target_strength']
-            data['days']['val'] = sqlData['target_days']
+        for i, sqlRow in enumerate(sqlResult):
+            data = strenTable[i]['dataFields']  #data takes a reference to strenTable[i]['dataFields']
+
+            data['strength']['val'] = sqlRow['target_strength']
+            data['days']['val'] = sqlRow['target_days']
 
             # Ensure the first entry is visible
             if (i == 0):
                 targetVisible = 1
             else:
-                targetVisible = sqlData['target_visible']
+                targetVisible = sqlRow['target_visible']
 
             data['visible']['val'] = targetVisible
-            data['autoID']['val'] = sqlData['auto_id']
+            data['autoID']['val'] = sqlRow['auto_id']
 
             strList.append(strenTable[i])
 
@@ -618,46 +607,59 @@ class CylinderReport(Reports):
     def __sql_to_html_con(self, sqlResult, formTable):
         newFormTable = copy.deepcopy(formTable)
 
-        #Ensure all None values are removed
         sqlResult = processSql(sqlResult)
 
         #Ensure the 'property' fields match and populate the table
         for row in newFormTable:
-            dataFields = row['dataFields']
-            for sql in sqlResult:
-                if(row['property'] == sql['property']):
-                    dataFields['actual']['val'] = sql['val_actual']
-                    dataFields['min']['val'] = sql['val_min']
-                    dataFields['max']['val'] = sql['val_max']
-                    dataFields['notes']['val'] = sql['notes']
-                    dataFields['autoID']['val'] = sql['auto_id']
+            dataFields = row['dataFields'] #assign dataFields a reference to row['dataFields']
+            for sqlRow in sqlResult:
+                if(row['property'] == sqlRow['property']):
+                    dataFields['actual']['val'] = sqlRow['val_actual']
+                    dataFields['min']['val'] = sqlRow['val_min']
+                    dataFields['max']['val'] = sqlRow['val_max']
+                    dataFields['notes']['val'] = sqlRow['notes']
+                    dataFields['autoID']['val'] = sqlRow['auto_id']
                     break
 
         return newFormTable
 
     @classmethod
     def __sql_to_html_cyl_items(self, sqlResult, formTable):
+        '''
+
+        :param sqlResult: A list of dicts, where each dictionary corresponds to individual cylinder data
+        :param formTable: A list containing a single dict which is a template corresponding to HTML outputs and properties
+            to be populated with sqlResult data.
+
+        :return: A list of dicts
+        '''
+
         sqlResult = processSql(sqlResult)
 
         newFormTable = []
 
-        for i, row in enumerate(sqlResult):
-            newFormTable.append(copy.deepcopy(formTable[0])) #copy the form table (which is only 1 row) as many times as there is SQL data
+        for sqlRow in sqlResult:
+            newRow = copy.deepcopy(formTable[0])  #copy the formTable template as many times as there is SQL data
+            dataFields = newRow['dataFields']   #assign dataFields a reference to newRow['dataFields']
 
-            newFormTable[i]['valueData']['itemID'] = row['item_id']
-            newFormTable[i]['valueData']['dateReceived'] = row['date_received']
-            newFormTable[i]['valueData']['dateTested'] = row['date_tested']
-            newFormTable[i]['valueData']['age'] = row['age']
-            newFormTable[i]['valueData']['diameter'] = row['diameter']
-            newFormTable[i]['valueData']['length'] = row['length']
-            newFormTable[i]['valueData']['area'] = row['area']
-            newFormTable[i]['valueData']['weight'] = row['weight']
-            newFormTable[i]['valueData']['strength'] = row['strength']
-            newFormTable[i]['valueData']['breakType'] = row['break_type']
-            newFormTable[i]['valueData']['percentStrength'] = row['percent_strength']
-            newFormTable[i]['valueData']['initials'] = row['initials']
+            dateReceived = HLP.dateToStr(sqlRow['date_received'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
+            dateTested = HLP.dateToStr(sqlRow['date_tested'], GLB.DATE_FORMATS.SIMPLE_DATE_FORMAT.value)
 
-            newFormTable[i]['valueData']['autoID'] = row['auto_id']
+            dataFields['itemID']['val'] = sqlRow['item_id']
+            dataFields['dateReceived']['val'] = dateReceived
+            dataFields['dateTested']['val'] = dateTested
+            dataFields['age']['val'] = sqlRow['age']
+            dataFields['diameter']['val'] = sqlRow['diameter']
+            dataFields['length']['val'] = sqlRow['length']
+            dataFields['area']['val'] = sqlRow['area']
+            dataFields['weight']['val'] = sqlRow['weight']
+            dataFields['strength']['val'] = sqlRow['strength']
+            dataFields['breakType']['val'] = sqlRow['break_type']
+            dataFields['percentStrength']['val'] = sqlRow['percent_strength']
+            dataFields['initials']['val']= sqlRow['initials']
+
+            dataFields['autoID']['val'] = sqlRow['auto_id']
+            newFormTable.append(newRow)
 
 
         return newFormTable
