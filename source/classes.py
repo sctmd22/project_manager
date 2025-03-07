@@ -313,6 +313,7 @@ class CylinderReport(Reports):
         #Ensure first item is always visible
         strTable[0]['dataFields']['visible']['val'] = 1
 
+        #Re-assign list as dict
         fieldTable = fieldTable[0]
 
         #Insert some default values
@@ -409,19 +410,19 @@ class CylinderReport(Reports):
             corresponds to a row to be output on the HTML page.
             [
                 {
-                    'name': 'strTable1',
+                    'name': 'strTableRow1',
                     'title': 'Target 1',
                     'dataFields': {
                         'strength':     {'label': 'strTableStrength1', 'val': None, 'dataType': 1, 'size': {'min': 0, 'max': 1000}, 'errorLabel': 'errorStrTableStrength1'},
                         'reportTitle':  {'label': 'strTableDays1', 'val': None, 'dataType': 1, 'size': {'min': 0, 'max': 1000}, 'errorLabel': 'errorStrTableDays1'},
                 }
                 {
-                    'name': 'strTable2',
+                    'name': 'strTableRow2',
                     'title': '',
                     'dataFields': { ... }
                 }
                 {
-                    'strTable3'
+                    'strTableRow3'
                 }
             ]
         '''
@@ -453,7 +454,16 @@ class CylinderReport(Reports):
                 data['title'] = data['title'].replace('{n}', index)   #Replace any instances of {n} in 'title' with index
 
                 name = data['name']
-                data['name'] = name + index #Concatenate the index value to the name
+                data['name'] = name + "Row" + index #Concatenate 'Row' and the index value to the name. Can be used as for each row name/ID
+
+                precisionData = None
+
+                #Precision precedence: Row/template > col/Labels. If precision is specified on the row (template) level, populate
+                    #the 'precision' properties for each individual label with those values
+                if('precision' in data):
+                    precisionData = data['precision']
+                    data.pop('precision') #remove precision date from the row
+
 
                 for row in formLabels:
                     key = row['label']  #The key to be used with the 'data' dict is simply the 'label' key from the formLabels row
@@ -465,36 +475,46 @@ class CylinderReport(Reports):
                     fieldData['label'] = fullLabel
                     fieldData['val'] = ''
 
-                    if (not 'size' in row):
-                        fieldData['size'] = None
-                    else:
+                    if ('size' in row):
                         fieldData['size'] = copy.deepcopy(row['size'])
-
-                    if (not 'maxlength' in row):
-                        fieldData['maxlength'] = None
                     else:
+                        fieldData['size'] = None
+
+                    if ('maxlength' in row):
                         fieldData['maxlength'] = row['maxlength']
-
-                    if (not 'dataType' in row):
-                        fieldData['dataType'] = None
                     else:
+                        fieldData['maxlength'] = None
+
+                    if ('dataType' in row):
                         fieldData['dataType'] = row['dataType']
-
-                    if(not 'precision' in row):
-                        fieldData['precision'] = None
                     else:
+                        fieldData['dataType'] = None
+
+                    #Use row/template precision data first
+                    if(precisionData):
+                        if(key in precisionData):
+                            fieldData['precision'] = precisionData[key]
+
+                    #Use col/label precision second
+                    elif('precision' in row):
                         fieldData['precision'] = row['precision']
-
-                    if(not 'disabled' in row):
-                        fieldData['disabled'] = ''
                     else:
+                        fieldData['precision'] = None
+
+                    if('disabled' in row):
                         fieldData['disabled'] = 'disabled'
+                    else:
+                        fieldData['disabled'] = ''
+
 
                     fieldData['errorLabel'] = 'error' + HLP.capitalizeFirst(fullLabel)
 
                     data['dataFields'][key] = fieldData
 
+
                 dataList.append(data)
+
+
 
         return dataList
 

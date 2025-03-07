@@ -539,7 +539,7 @@
 		
 		{% for row in data.conditionsTable %}
 
-			<tr class="align-center" id="{{ row.name }}Row">
+			<tr class="align-center" id="{{ row.name }}">
 
 					<th scope="row">{{ row.title | safe }}</th>
 	
@@ -553,13 +553,13 @@
 
 				{% else %}
 					
-					<td>{{ row.dataFields.actual.val | round_val_f(row.precision.actual) }}</td>
+					<td>{{ row.dataFields.actual.val | round_val_f(row.dataFields.actual.precision ) }}</td>
 					
 					{% if ((row.property == 'air') and (data.fieldTable.dataFields.airOptions.val == 'natural')) %}
 						<td colspan="2">Natural</td>
 					{% else %}	
-						<td>{{ row.dataFields.min.val | round_val_f(row.precision.min) }}</td>
-						<td>{{ row.dataFields.max.val | round_val_f(row.precision.max) }}</td>
+						<td>{{ row.dataFields.min.val | round_val_f(row.dataFields.min.precision) }}</td>
+						<td>{{ row.dataFields.max.val | round_val_f(row.dataFields.max.precision) }}</td>
 
 					{% endif %}
 					<td class="align-left">{{ row.dataFields.notes.val }}</td>
@@ -735,15 +735,17 @@
 				
 			</tr>
 			
-
 			{%  if pageData.editing %}
-				<tr class="align-center" id="cylItemsRows">
+
+			<tr class="">
+				<td colspan="14"><button type="button" class="btn btn-primary" id="btnAddItemsRow">Add Row</button></td>
+			</tr>
 			
-				</tr>
+
 			{% else %}
 			
 				{% for row in data.cylItemsTable %}
-					<tr class="align-center" id="cylItemsRows">
+					<tr class="align-center" id="cylItemsRow">
 						<td>{{ row.dataFields.itemID.val }}</td>
 						<td>{{ row.dataFields.dateReceived.val }}</td>
 						<td>{{ row.dataFields.dateTested.val }}</td>

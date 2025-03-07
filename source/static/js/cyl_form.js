@@ -260,10 +260,14 @@ const FORM_FUNCTIONS = function(data){
 			if (!regex.test(this.inputElement.value)) {
 				this.inputElement.value = this.inputElement.value.replace(/[^\d]/g, ''); // Remove non-integer characters
 			}
-
 			
 			this.verifySize();
 					
+		}
+		
+		getVal(){
+			this.verifyPosInt();
+			return this.val;
 		}
 	}
 
@@ -290,6 +294,12 @@ const FORM_FUNCTIONS = function(data){
 
 			//Update the input field value
 			this.inputElement.value = newValue;
+			this.val = newValue;
+		}
+		
+		getVal(){
+			this.verifyNumber();
+			return this.val;
 		}
 		
 	}
@@ -413,15 +423,18 @@ const FORM_FUNCTIONS = function(data){
 
 	const ITEMS_FUNCTIONS = (function(){
 		
+		const ITEMS_LIMIT = 30;
+		
 		const checkboxReceivedEqual = document.getElementById(FORM_DATA_JSON.fieldTable.dataFields.dateReceivedEqual.label);
 		const checkboxSpecimenEqual = document.getElementById(FORM_DATA_JSON.fieldTable.dataFields.dateSpecimenEqual.label);
 		const checkboxCustomID = document.getElementById('customIDCheck');
 		
 		const addButtonElement = document.getElementById('btnAddItems');	
+		const addButtonRowElement = document.getElementById('btnAddItemsRow');	
 
 		const exampleOutput = new OutputElement('itemsExampleID');
 
-		const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 1, 30);
+		const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 1, ITEMS_LIMIT);
 		
 		const initials = new TextInput('itemsInitialsIn', 'itemsInitialsErrorMsg', 3);
 		const customID = new TextInput('itemsCustomID', 'itemsCustomIDErr', 10);
@@ -438,12 +451,6 @@ const FORM_FUNCTIONS = function(data){
 
 		if(EDITING){
 			ADD_ITEMS();
-			
-			//Add event listener for "Add X" button
-			addButtonElement.addEventListener('click', ()=>{
-				createItemsRow();
-			});
-			
 		}
 
 		//Handle realtime functionality of the "Add Cylinders/Cubes/X" forms
@@ -623,23 +630,139 @@ const FORM_FUNCTIONS = function(data){
 			
 			
 		class ItemsTable {
-			constructor(itemsData, template, tableID){
+			constructor(itemsData, template, tableID, maxItems){
 				/*
-					itemsData: 	An array of objects, each row corresponding to an items row. Use it to initialize the table
-					template:	An array (1 element) of objects, where the object properties correpsond to HTML properties of each row
+					itemsData: 	An array of objects, each row corresponding to an items row. Will be empty if table has not yet been written to database
+					template:	An object (dict) correpsond to HTML properties of each row (without values)
 					tableID:	The HTML ID of the table to append data to
 				*/
+				
+				this.numRows = 0;
+				this.tableBodyElement = null;
+				this.itemsTableData = [];
+				this.rowLimit = 100;
+				this.rowTemplate = {};
+				
+				if(maxItems){
+					this.rowLimit = maxItems;
+				}
+				
+				this.rowTemplate = template;
+				
+				//Get correct table row from table
+				this.tableBodyElement = document.querySelector(`#${tableID} tbody`);
+			
+				if(itemsData){
+					this.numRows = itemsData.length;
+					this.itemsTableData = itemsData; //Initially assign the database table to the object table
+				}
 			}
 			
+			deleteTable(){
+				this.clearDisplay();
+				
+				//Clear Table
+				this.itemsTableData = []
+				this.updateSize();
+				
+			}
 			
+			clearDisplay(){
+				for(let i = 0; i < this.numRows; i++){
+					let rowID = this.itemsTableData[i].name;
+					let rowElem = document.getElementById(rowID);
+					
+					//Remove form elements
+					if(rowElem){
+						rowElem.remove();
+					}	
+				}
+			}
+			
+			//Display the contents of this.itemsTableData
 			displayTable(){
+				this.clearDisplay();
+				
+				for(let i = 0; i < this.numRows; i++){
+					let rowData = this.itemsTableData[i].dataFields;
+					let rowID = this.itemsTableData[i].name;
+					
+					const tableRow = document.createElement('tr');	
+					tableRow.id = `${rowID}`;
+					
+					tableRow.innerHTML = this.populateTD(rowData, i);
+
+					this.tableBodyElement.appendChild(tableRow);
+				}
+			}
+			
+			//Populate the HTML template <td></td> with data
+			populateTD(rowData, idIndex){
+				let tableRow = '';
+				
+				for(let key in rowData){
+					let maxLength = rowData[key].maxlength;
+					let label = rowData[key].label;
+					let val = rowData[key].val;
+					let disabled = rowData[key].disabled;
+					
+					let td = '';
+					
+					if(key == 'autoID'){
+						td = `<input type="hidden" id="${label}" value="${val}">`;
+						
+					} else {
+						td = `<td><input type="text" maxlength="${maxLength}" class="form-control" id="${label}" name="" value="${val}" aria-describedby="textDesc" ${disabled}></td>`;
+					}
+					
+					tableRow += td;
+					
+				}
+				return tableRow;
+			}
+			
+			//Add rows filled in with information from the 'Add Cylinders' form
+			addTableRows(n, specimenID, dateReceived, dateTested){
+
+				let startVal = this.numRows + 1;
+				let endVal = n + startVal;
+				
+				for(let i = startVal; i < endVal; i++){				
+					
+					let newRow = structuredClone(this.rowTemplate); //Creat a deep copy of the template row
+
+					newRow.dataFields.itemID.val = `${specimenID}${i}`;
+
+					this.itemsTableData.push(newRow);
+					this.updateSize();
+
+					
+				}
+				
+				console.log(this.itemsTableData);
+				
+				this.displayTable()
 				
 			}
 			
 			
-			addTableRows(numRows, specimenID, dateReceived, dateTransported){
-				
-				
+			//Add an empty row to the end of the table
+			addRow(){
+				if(this.numRows < this.rowLimit){
+					
+					//Append the template to the table
+					this.itemsTableData.push(this.rowTemplate);	
+					
+					//Update numRows
+					this.updateSize()
+	
+					this.displayTable();
+				}	
+								
+			}
+			
+			updateSize(){
+				this.numRows = this.itemsTableData.length;
 			}
 			
 			
@@ -654,24 +777,52 @@ const FORM_FUNCTIONS = function(data){
 			
 			
 			
-		}
-			
+		}	
 			
 		//Items table declarations
 		const ITEMS_TABLE = FORM_DATA_JSON.cylItemsTable;
 		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
+		//const ITEMS_TABLE_ROW = 'cylItemsRow';		//Table row ID/template name
 		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`); //Select <tbody> of ITEMS_TABLE_ID
 		
 		//Template to be used to fill the HTML properties such as id, maxlength, etc. of each input of the items row
 		let ITEMS_TEMPLATE = FORM_DATA_JSON.cylItemsTableTemplate[0]; 
 		
+		//Create ItemsTable object
+		itemsTable = new ItemsTable(ITEMS_TABLE, ITEMS_TEMPLATE, ITEMS_TABLE_ID, ITEMS_LIMIT);
 		
-		itemsTable = new ItemsTable(ITEMS_TABLE, ITEMS_TEMPLATE, ITEMS_TABLE_ID);
+		
+		
+		if(EDITING){
+			itemsTable.displayTable();
+			
+			//Add event listener for "Add X" button
+			addButtonElement.addEventListener('click', ()=>{
+				const numRows = numItems.getVal();
+				const specimenID = exampleOutput.getVal().slice(0,-1);
+				const dateReceivedVal = dateReceived.getVal();
+				const dateTestedVal = '';
+				
+				itemsTable.addTableRows(numRows, specimenID, dateReceivedVal, dateTestedVal);
+			});
+			
+			
+			//Add event listener for "Add Row" button
+			addButtonRowElement.addEventListener('click', ()=>{
+				itemsTable.addRow();
+			});
+			
+		}
+		
+		itemsTable.deleteTable();
+		
+		//itemsTable.clearDisplay();
+		
 		let idIndex = 1;
 		
 		
 		if(EDITING){
-			outputDBItems();
+			//outputDBItems();
 		}
 		
 		//Output item rows loaded from the database
@@ -698,7 +849,7 @@ const FORM_FUNCTIONS = function(data){
 		function createItemsRow(){
 
 			
-			const numRows = numItems.val; //Read the number of rows to add from the numItems object
+			const numRows = numItems.getVal(); //Read the number of rows to add from the numItems object
 			
 			for(let i = 0; i < numRows; i++){
 				const tableRow = document.createElement('tr');			
@@ -747,9 +898,7 @@ const FORM_FUNCTIONS = function(data){
 			
 		}
 		
-		
-		
-		
+
 		
 		//Add event listeners to all 'diameter' and 'length' inputs
 		//Add event listeners to all 'age' inputs
@@ -1018,7 +1167,7 @@ const FORM_FUNCTIONS = function(data){
 				}
 
 				for (let row of CONDITIONS_TABLE){
-					let targetElement = document.getElementById(row['name']+'Row');
+					let targetElement = document.getElementById(row.name);
 					
 					//Show all table rows initially
 					targetElement.classList.remove(HIDDEN_CLASS);
