@@ -437,7 +437,7 @@ const FORM_FUNCTIONS = function(data){
 		const numItems = new IntInput('numItemsIn', 'numItemsErrorMsg', 1, ITEMS_LIMIT);
 		
 		const initials = new TextInput('itemsInitialsIn', 'itemsInitialsErrorMsg', 3);
-		const customID = new TextInput('itemsCustomID', 'itemsCustomIDErr', 10);
+		const customID = new TextInput('itemsCustomID', 'itemsCustomIDErr', 20);
 		
 		const dateCast = new DateInput(FORM_DATA_JSON.fieldTable.dataFields.castDate.label);
 		const dateTransported = new DateInput(FORM_DATA_JSON.fieldTable.dataFields.dateTransported.label);
@@ -635,13 +635,26 @@ const FORM_FUNCTIONS = function(data){
 					itemsData: 	An array of objects, each row corresponding to an items row. Will be empty if table has not yet been written to database
 					template:	An object (dict) correpsond to HTML properties of each row (without values)
 					tableID:	The HTML ID of the table to append data to
+					maxItems:	The maximum number of rows the table will allow
 				*/
 				
 				this.numRows = 0;
 				this.tableBodyElement = null;
 				this.itemsTableData = [];
+				this.itemsTableDB = []; //Save a copy of itemsData incase the table needs to be reset
 				this.rowLimit = 100;
 				this.rowTemplate = {};
+				
+				
+				//Control button ID's (Add Row, Reset, Delete)
+				this.isBtnRow = false; //Whether the "Add Row" row has been added or not
+				this.isDeleteBtnRow = false; //Whether or not the delete row icons have been set with eventlisteners
+				this.addRowID = 'addItemsRow';
+				this.addRowBtnID  = 'btnItemsAddRow'; //ID of the table row for the "Add Row" button
+				this.resetBtnID = 'btnResetTable';
+				this.deleteTableBtnID = 'btnDeleteTable';
+				this.deleteBtnRowID = 'btnDeleteRow';
+				
 				
 				if(maxItems){
 					this.rowLimit = maxItems;
@@ -654,9 +667,84 @@ const FORM_FUNCTIONS = function(data){
 			
 				if(itemsData){
 					this.numRows = itemsData.length;
+					this.itemsTableDB = structuredClone(itemsData); //Save a copy of the original table incase the table needs to be reset
 					this.itemsTableData = itemsData; //Initially assign the database table to the object table
 				}
+				
+				
 			}
+			
+			
+			//Add the bottom row controls (Add Row, Undo All, Delete Table)
+			addControls(){
+				if(!this.isBtnRow){
+					const addBtnID = this.addRowBtnID;
+					const resetBtnID = this.resetBtnID;
+					const deleteBtnID = this.deleteTableBtnID;
+					
+					const tableRow = document.createElement('tr');	
+					tableRow.id = this.addRowID;
+					
+					tableRow.innerHTML = `
+						<td colspan="14">
+							<button type="button" class="btn btn-primary" id="${addBtnID}">Add Row</button>
+							<button type="button" class="btn btn-primary" id="${resetBtnID}">Undo All</button>
+							<button type="button" class="btn btn-danger" id="${deleteBtnID}">Delete Table</button>
+						</td>`;
+					
+					this.tableBodyElement.appendChild(tableRow);
+					
+					this.isBtnRow = true;
+					
+					//Get the element of the newly added buttons
+					const addBtnElement = document.getElementById(addBtnID);
+					const resetBtnElement = document.getElementById(resetBtnID);
+					const deleteBtnElement = document.getElementById(deleteBtnID);
+
+					//Add event listeners
+					addBtnElement.addEventListener('click', ()=>{
+						this.addRow();
+					});
+					
+					
+					resetBtnElement.addEventListener('click', ()=>{
+						const userConfirmed = confirm("Warning - This will reset any changes made to the Cylinder Data table during this session.");
+						
+						if(userConfirmed){
+							this.resetTable();
+						}
+						
+					});
+					
+			
+					deleteBtnElement.addEventListener('click', ()=>{
+						const userConfirmed = confirm("Are you sure you want to delete the Cylinder Data table?");
+						
+						if(userConfirmed){
+							this.deleteTable();
+						}
+						
+					});
+					
+				}
+		
+			}
+			
+			
+			//Remove only the changes from the table (not the data loaded from the database)
+				//Any data entered or rows added/removed will be reset to the original state when the table was first loaded
+			resetTable(){
+				//Need to clear the display first as clearDisplay() reads elements to clear from the table
+				this.clearDisplay();
+				
+				//Overwrite the current table with a copy the one from the database
+				this.itemsTableData = structuredClone(this.itemsTableDB);
+				
+				this.updateSize();
+				this.displayTable();
+				
+			}
+			
 			
 			deleteTable(){
 				this.clearDisplay();
@@ -667,10 +755,12 @@ const FORM_FUNCTIONS = function(data){
 				
 			}
 			
+			
+			//Read through the table and remove all rows from the DOM
 			clearDisplay(){
 				for(let i = 0; i < this.numRows; i++){
-					let rowID = this.itemsTableData[i].name;
-					let rowElem = document.getElementById(rowID);
+					const rowID = this.itemsTableData[i].name;
+					const rowElem = document.getElementById(rowID);
 					
 					//Remove form elements
 					if(rowElem){
@@ -682,37 +772,80 @@ const FORM_FUNCTIONS = function(data){
 			//Display the contents of this.itemsTableData
 			displayTable(){
 				this.clearDisplay();
+				this.addControls();
 				
 				for(let i = 0; i < this.numRows; i++){
-					let rowData = this.itemsTableData[i].dataFields;
-					let rowID = this.itemsTableData[i].name;
+					const rowData = this.itemsTableData[i].dataFields;
+					const rowID = this.itemsTableData[i].name;
 					
 					const tableRow = document.createElement('tr');	
 					tableRow.id = `${rowID}`;
 					
-					tableRow.innerHTML = this.populateTD(rowData, i);
+					tableRow.innerHTML = this.populateTD(rowData, i);;
 
-					this.tableBodyElement.appendChild(tableRow);
+					//Select the btnRow <tr></tr> to insert the table rows before it
+					const btnAddRow = document.getElementById(this.addRowID);
+
+					this.tableBodyElement.insertBefore(tableRow, btnAddRow);
+					
 				}
+				
+				this.addDeleteControl();
+
 			}
+			
+			
+			//Add event listeners for the delete icons for each row
+			addDeleteControl(){
+				
+				if(!this.isDeleteBtnRow){
+
+					//The ID without an index suffix is the input boxes 'name' property
+					const deleteBtnID = this.deleteBtnRowID;
+					
+					const deleteBtnElements = document.querySelectorAll(`i[name=${deleteBtnID}]`);
+					
+					console.log(deleteBtnElements);
+					
+					//ADD EVENT LISTENERS
+					
+					this.isDeleteBtnRow = true;
+	
+				}
+				
+			
+			}
+			
 			
 			//Populate the HTML template <td></td> with data
 			populateTD(rowData, idIndex){
 				let tableRow = '';
 				
 				for(let key in rowData){
-					let maxLength = rowData[key].maxlength;
-					let label = rowData[key].label;
-					let val = rowData[key].val;
-					let disabled = rowData[key].disabled;
+					const maxLength = rowData[key].maxlength;
+					const label = rowData[key].label;
+					const val = rowData[key].val;
+					const disabled = rowData[key].disabled;
 					
 					let td = '';
+				
+					const id = `${label}${idIndex}`
+					
+					
+					let deleteBtn = '';
+					let tdClass = '';
+			
+					if(key == 'itemID'){
+						deleteBtn = `<i class="bi bi-trash3 itemsIcon" id="${this.deleteBtnRowID}${idIndex}" name="${this.deleteBtnRowID}" row="${idIndex}"></i>`;
+						tdClass = 'itemsTD';
+					}
+			
 					
 					if(key == 'autoID'){
-						td = `<input type="hidden" id="${label}" value="${val}">`;
+						td = `<input type="hidden" id="${id}" name="${label}" value="${val}">`;
 						
 					} else {
-						td = `<td><input type="text" maxlength="${maxLength}" class="form-control" id="${label}" name="" value="${val}" aria-describedby="textDesc" ${disabled}></td>`;
+						td = `<td>${deleteBtn}<input type="text" maxlength="${maxLength}" class="form-control ${tdClass}" id="${id}" name="${label}" value="${val}" aria-describedby="textDesc" ${disabled}></td>`;
 					}
 					
 					tableRow += td;
@@ -724,8 +857,15 @@ const FORM_FUNCTIONS = function(data){
 			//Add rows filled in with information from the 'Add Cylinders' form
 			addTableRows(n, specimenID, dateReceived, dateTested){
 
-				let startVal = this.numRows + 1;
+				const startVal = this.numRows + 1;
 				let endVal = n + startVal;
+				
+				//Ensure endVal is within the limits
+				if(endVal > this.rowLimit){
+					endVal = this.rowLimit + 1;
+					
+				}
+				
 				
 				for(let i = startVal; i < endVal; i++){				
 					
@@ -735,12 +875,9 @@ const FORM_FUNCTIONS = function(data){
 
 					this.itemsTableData.push(newRow);
 					this.updateSize();
-
 					
 				}
-				
-				console.log(this.itemsTableData);
-				
+
 				this.displayTable()
 				
 			}
@@ -758,7 +895,6 @@ const FORM_FUNCTIONS = function(data){
 	
 					this.displayTable();
 				}	
-								
 			}
 			
 			updateSize(){
@@ -775,14 +911,11 @@ const FORM_FUNCTIONS = function(data){
 				
 			}
 			
-			
-			
 		}	
 			
 		//Items table declarations
 		const ITEMS_TABLE = FORM_DATA_JSON.cylItemsTable;
 		const ITEMS_TABLE_ID = 'cylItemsTable';		//Table to append elements to
-		//const ITEMS_TABLE_ROW = 'cylItemsRow';		//Table row ID/template name
 		const itemsTableBody = document.querySelector(`#${ITEMS_TABLE_ID} tbody`); //Select <tbody> of ITEMS_TABLE_ID
 		
 		//Template to be used to fill the HTML properties such as id, maxlength, etc. of each input of the items row
@@ -806,107 +939,8 @@ const FORM_FUNCTIONS = function(data){
 				itemsTable.addTableRows(numRows, specimenID, dateReceivedVal, dateTestedVal);
 			});
 			
-			
-			//Add event listener for "Add Row" button
-			addButtonRowElement.addEventListener('click', ()=>{
-				itemsTable.addRow();
-			});
-			
 		}
 		
-		itemsTable.deleteTable();
-		
-		//itemsTable.clearDisplay();
-		
-		let idIndex = 1;
-		
-		
-		if(EDITING){
-			//outputDBItems();
-		}
-		
-		//Output item rows loaded from the database
-		function outputDBItems(){
-			
-			numRows = ITEMS_TABLE.length;
-			
-			for(let i = 0; i < numRows; i++){
-				let row = ITEMS_TABLE[i].dataFields;
-				
-				const tableRow = document.createElement('tr');	
-				
-				tableRow.innerHTML = populateRow(row, idIndex);
-				
-				itemsTableBody.appendChild(tableRow);
-				
-				idIndex++;
-			}
-			
-		}
-		
-
-		//Add x number of new rows to the items table depending on the value of the "Add X" form
-		function createItemsRow(){
-
-			
-			const numRows = numItems.getVal(); //Read the number of rows to add from the numItems object
-			
-			for(let i = 0; i < numRows; i++){
-				const tableRow = document.createElement('tr');			
-
-				let rowData = ITEMS_TEMPLATE.dataFields;
-				
-				let specimenID = `${exampleOutput.getVal().slice(0,-1)}${idIndex}`;
-				let dateReceivedVal = dateReceived.getVal();
-				let dateTestedVal = '';
-
-
-				const values = {};
-				
-				rowData.itemID.val = specimenID;
-				rowData.dateReceived.val = dateReceivedVal;
-				rowData.dateTested.val = dateTestedVal;
-
-				tableRow.innerHTML = populateRow(rowData, idIndex);
-				
-				idIndex++;
-				itemsTableBody.appendChild(tableRow);	
-			
-			}
-		}
-		
-		
-		function populateRow(dataTable, idIndex){
-
-			const rows = `
-				<td><input type="text" maxlength="${dataTable.itemID.maxlength}" class="form-control" id="${dataTable.itemID.label}${idIndex}" name="" value="${dataTable.itemID.val}" aria-describedby="textDesc" ${dataTable.itemID.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.dateReceived.maxlength}" class="form-control" id="${dataTable.dateReceived.label}${idIndex}" name="" value="${dataTable.dateReceived.val}" aria-describedby="textDesc" ${dataTable.dateReceived.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.dateTested.maxlength}" class="form-control" id="${dataTable.dateTested.label}${idIndex}" name="" value="${dataTable.dateTested.val}" aria-describedby="textDesc" ${dataTable.dateTested.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.age.maxlength}" class="form-control" id="${dataTable.age.label}${idIndex}" name="" value="${dataTable.age.val}" aria-describedby="textDesc" ${dataTable.age.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.diameter.maxlength}" class="form-control" id="${dataTable.diameter.label}${idIndex}" name="" value="${dataTable.diameter.val}" aria-describedby="textDesc" ${dataTable.diameter.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.length.maxlength}" class="form-control" id="${dataTable.length.label}${idIndex}" name="" value="${dataTable.length.val}" aria-describedby="textDesc" ${dataTable.length.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.area.maxlength}" class="form-control" id="${dataTable.area.label}${idIndex}" name="" value="${dataTable.area.val}" aria-describedby="textDesc" ${dataTable.area.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.weight.maxlength}" class="form-control" id="${dataTable.weight.label}${idIndex}" name="" value="${dataTable.weight.val}" aria-describedby="textDesc" ${dataTable.weight.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.strength.maxlength}" class="form-control" id="${dataTable.strength.label}${idIndex}" name="" value="${dataTable.strength.val}" aria-describedby="textDesc" ${dataTable.strength.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.breakType.maxlength}" class="form-control" id="${dataTable.breakType.label}${idIndex}" name="" value="${dataTable.breakType.val}" aria-describedby="textDesc" ${dataTable.breakType.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.requiredStrength.maxlength}" class="form-control" id="${dataTable.requiredStrength.label}${idIndex}" name="" value="${dataTable.requiredStrength.val}" aria-describedby="textDesc" ${dataTable.requiredStrength.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.percentStrength.maxlength}" class="form-control" id="${dataTable.percentStrength.label}${idIndex}" name="" value="${dataTable.percentStrength.val}" aria-describedby="textDesc" ${dataTable.percentStrength.disabled}></td>
-				<td><input type="text" maxlength="${dataTable.initials.maxlength}" class="form-control" id="${dataTable.initials.label}${idIndex}" name="" value="${dataTable.initials.val}" aria-describedby="textDesc" ${dataTable.initials.disabled}></td>
-			`;
-			
-			return rows
-			
-		}
-		
-
-		
-		//Add event listeners to all 'diameter' and 'length' inputs
-		//Add event listeners to all 'age' inputs
-		
-		function calcArea(diam){
-			
-			
-		}
 		
 	})();
 	
